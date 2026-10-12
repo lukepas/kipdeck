@@ -199,7 +199,7 @@ test('answers the open routes before anyone signs in', async () => {
   const put = await fetch(base + '/api/login', { method: 'PUT' });
   assert.equal(put.status, 401);
   assert.deepEqual(await put.json(), { error: 'Not logged in' });
-  assert.deepEqual(await (await post('/api/claim', { token: 'nope' })).json(), { error: 'This office has already been claimed. Sign in with the password you saved.' });
+  assert.deepEqual(await (await post('/api/claim', { token: 'nope' })).json(), { error: 'This Kipdeck has already been claimed. Sign in with the password you saved.' });
   assert.equal((await post('/api/link', { key: 'nope' })).status, 410);
   assert.equal((await post('/api/join', { token: 'nope' })).status, 410);
 });
@@ -357,14 +357,14 @@ test('welcomes a browser and dispatches what it sends', async () => {
   a.send({ t: 'leaveOnMerge.set', on: true });
   for (const who of [a, b]) {
     assert.equal((await who.take('leaveOnMerge')).state.on, true);
-    assert.match((await who.take('toast', (m) => m.text.includes('go home'))).text, /^Ada L set workers to go home/);
+    assert.match((await who.take('toast', (m) => m.text.includes('go home'))).text, /^Ada L set agents to go home/);
   }
 
   // Only for Ada: a floor that isn't there, sign-ins on the shared password, and the accounts list.
   a.send({ t: 'floor.go', floor: 'nope' });
   assert.deepEqual(await a.take('toast', (m) => m.level === 'warn'), { t: 'toast', text: 'No such project', level: 'warn' });
   a.send({ t: 'signins.get' });
-  assert.equal((await a.take('toast', (m) => m.level === 'warn')).text, "On the shared office password, workers run on the office's own sign-ins");
+  assert.equal((await a.take('toast', (m) => m.level === 'warn')).text, "On the shared password, agents run on this Kipdeck's own sign-ins");
   a.send({ t: 'accounts.get' });
   assert.equal((await a.take('accounts')).state.sharedPassword, true);
 
@@ -548,13 +548,13 @@ test('settings, accounts, sign-ins and the boards answer as before', async () =>
   const told = async (start: string) => (await a.take('toast', (m) => m.level === 'info' && m.text.startsWith(start))).text;
 
   a.send({ t: 'machine.limit', limit: 0 });
-  await warned('The worker limit is a whole number from 1 to 500');
+  await warned('The agent limit is a whole number from 1 to 500');
   a.send({ t: 'machine.limit', limit: 3 });
   assert.equal((await a.take('machine', (m) => m.state.limit === 3)).state.limit, 3);
-  assert.equal(await told('Eve set the worker limit'), 'Eve set the worker limit to 3');
+  assert.equal(await told('Eve set the agent limit'), 'Eve set the agent limit to 3');
   a.send({ t: 'prompts.set', id: 'nope', text: 'x' });
   a.send({ t: 'prompts.agent', choice: null });
-  assert.equal(await told("Eve put the office's default worker"), "Eve put the office's default worker back to claude");
+  assert.equal(await told("Eve put this Kipdeck's default agent"), "Eve put this Kipdeck's default agent back to claude");
   a.send({ t: 'notify.webhook', url: 'not a url' });
   assert.match((await a.take('toast', (m) => m.level === 'warn')).text, /./);
   a.send({ t: 'upgrade.check' });
@@ -569,7 +569,7 @@ test('settings, accounts, sign-ins and the boards answer as before', async () =>
   a.send({ t: 'accounts.revoke', accountId: 'nobody' });
   for (const t of ['signins.start', 'signins.cancel', 'signins.signout'] as const) {
     a.send({ t, which: 'github' });
-    await warned("On the shared office password, workers run on the office's own sign-ins");
+    await warned("On the shared password, agents run on this Kipdeck's own sign-ins");
   }
 
   a.send({ t: 'gh.merge', number: 0, method: 'squash', deleteBranch: false });

@@ -3,7 +3,7 @@
 // livesessions.ts), and turning the anonymous usage numbers on or off (admins).
 import path from 'node:path';
 import type { SetupClientMsg, SetupGithub, SetupState } from '../../../shared/protocol.js';
-import { checkAgentsAsync, checkGithub } from '../../firstrun.js';
+import { checkAgentsAsync, checkGithub, findConfigured } from '../../firstrun.js';
 import { launchCommand } from '../../runcmd.js';
 import { adoptSession, sessionTaken } from '../../adopt.js';
 import { liveSessions } from '../../livesessions.js';
@@ -36,7 +36,7 @@ export async function setupState(ctx: Ctx, fresh = false, admin = false, late?: 
   const first = floor ?? defs[0];
   const coming = first ? starters(first.dir, true, fresh).catch(() => [] as Starter[]) : undefined;
   let waited: Starter[] | undefined;
-  const [gh, agents] = await Promise.all([github.state, checkAgentsAsync(), coming && Promise.race([coming.then((c) => (waited = c)), new Promise((r) => setTimeout(r, STARTERS_WAIT_MS).unref?.())])]);
+  const [gh, agents] = await Promise.all([github.state, checkAgentsAsync(findConfigured(ctx.cfg.agentCmd)), coming && Promise.race([coming.then((c) => (waited = c)), new Promise((r) => setTimeout(r, STARTERS_WAIT_MS).unref?.())])]);
   const sessions = admin ? liveSessions(defs.map((d) => ({ floor: d.id, dir: d.dir })), (p, id) => !!sessionTaken(ctx, p, id)) : [];
   const state: SetupState = {
     agents,
@@ -62,11 +62,11 @@ export const setupHandlers = {
     // It opens a checkout on this machine and runs what's in it past the office's checks: admins do.
     if (!ctx.meOf(c.accountId).admin) return ctx.warn(c, 'Only admins can add a project');
     const dir = ctx.cfg.startedIn;
-    if (!dir) return ctx.warn(c, 'The office was not started inside a git repository');
+    if (!dir) return ctx.warn(c, 'Kipdeck was not started inside a git repository');
     const who = c.peer.name;
     const r = ctx.building.addFolder(dir, who);
     if (typeof r === 'string') return ctx.warn(c, r);
-    if (!ctx.floors.has(r.id) && !ctx.openFloor(r)) return ctx.warn(c, `Couldn't open ${r.name} - see the office's log`);
+    if (!ctx.floors.has(r.id) && !ctx.openFloor(r)) return ctx.warn(c, `Couldn't open ${r.name} - see Kipdeck's log`);
     ctx.floorsChanged();
     ctx.toastAll(`${who} added ${r.name} as a project`);
     void setupState(ctx, false, true).then((state) => ctx.sendTo(c, { t: 'setup', state }));

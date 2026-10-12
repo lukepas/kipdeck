@@ -62,8 +62,8 @@ export const accountsHandlers = {
     // Only someone who can still get in without it may switch it off.
     if (!msg.on && !c.accountId) return ctx.warn(c, 'Sign in with an admin account of your own first, or nobody could get back in');
     ctx.accounts.setSharedPassword(!!msg.on);
-    console.log(`  ${who} switched the shared office password ${msg.on ? 'on' : 'off'}`);
-    ctx.toastAll(msg.on ? `${who} switched the shared office password back on` : `${who} switched off the shared office password - everyone signs in with their own account now`);
+    console.log(`  ${who} switched the shared password ${msg.on ? 'on' : 'off'}`);
+    ctx.toastAll(msg.on ? `${who} switched the shared password back on` : `${who} switched off the shared password - everyone signs in with their own account now`);
     ctx.accountsChanged(); // signs out whoever came in with it
   },
 } satisfies HandlerMap<AccountsClientMsg>;

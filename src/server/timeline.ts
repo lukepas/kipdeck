@@ -282,7 +282,7 @@ export class TimelineWatch {
       const now = next.get(t.id);
       if (was === now) continue;
       const base = { ...(t.workerId ? { worker: t.workerId } : {}), ...(t.workerName ? { name: t.workerName } : {}), ...(t.goal ? { goal: t.goal } : {}), ...(t.issue ? { issue: t.issue } : {}) };
-      if (now === 'running') this.add({ kind: 'task-started', ...base, text: `${t.workerName ?? 'A worker'} started the queue task ${t.title}` });
+      if (now === 'running') this.add({ kind: 'task-started', ...base, text: `${t.workerName ?? 'An agent'} started the queue task ${t.title}` });
       else if (now === 'failed') this.add({ kind: 'task-failed', ...base, text: `The queue task ${t.title} failed${t.error ? `: ${t.error}` : ''}` });
       else if (now === 'done' && was === 'running') this.add({ kind: 'task-done', ...base, text: `The queue task ${t.title} ended (${t.outcome ?? 'done'})` });
     }

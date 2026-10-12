@@ -52,7 +52,7 @@ export function openPromptEditor(net: Net, first: PromptId = PROMPT_IDS[0]) {
   const ta = h('textarea.prompt-text', { spellcheck: 'false', 'aria-label': 'Prompt', maxlength: PROMPT_MAX }) as HTMLTextAreaElement;
   const vars = h('div.prompt-vars');
   const warnings = h('div.prompt-warnings');
-  const reset = h('button.btn', { type: 'button', title: 'Put the office\'s own wording back in the box (then Save)' }, 'Default');
+  const reset = h('button.btn', { type: 'button', title: 'Put Kipdeck\'s own wording back in the box (then Save)' }, 'Default');
   const undo = h('button.btn', { type: 'button', title: 'Back to what\'s saved' }, 'Undo changes');
   const save = h('button.btn.primary', { type: 'button' }, 'Save');
   const note = h('span.grow');
@@ -82,7 +82,7 @@ export function openPromptEditor(net: Net, first: PromptId = PROMPT_IDS[0]) {
     const lines: string[] = [];
     if (!ta.value.trim() && !def.optional) lines.push('It can\'t be empty: write something, or put the default back.');
     for (const name of inText) if (!(name in def.vars)) lines.push(`{{${name}}} isn't filled in here, so it's sent just as it's written.`);
-    for (const name of def.needs ?? []) if (!inText.includes(name)) lines.push(`The office counts on {{${name}}} (${def.vars[name].toLowerCase()}): without it the worker isn't told.`);
+    for (const name of def.needs ?? []) if (!inText.includes(name)) lines.push(`Kipdeck counts on {{${name}}} (${def.vars[name].toLowerCase()}): without it the agent isn't told.`);
     warnings.replaceChildren(...lines.map((l) => h('p', {}, `${l}`)));
   };
 
@@ -111,7 +111,7 @@ export function openPromptEditor(net: Net, first: PromptId = PROMPT_IDS[0]) {
     undo.classList.toggle('hidden', !admin || !dirty(current));
     save.classList.toggle('hidden', !admin);
     save.toggleAttribute('disabled', !dirty(current));
-    note.textContent = admin ? 'For the whole office, on every deck. A rewritten prompt is used from the next time it\'s sent.' : 'Only admins can change the office\'s prompts. This is what they say now.';
+    note.textContent = admin ? 'For everyone on this Kipdeck, on every project. A rewritten prompt is used from the next time it\'s sent.' : 'Only admins can change this Kipdeck\'s prompts. This is what they say now.';
     paintItems();
     paintWarnings();
   };
@@ -160,7 +160,7 @@ export function openPromptEditor(net: Net, first: PromptId = PROMPT_IDS[0]) {
   });
   const offMe = store.on('me', paint);
   const modal = openModal(el, {
-    doing: 'reading the office\'s prompts',
+    doing: 'reading this Kipdeck\'s prompts',
     // A click beside it shouldn't throw away what you're writing.
     backdropCloses: false,
     onClose: () => {

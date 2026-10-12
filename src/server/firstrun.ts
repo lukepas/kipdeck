@@ -11,6 +11,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { AGENT_PROVIDERS, PROVIDER_META, type AgentProvider } from '../shared/providers.js';
+import { configuredProvider } from './agents.js';
 import type { SetupAgent, SetupGithub } from '../shared/protocol.js';
 import { resolveCommand, resolveCommandAsync } from './workers/process.js';
 
@@ -90,6 +91,17 @@ export async function checkAgentsAsync(find: (cmd: string) => Promise<string | n
   const bins = [...new Set(AGENT_PROVIDERS.map((p) => (p === 'custom' ? '' : PROVIDER_META[p].bin)).filter((b): b is string => !!b))];
   const found = new Map(await Promise.all(bins.map(async (b) => [b, await find(b)] as const)));
   return checkAgents((b) => found.get(b) ?? null, env, home);
+}
+
+/**
+ * `find`, with the office's own --agent (or AGENT_OFFICE_AGENT) standing in for its provider's CLI:
+ * an office started with --agent /opt/tools/claude runs that for Claude Code (agents.ts,
+ * providerCommand), so that's the Claude Code it has, whether or not a `claude` is on the PATH.
+ */
+export function findConfigured(agentCmd: string, find: (cmd: string) => Promise<string | null> = resolveCommandAsync): (cmd: string) => Promise<string | null> {
+  const provider = configuredProvider(agentCmd);
+  const bin = provider === 'custom' ? undefined : PROVIDER_META[provider].bin;
+  return (cmd) => find(cmd === bin ? agentCmd : cmd);
 }
 
 /** Who `gh` is signed in as, or why it isn't. Never asks anything. */

@@ -12,6 +12,7 @@ import type { AgentProvider, WorkerInfo } from '../src/shared/protocol.js';
 import type { PromptSource } from '../src/server/prompts.js';
 import { PROMPTS } from '../src/shared/prompts.js';
 import { setWorkerEnv } from '../src/server/workers/env.js';
+import { NOT_RUNNING } from '../src/server/workers/says.js';
 
 // The stand-in agents are steered by FAKE_AGENT_* variables: let them through the worker allowlist.
 setWorkerEnv({ policy: 'clean', allow: ['FAKE_*', 'GH_STATE'] });
@@ -248,6 +249,8 @@ test('Claude workers use the configured executable, pass prompts and resume ids,
   assert.equal(workers.handleHook(worker.id, firstWorker.env.hookToken!, 'SessionStart', { session_id: 'claude-session-1' }), true);
   assert.equal(workers.get(worker.id)?.status, 'idle');
   await waitFor(() => workers.get(worker.id)?.status, (status) => status === 'exited');
+  // A prompt to a stopped agent says so in the one string the gate, mission and HTTP callers wake it on.
+  assert.equal(workers.prompt(worker.id, 'are you there?'), NOT_RUNNING);
   assert.equal(workers.resume(worker.id), undefined);
   const resumed = await waitFor(() => f.read(), (records) => records.filter((r) => r.kind === 'claude' && r.args.includes('--settings')).length >= 2);
   const secondWorker = resumed.filter((r) => r.kind === 'claude' && r.args.includes('--settings'))[1];

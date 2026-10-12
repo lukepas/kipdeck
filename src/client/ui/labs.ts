@@ -9,7 +9,7 @@ import { h, openModal } from './dom';
 
 /** The line over the switches: every lab ships off. */
 export const labsIntro = (admin: boolean): string =>
-  admin ? 'Everything here is off until you switch it on. Switching changes it for everyone in this office.' : 'Everything here is off until an admin switches it on.';
+  admin ? 'Everything here is off until you switch it on. Switching changes it for everyone on this Kipdeck.' : 'Everything here is off until an admin switches it on.';
 
 /** Is this lab held from the command line, and which way? */
 export const labHeld = (state: LabsState | undefined, id: LabId): 'on' | 'off' | null =>

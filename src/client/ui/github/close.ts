@@ -38,7 +38,7 @@ export function openClose(kind: 'issue' | 'pull', it: GhIssue | GhPull, net: Net
       {},
       h('p.gh-merge-title', {}, it.title, pull ? h('small', {}, `${pull.headRefName} → ${pull.baseRefName}`) : null),
       pull
-        ? h('div.gh-status.muted', {}, h('span', {}, icon('info', 16)), `It won't be merged, and can be reopened on GitHub later.${w ? ` ${w.name} is still at a desk working on its branch.` : ''}`)
+        ? h('div.gh-status.muted', {}, h('span', {}, icon('info', 16)), `It won't be merged, and can be reopened on GitHub later.${w ? ' Its agent is still working on that branch.' : ''}`)
         : h('label', {}, 'Why'),
       pull ? h('label.gh-check', { for: 'close-del' }, del, `Delete ${pull.headRefName} too`) : reasons,
       comment,

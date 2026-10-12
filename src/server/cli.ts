@@ -20,7 +20,7 @@ const { openBrowser } = await import('./browser.js');
 const { loopbackName, passwordless, removeLocalFile, writeLocalFile } = await import('./local.js');
 const { freePort } = await import('./port.js');
 const { gitTop, within } = await import('./checkouts.js');
-const { checkAgentsAsync } = await import('./firstrun.js');
+const { checkAgentsAsync, findConfigured } = await import('./firstrun.js');
 const { PROVIDER_META } = await import('../shared/providers.js');
 const { officeCommand } = await import('./runcmd.js');
 
@@ -127,7 +127,7 @@ const projectLine = floors.length
 const waiting = floors.some((f) => f.workers.list().some((w) => w.status === 'needs_input'));
 console.log(block(addressLines({ urls: [...urls], signIn, opened, openCmd, warm: atTerminal && !waiting })));
 if (!cfg.demo) step('Looking for agent CLIs...');
-const agents = cfg.demo ? [] : await checkAgentsAsync();
+const agents = cfg.demo ? [] : await checkAgentsAsync(findConfigured(cfg.agentCmd));
 const usable = agents.filter((a) => a.installed && a.signedIn !== false);
 const agentsLine = usable.length
   ? usable.map((a) => PROVIDER_META[a.provider].label).join(', ')

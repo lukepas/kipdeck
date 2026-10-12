@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { NextUp, nLine, nToast, unsnoozed, waitingElsewhere, waitingElsewhereCount, waitingInOrder, waitingLabel } from '../src/client/nextup.js';
 import { bannerText, needingYou } from '../src/client/features/needsyou/logic.js';
 import { rankRoster } from '../src/shared/attention.js';
+import { advanceAfterAnswer, buildInbox, nextTab } from '../src/shared/inbox.js';
 import type { RosterEntry, WorkerInfo, WorkerStatus } from '../src/shared/protocol.js';
 
 function worker(id: string, status: WorkerStatus, waitingSince?: number, acked = false, createdAt = 0): WorkerInfo {
@@ -115,4 +116,28 @@ test('peek says who N goes to next without going: after one press it names the s
   const ranked = [r('a', 'Byte'), r('b', 'Pixel')];
   assert.equal(nextWord(ranked, 60_000, 'b').who, 'next: Pixel,');
   assert.equal(nextWord(ranked, 60_000).who, 'next: Byte,', 'without a round, the first in line');
+});
+
+test('after an answer: the next that needs you, then the next to review, never the one answered, nothing while it still asks', () => {
+  const view = (...es: RosterEntry[]) => buildInbox(rankRoster(es, NOW));
+  const a = entry(worker('a', 'needs_input', NOW - 5 * 60_000), 'f');
+  const b = entry(worker('b', 'needs_input', NOW - 2 * 60_000), 'f');
+  const done = entry(worker('d', 'done', NOW - 60_000), 'f', { work: { files: 1, additions: 3, deletions: 0, ahead: 1 } });
+  // Two ask: answering the first goes to the second, on its terminal.
+  const two = view(a, b, done);
+  assert.equal(advanceAfterAnswer(two, 'a', false)?.id, 'b');
+  assert.equal(nextTab(advanceAfterAnswer(two, 'a', false)!), 'terminal');
+  // Answering the second skips the first only because it's the one answered: a still asks, so it's next.
+  assert.equal(advanceAfterAnswer(two, 'b', false)?.id, 'a');
+  // One asks and one is done: answering falls through to the review, on its Changes tab.
+  const next = advanceAfterAnswer(view(a, done), 'a', false);
+  assert.equal(next?.id, 'd');
+  assert.equal(nextTab(next!), 'changes');
+  // The one answered is gone from Needs you already: still never itself.
+  assert.equal(advanceAfterAnswer(view({ ...a, status: 'working', waitingSince: undefined }, done), 'a', false)?.id, 'd');
+  // Nothing else waiting: undefined, and the pane stays on the one answered.
+  assert.equal(advanceAfterAnswer(view(a), 'a', false), undefined);
+  assert.equal(advanceAfterAnswer(view(), 'a', false), undefined);
+  // It still asks (another request): it doesn't move yet.
+  assert.equal(advanceAfterAnswer(two, 'a', true), undefined);
 });

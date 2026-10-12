@@ -29,10 +29,10 @@ export function togglePalette(entries: () => PaletteEntry[]) {
   const all = entries();
   const input = h('input', {
     type: 'text',
-    placeholder: 'Find a worker, issue, PR, board, teammate or action...',
+    placeholder: 'Find an agent, issue, PR, board, teammate or action...',
     autocomplete: 'off',
     spellcheck: 'false',
-    'aria-label': 'Find anything in the office',
+    'aria-label': 'Find anything in this Kipdeck',
     role: 'combobox',
     'aria-controls': 'palette-list',
     'aria-expanded': 'true',

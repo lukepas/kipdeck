@@ -49,6 +49,10 @@ export const pair = once(() => import('../ui/pair'));
 export const deploy = once(() => import('./deploy'));
 /** Kip in the quiet moments: the all-clear pane, the setup card, the merge's cheer, the first job (kip-moments.ts). */
 export const kipMoments = once(() => import('./kip-moments'));
+/** The pane moving on after an answer, loaded with the first one (advance.ts). */
+const advance = once(() => import('./advance'));
+/** This page sent an answer for agent `id`: the pane moves on once it's back at work. */
+export const answered = (id: string) => void advance().then((m) => m.answered(id));
 
 /** After a reconnect the office has forgotten which terminal and which changes this page follows: tell it again. */
 export async function rewatch(net: Net) {

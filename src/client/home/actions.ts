@@ -3,7 +3,7 @@
 // doesn't draw itself (a pull request, the boards, the queue, Mission control) load when first wanted.
 
 import { firstMergeLine } from '../../shared/warm';
-import { nextUp, shippedToday, type RowAction } from '../../shared/inbox';
+import { nextTab, nextUp, shippedToday, type RowAction } from '../../shared/inbox';
 import type { InboxServerMsg, Reminder, RosterEntry } from '../../shared/protocol';
 import type { AgentProvider } from '../../shared/providers';
 import type { Net } from '../net';
@@ -254,7 +254,7 @@ export function createActions(net: Net): Actions {
       // Nothing next: the pane rests on "nothing needs you" until something new arrives, rather than
       // opening the change just merged again while it's still leaving To review.
       if (!next) home.held = true;
-      home.select(next?.id, next ? (next.status === 'needs_input' ? 'terminal' : 'changes') : undefined);
+      home.select(next?.id, next ? nextTab(next) : undefined);
     },
     openBoard: (kind) => void lazy.boards().then((m) => m.openBoard(kind, net, boardActions())),
     openQueue,
