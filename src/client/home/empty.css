@@ -1,6 +1,6 @@
 /* The pane with nothing selected (empty.ts): the next item that needs you, or All clear and what shipped today. */
-.pe-eyebrow { font: 600 12px/1 var(--font-ui); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
-.pe-item { display: flex; align-items: center; gap: 12px; width: min(100%, 420px); padding: 12px 14px; border: 1px solid var(--line); border-left-width: 3px; border-radius: var(--radius); background: var(--surface-2); color: var(--text); text-align: left; cursor: pointer; font: inherit; }
+.pe-eyebrow { font: 600 13px/1 var(--font-ui); color: var(--muted); }
+.pe-item { display: flex; align-items: center; gap: 12px; width: min(100%, 420px); padding: 12px 14px; border: 1px solid var(--line); border-left-width: 3px; border-radius: var(--radius-panel); background: var(--surface-2); color: var(--text); text-align: left; cursor: pointer; font: inherit; }
 .pe-item.needs-you { border-left-color: var(--signal); background: var(--signal-tint); }
 .pe-item.review { border-left-color: var(--review); background: var(--review-tint); }
 .pe-item:hover { border-color: var(--line-strong); }
@@ -16,3 +16,5 @@
 .pe-ship-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pe-ship-at { font: 400 13px var(--font-mono); color: var(--muted); }
 .pe-more { font-size: 13px; }
+/* The greeting and Kip (warm.ts) take no room until they're filled, and none while anyone needs you. */
+.pe-warm:empty, .pe-warm-line:empty { display: none; }

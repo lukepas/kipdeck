@@ -109,10 +109,10 @@ export function undoMerge(id: string, changed: () => void) {
   changed();
 }
 
-/** The office answered a merge this page sent: its toast says how it went. False when this page has no toast for it. */
-export function mergeLanded(workerId: string, result: { error?: string; record?: ShipRecord }, note?: string): boolean {
+/** The office answered a merge this page sent: its toast says how it went, and is handed back. Undefined when this page has no toast for it. */
+export function mergeLanded(workerId: string, result: { error?: string; record?: ShipRecord }, note?: string): HTMLElement | undefined {
   const s = sent.get(workerId);
-  if (!s) return false;
+  if (!s) return undefined;
   sent.delete(workerId);
   const text = s.toast.querySelector('.toast-text');
   s.toast.classList.remove('hold');
@@ -120,7 +120,7 @@ export function mergeLanded(workerId: string, result: { error?: string; record?:
     s.toast.classList.add('warn');
     text?.replaceChildren(result.error);
     fade(s.toast, 6000);
-    return true;
+    return s.toast;
   }
   const waited = result.record?.waitedMs;
   // What merged, how long it waited on you, and then the note (the first merge's) or where it went.
@@ -129,5 +129,5 @@ export function mergeLanded(workerId: string, result: { error?: string; record?:
   text?.replaceChildren(mergeWords(s.entry, true), h('small', {}, said));
   settle(s.toast);
   fade(s.toast, 4500);
-  return true;
+  return s.toast;
 }

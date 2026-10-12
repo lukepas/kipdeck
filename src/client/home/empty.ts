@@ -1,6 +1,7 @@
-// The pane with nothing selected: the work, never a picture (shared/empty-pane.ts). The next agent
-// that needs you, with its task, what it wants and how long it has waited, and one button to open it;
-// with nobody waiting, "All clear" with the day so far and what shipped today. Before the first agent
+// The pane with nothing selected: the work first (shared/empty-pane.ts). The next agent that needs
+// you, with its task, what it wants and how long it has waited, and one button to open it; with nobody
+// waiting, "All clear" with the day so far and what shipped today, under the greeting and Kip (warm.ts,
+// the one place the pane has a picture, and never while anyone needs you). Before the first agent
 // the setup card's preview has it. With the Deck lab switched on, the deck plan sits under the work as
 // a small extra (its Proof corner only once Proof of Merge is set up, client/proof-ready.ts).
 
@@ -15,6 +16,7 @@ import { proofReady } from '../proof-ready';
 import type { Actions } from './actions';
 import { agentMark, currentView, entryTitle, waitingNow } from './list';
 import { preview } from './preview';
+import * as lazy from './lazy';
 import { home } from './state';
 import './empty.css';
 
@@ -53,11 +55,17 @@ export function emptyState(actions: Actions): HTMLElement {
     const earned = clearedAt > 0 && now - clearedAt < 1_500;
     clearedAt = 0;
     const day = todayPulse(records, waitingNow(view), now);
+    // The greeting and Kip, and the night shift's line, filled by warm.ts once it's loaded (never while anyone needs you).
+    const warm = h('div.pe-warm');
+    const warmLine = h('p.pe-warm-line');
+    void lazy.warm().then((w) => w.fillCalm(warm, warmLine, pane.working));
     return h(
       'div.pe.calm',
       { class: earned ? 'earned' : '' },
+      warm,
       h('span.pe-ok', {}, icon('check', 20)),
       h('h2', {}, 'All clear'),
+      warmLine,
       h('p', {}, daySoFar(pane.working, day.merged, day.medianWaitMs)),
       pane.shipped.length
         ? h(

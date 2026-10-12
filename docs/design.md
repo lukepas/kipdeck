@@ -40,7 +40,7 @@ The state hues keep their values and glyphs: dark Signal `#FF6A1A` (6.51 / 6.16 
 The extras, each with one home:
 
 - **Tape stripe** (`--tape-stripe`, 5px tall): three 1px lines in ship, tape and plum under the inbox's top bar, the Deck HUD's top bar and the landing nav. It is the one ornament in the chrome.
-- **Sunset** (`--sunset`, from `--sunset-1` apricot `#F2B48C` through `--sunset-2` dusty rose `#C47F93` and `--sunset-3` plum `#4A3560` to the void): a glow behind Kip on the sign-in page and the landing hero only. Never in the app's chrome, never in a row, never next to a state mark, never under text or a focusable control. These are the two places with no state on screen, so its apricot cannot be read as Signal.
+- **Sunset** (`--sunset`, from `--sunset-1` apricot `#F2B48C` through `--sunset-2` dusty rose `#C47F93` and `--sunset-3` plum `#4A3560` to the void): a glow behind Kip on the sign-in page and the landing hero only. Never in the app's chrome, never in a row, never next to a state mark, never under text or a focusable control. These are the two places with no state on screen, so its apricot cannot be read as Signal. Like the grain it is `none` in the light sets and in print, where Kip stands on the plain paper.
 - **Grain** (`--grain`, 3% noise as an inline SVG data URI, allowed by `img-src data:`): the sign-in page's ground and the landing hero only. Never on panes, the terminal, a diff or under focusable text. It is `none` in the light sets and in print.
 
 No new accent hue goes into the inbox: a warm accent would collide with Signal or review. Brass and conn gold stay on the Deck.

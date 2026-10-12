@@ -209,7 +209,15 @@ export function createActions(net: Net): Actions {
     merging,
     sendBack,
     stop,
-    deploy: (prompt, provider) => openDeploy(net, { prompt, provider, started: (at) => (home.deployedAt = at) }),
+    deploy: (prompt, provider) =>
+      openDeploy(net, {
+        prompt,
+        provider,
+        started: (at, task) => {
+          home.deployedAt = at;
+          void lazy.warm().then((w) => w.firstJob(task));
+        },
+      }),
     merged(msg) {
       merging.delete(msg.workerId);
       if (msg.error) {
@@ -219,7 +227,9 @@ export function createActions(net: Net): Actions {
       // The office tells everyone who merged what; this page's hold toast says it landed and moves on
       // to the next thing. The first merge in this browser is worth saying once, with how long the loop took.
       const first = home.firstMerge() ? `Your first merge, ${waitWords(Date.now() - Math.min(...store.roster.map((e) => e.createdAt), Date.now()))} after your first agent started. It's in Shipped today.` : undefined;
-      if (!mergeLanded(msg.workerId, msg, first) && first) toast(first);
+      const landed = mergeLanded(msg.workerId, msg, first) ?? (first ? toast(first) : undefined);
+      // Kip's beat for it, only while nobody waits on you (warm.ts).
+      void lazy.warm().then((w) => w.celebrate(landed, !!first));
       home.check('merge');
       // On to the next thing that needs you.
       const next = nextUp(currentView(), msg.workerId);

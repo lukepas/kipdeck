@@ -1,0 +1,41 @@
+/* The inbox's warm moments (warm.ts): the greeting and Kip in the all-clear pane, Kip in a toast's icon
+   slot, the first merge's sticker and the tuft's hop. Tokens only, no hex. Beats last --t-beat and play
+   once; Kip alone uses --ease-soft. Reduced motion and Ship motion Off make every one a cut and Kip a
+   still pose (styles/tokens.css). */
+
+/* The tape label: a cassette-label stamp for warm eyebrows only. */
+.tape-label { margin: 0; font: 500 var(--label-size)/1.4 var(--label-font); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--tape); }
+
+/* The all-clear pane: the greeting over Kip, then the check and the heading. */
+.pe-warm { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.kip { display: block; color: var(--muted); }
+.kip svg { display: block; width: 100%; height: 100%; }
+/* Kip's head, ears and body are filled with the panel, so the lines behind them drop out. */
+.kip .kip-fill, .kip-toast .toast-icon .kip-fill, .kip-sticker .kip-fill { fill: var(--surface-1); }
+.kip .kip-ground, .kip .kip-steam, .kip .kip-swish { opacity: .45; }
+.pe-warm .kip { width: 104px; height: 104px; }
+/* A slow breath, 6s, far from any state's cadence; held still under reduced motion. */
+.kip-idle svg { transform-origin: 50% 94%; animation: kip-breathe 6s var(--ease-soft) infinite alternate; }
+@keyframes kip-breathe { to { transform: scaleY(1.015); } }
+
+/* Kip in a toast's icon slot (the merge's cheer, the first job's wave): a wider slot, one hop. */
+.toast.kip-toast { grid-template-columns: 30px minmax(0, 1fr) auto; }
+.toast.kip-toast .toast-icon { width: 30px; height: 30px; padding-top: 0; color: var(--text); }
+.toast.kip-toast .toast-icon svg { width: 30px; height: 30px; }
+.toast.kip-toast .toast-icon svg * { vector-effect: non-scaling-stroke; stroke-width: 1.5; }
+.toast.kip-toast .toast-icon svg { animation: kip-hop var(--t-beat) var(--ease-soft) 1 both; transform-origin: 50% 100%; }
+@keyframes kip-hop { 0% { transform: translateY(4px) scale(.96); opacity: 0; } 45% { transform: translateY(-3px); opacity: 1; } 100% { transform: none; } }
+
+/* The first merge's sticker: Kip on the toast's corner, a little askew, never over the words. */
+.toast .kip-sticker { position: absolute; top: -18px; right: -8px; width: 44px; height: 44px; padding: 3px; border-radius: 50%; background: var(--surface-1); color: var(--tape); transform: rotate(8deg); animation: kip-stick var(--t-beat) var(--ease-soft) 1 both; }
+.toast .kip-sticker svg { display: block; width: 100%; height: 100%; }
+.toast .kip-sticker svg * { vector-effect: non-scaling-stroke; stroke-width: 1.25; }
+@keyframes kip-stick { from { transform: rotate(-4deg) scale(.8); opacity: 0; } to { transform: rotate(8deg); opacity: 1; } }
+
+/* The tuft on the top bar's mark hops once on a merge. */
+.brand-mark.tuft-hop .signal { transform-box: fill-box; transform-origin: center; animation: tuft-hop var(--t-beat) var(--ease-soft) 1; }
+@keyframes tuft-hop { 0%, 100% { transform: none; } 40% { transform: translateY(-3px); } 70% { transform: translateY(.5px); } }
+
+/* The setup card's wave, in its corner; on a narrow phone the words get the room. */
+.su-kip { position: absolute; top: 18px; right: 20px; width: 64px; height: 64px; }
+@media (max-width: 420px) { .su-kip { display: none; } }
