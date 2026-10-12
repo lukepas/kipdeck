@@ -74,6 +74,7 @@ export function questionCard(net: Net): QuestionCard {
       return;
     }
     net.send({ t: 'term.input', workerId: id, data: key });
+    lazy.answered(id);
   };
 
   form.addEventListener('submit', (ev) => {
@@ -81,6 +82,7 @@ export function questionCard(net: Net): QuestionCard {
     const answer = input.value.trim();
     if (!answer || !workerId) return;
     net.send({ t: 'worker.prompt', workerId, prompt: answer });
+    lazy.answered(workerId);
     input.value = '';
   });
 

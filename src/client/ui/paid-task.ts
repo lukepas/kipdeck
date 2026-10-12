@@ -25,11 +25,11 @@ export function paidParts(t: QueueTask, net: Net): { meta: string[]; buttons: HT
   if (t.held) {
     meta.push(admin ? 'waits for you to approve it' : 'waits for an admin to approve it');
     if (admin && !p.tx && p.settlement === 'unknown') {
-      buttons.push(h('button.btn', { type: 'button', title: "The facilitator never said whether it settled: look up the payer's transfer on the explorer, then record it", onclick: () => openPrompt({ title: 'Record the settlement', subtitle: `Look on ${NETWORK[p.network] ?? p.network} for ${p.amount} test USDC from ${p.payer} to the office. If it isn't there, turn the task down instead (nothing is owed back then).`, placeholder: p.network.startsWith('eip155') ? '0x... transaction hash' : 'Transaction signature', submitLabel: 'Record', onSubmit: (tx) => net.send({ t: 'queue.settled', taskId: t.id, tx: tx.trim() }) }) }, 'Record settlement'));
+      buttons.push(h('button.btn', { type: 'button', title: "The facilitator never said whether it settled: look up the payer's transfer on the explorer, then record it", onclick: () => openPrompt({ title: 'Record the settlement', subtitle: `Look on ${NETWORK[p.network] ?? p.network} for ${p.amount} test USDC from ${p.payer} to this Kipdeck. If it isn't there, turn the task down instead (nothing is owed back then).`, placeholder: p.network.startsWith('eip155') ? '0x... transaction hash' : 'Transaction signature', submitLabel: 'Record', onSubmit: (tx) => net.send({ t: 'queue.settled', taskId: t.id, tx: tx.trim() }) }) }, 'Record settlement'));
     }
     if (admin && p.tx) {
-      buttons.push(h('button.btn.primary', { type: 'button', title: 'Let a worker start on it, on your sign-ins', onclick: () => confirmDialog('Approve this paid task?', `A worker will run this prompt from someone outside the office, on your sign-ins:\n\n${t.prompt.slice(0, 600)}`, 'Approve', () => net.send({ t: 'queue.approve', taskId: t.id })) }, 'Approve'));
-      buttons.push(h('button.btn', { type: 'button', title: 'Turn it down: the payment is then refunded by hand', onclick: () => confirmDialog('Turn this paid task down?', `${short(p.payer)} paid ${p.amount} test USDC for it. Refund that from the office's wallet, then record the transaction here.`, 'Turn down', () => net.send({ t: 'queue.reject', taskId: t.id })) }, 'Turn down'));
+      buttons.push(h('button.btn.primary', { type: 'button', title: 'Let an agent start on it, on your sign-ins', onclick: () => confirmDialog('Approve this paid task?', `An agent will run this prompt from someone outside this Kipdeck, on your sign-ins:\n\n${t.prompt.slice(0, 600)}`, 'Approve', () => net.send({ t: 'queue.approve', taskId: t.id })) }, 'Approve'));
+      buttons.push(h('button.btn', { type: 'button', title: 'Turn it down: the payment is then refunded by hand', onclick: () => confirmDialog('Turn this paid task down?', `${short(p.payer)} paid ${p.amount} test USDC for it. Refund that from this Kipdeck's wallet, then record the transaction here.`, 'Turn down', () => net.send({ t: 'queue.reject', taskId: t.id })) }, 'Turn down'));
     }
   } else if (t.outcome === 'rejected') {
     if (p.refundTx) {
@@ -38,7 +38,7 @@ export function paidParts(t: QueueTask, net: Net): { meta: string[]; buttons: HT
       if (r) buttons.push(r);
     } else {
       meta.push(`a refund of ${p.amount} test USDC is owed`);
-      if (admin) buttons.push(h('button.btn', { type: 'button', title: 'Record the refund you sent from the office wallet', onclick: () => openPrompt({ title: 'Record the refund', subtitle: `The transaction that sent ${p.amount} test USDC back to ${p.payer} on ${NETWORK[p.network] ?? p.network}.`, placeholder: p.network.startsWith('eip155') ? '0x... transaction hash' : 'Transaction signature', submitLabel: 'Record', onSubmit: (tx) => net.send({ t: 'queue.refunded', taskId: t.id, tx: tx.trim() }) }) }, 'Record refund'));
+      if (admin) buttons.push(h('button.btn', { type: 'button', title: 'Record the refund you sent from this Kipdeck\'s wallet', onclick: () => openPrompt({ title: 'Record the refund', subtitle: `The transaction that sent ${p.amount} test USDC back to ${p.payer} on ${NETWORK[p.network] ?? p.network}.`, placeholder: p.network.startsWith('eip155') ? '0x... transaction hash' : 'Transaction signature', submitLabel: 'Record', onSubmit: (tx) => net.send({ t: 'queue.refunded', taskId: t.id, tx: tx.trim() }) }) }, 'Record refund'));
     }
   }
   return { meta, buttons };

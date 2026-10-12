@@ -83,7 +83,7 @@ export const queueHandlers = {
     if (!floor || !admin(ctx, c, 'turn down a held task')) return;
     const err = floor.queue.reject(str(msg.taskId, 32));
     if (err) return ctx.warn(c, err);
-    ctx.toastFloor(floor, `${c.peer.name} turned down a paid task: refund it from the office's wallet and record the transaction`);
+    ctx.toastFloor(floor, `${c.peer.name} turned down a paid task: refund it from this Kipdeck's wallet and record the transaction`);
   },
   'queue.refunded'(ctx, c, msg) {
     const floor = here(ctx, c);

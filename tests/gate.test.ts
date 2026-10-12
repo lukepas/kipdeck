@@ -16,6 +16,7 @@ import { handleMcp, main } from '../bin/office-workers.js';
 import type { Ctx } from '../src/server/office/context.js';
 import type { Floor } from '../src/server/floor.js';
 import type { WorkerInfo } from '../src/shared/protocol.js';
+import { NOT_RUNNING } from '../src/server/workers/says.ts';
 
 const grant = (more: Partial<Grant>): Grant => ({ id: 'g1', floor: 'f1', action: 'hire', by: 'Ada', at: 1, ...more });
 const proposal = (more: Partial<Proposal> = {}): Proposal => ({ id: 'p1', floor: 'f1', floorName: 'shop', action: 'hire', by: { id: 'w1', name: 'Byte', task: 'Fix the login' }, text: 'Write the tests', at: 1, ...more });
@@ -296,7 +297,7 @@ test('a stopped agent is not woken for an outcome: it hears it once it runs agai
     const woke: string[] = [];
     const told: string[] = [];
     const workers = o.floor.workers as unknown as { prompt: (id: string, text: string) => string | undefined; resume: (id: string) => undefined };
-    workers.prompt = (_id, text) => (running ? (told.push(text), undefined) : 'Worker is not running');
+    workers.prompt = (_id, text) => (running ? (told.push(text), undefined) : NOT_RUNNING);
     workers.resume = (id) => (woke.push(id), undefined);
     await gateOrRun(ctx, o.floor, o.me, { action: 'tell', worker: 'w2', text: 'x' }, { targets: ['Nova'], text: 'x' });
     const [p] = ctx.gate.state().proposals;

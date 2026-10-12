@@ -33,7 +33,7 @@ function inviteMessage(t: TeamState, os: Os): string {
     '',
     tunnelCommand(t, os),
     '',
-    `It opens the office at http://localhost:${t.port} - sign in (with the office password, or the account link you get from me) and keep that terminal open while you're in.`,
+    `It opens Kipdeck at http://localhost:${t.port} - sign in (with the shared password, or the account link you get from me) and keep that terminal open while you're in.`,
     t.fingerprint ? `The first time, ssh asks whether to trust the server. Only say yes if it shows ${t.fingerprint}` : '',
   ]
     .filter((l, i, all) => l || all[i - 1])
@@ -47,7 +47,7 @@ function tailnetMessage(t: TeamState): string {
   return [
     `You're invited to the ${project} deck on Kipdeck: https://${t.tailnet}`,
     '',
-    "It's on our Tailscale network. If you aren't on it yet: install Tailscale (https://tailscale.com/download), sign in, and accept the invite I send you from Tailscale. Then open the link and sign in with the office password, or the account link you get from me.",
+    "It's on our Tailscale network. If you aren't on it yet: install Tailscale (https://tailscale.com/download), sign in, and accept the invite I send you from Tailscale. Then open the link and sign in with the shared password, or the account link you get from me.",
   ].join('\n');
 }
 
@@ -61,7 +61,9 @@ export async function copy(text: string): Promise<boolean> {
     // Not a secure context: fall back to a hidden textarea.
     const ta = h('textarea', { style: 'position:fixed;opacity:0' });
     ta.value = text;
-    document.body.append(ta);
+    // In the top window if one is open: the page behind a modal dialog is inert, and can't be selected in.
+    const windows = document.querySelectorAll('#modal-root > dialog[open]');
+    (windows[windows.length - 1] ?? document.body).append(ta);
     ta.select();
     const ok = document.execCommand('copy');
     ta.remove();
@@ -91,7 +93,7 @@ export function openTeam(net: Net) {
   const close = h('button.btn.close', { 'aria-label': 'Close' }, icon('close', 16));
   const message = (t: TeamState) => (t.tailnet ? tailnetMessage(t) : inviteMessage(t, os));
   const copyMsg = copyButton('Copy invite message', () => (store.team ? message(store.team) : ''), 'primary');
-  const footer = h('footer', {}, h('span.grow', {}, 'Invited people still need to sign in: the office password, or an account from Accounts.'), copyMsg);
+  const footer = h('footer', {}, h('span.grow', {}, 'Invited people still need to sign in: the shared password, or an account from Accounts.'), copyMsg);
   const el = h('div.modal', { role: 'dialog', 'aria-label': 'Invite teammates', style: 'width:min(680px,100%)' }, h('header', {}, h('h2', {}, 'Invite teammates'), close), body, footer);
 
   const input = h('input', { type: 'text', maxlength: 40, placeholder: 'GitHub username', 'aria-label': 'GitHub username', autocomplete: 'off', spellcheck: 'false' }) as HTMLInputElement;
@@ -123,7 +125,7 @@ export function openTeam(net: Net) {
     body.append(
       h('label', {}, 'Invite someone by their GitHub username'),
       form,
-      h('p.note', {}, 'Their SSH keys from github.com/<username>.keys can open a tunnel to this office - nothing else: no shell on the machine, no other ports.'),
+      h('p.note', {}, 'Their SSH keys from github.com/<username>.keys can open a tunnel to this Kipdeck - nothing else: no shell on the machine, no other ports.'),
     );
     if (status) body.append(status);
     if (t.error) body.append(h('p.team-status.error', {}, t.error));
@@ -190,7 +192,7 @@ export function openTeam(net: Net) {
       remove.addEventListener('click', () =>
         confirmDialog(
           `Remove ${m.name}?`,
-          `Their keys stop working right away. Every open tunnel drops for a moment too (other teammates just re-run their command). ${m.name} still knows the office password.`,
+          `Their keys stop working right away. Every open tunnel drops for a moment too (other teammates just re-run their command). ${m.name} still knows the shared password.`,
           'Remove',
           () => net.send({ t: 'team.remove', name: m.name }),
         ),

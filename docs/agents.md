@@ -73,7 +73,7 @@ Codex uses its interactive CLI with `--no-alt-screen`, preserves native sandbox 
 
 OpenCode metrics come from assistant-message token/cost records exposed by its plugin SDK. Updated messages replace prior values so streaming updates do not add the same call twice; existing root and child sessions are loaded on resume. History that is still loading or unavailable is labeled as partial. These snapshots update usage only, so a report cannot dismiss a permission request. The daily budget and historical ledger remain Claude-only.
 
-DeepSeek Harness metrics come from ACP `usage_update`: tokens in context and the window's size, shown per worker and for the current desks, plus a session cost only when the harness reports one. The daily budget and historical ledger remain Claude-only.
+DeepSeek Harness metrics come from ACP `usage_update`: tokens in context and the window's size, shown per worker and for the current agents, plus a session cost only when the harness reports one. The daily budget and historical ledger remain Claude-only.
 
 ## The office's prompts
 

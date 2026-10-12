@@ -1,5 +1,6 @@
 import { icon } from './icons';
 import { ago } from '../../shared/rowtext';
+import { focusInside, liftToasts, nameDialog, restoreTarget, wrapTab } from './dialog';
 
 type Attrs = Record<string, string | number | boolean | EventListener | undefined | null>;
 type Child = Node | string | number | null | undefined | false;
@@ -93,16 +94,26 @@ export function setDoing(modal: Modal, doing: string | undefined) {
  * does a ✕ in its top right corner unless `closeButton` is false (it follows `escCloses`). `doing`
  * is what teammates see under your name tag while it's open, like "reading PR #12", and `reading`
  * puts an open book in your character's hands. `onClose` hears whether it was the Esc key.
+ *
+ * The window is a native <dialog> opened with showModal() (ui/dialog.ts has its rules): the page
+ * behind is inert, Tab stays inside, it has aria-modal and a name, focus goes inside on open and back
+ * to what had it on close. A `side` panel is a plain element instead, and leaves the page live.
  */
 export function openModal(content: HTMLElement, opts: { escCloses?: boolean; onClose?: (byEsc: boolean) => void; backdropCloses?: boolean; closeButton?: boolean; doing?: string; reading?: boolean; dock?: HTMLElement; side?: boolean } = {}): Modal {
   if (opts.dock) return dockModal(content, opts.dock, opts);
-  const backdrop = h('div.backdrop', {}, content);
+  const modalWindow = !opts.side;
+  const backdrop = modalWindow ? (h('dialog.backdrop', {}) as HTMLDialogElement) : h('div.backdrop', {});
+  const unname = modalWindow ? nameDialog(backdrop, content) : () => {};
+  backdrop.append(content);
   const root = document.getElementById('modal-root')!;
-  root.append(backdrop);
+  // What had focus, and whether the Deck had the mouse, before the window and its listeners took them.
+  const opener = document.activeElement;
+  const inMouseLook = !!document.pointerLockElement;
   let closed = false;
   let byEsc = false;
+  const onTop = () => stack[stack.length - 1] === modal;
   const onKey = (e: KeyboardEvent) => {
-    if (stack[stack.length - 1] !== modal) return;
+    if (!onTop()) return;
     if (e.key === 'Escape' && opts.escCloses !== false) {
       // Stop it here so the Esc that closes a terminal isn't also typed into it.
       e.preventDefault();
@@ -110,6 +121,15 @@ export function openModal(content: HTMLElement, opts: { escCloses?: boolean; onC
       byEsc = true;
       modal.close();
     }
+  };
+  // Once whatever has focus has had the key (a terminal takes Tab and Esc itself): an Esc for a window
+  // Esc mustn't close is cancelled, so the browser doesn't close the <dialog> on its own (see the
+  // cancel and close events below), and Tab off either end goes round to the other, not out to the
+  // browser's toolbar.
+  const onKeyAfter = (e: KeyboardEvent) => {
+    if (!onTop() || e.defaultPrevented) return;
+    if (e.key === 'Escape' && opts.escCloses === false) e.preventDefault();
+    if (e.key === 'Tab' && !e.altKey && !e.ctrlKey && !e.metaKey) wrapTab(backdrop, e);
   };
   const modal: Modal = {
     el: content,
@@ -120,10 +140,15 @@ export function openModal(content: HTMLElement, opts: { escCloses?: boolean; onC
     close() {
       if (closed) return;
       closed = true;
-      backdrop.remove();
-      window.removeEventListener('keydown', onKey, true);
       const i = stack.indexOf(modal);
       if (i >= 0) stack.splice(i, 1);
+      liftToasts(topWindow());
+      const back = restoreTarget(opener, { inMouseLook, dialog: backdrop, active: document.activeElement, body: document.body });
+      backdrop.remove();
+      unname();
+      window.removeEventListener('keydown', onKey, true);
+      window.removeEventListener('keydown', onKeyAfter);
+      back?.focus({ preventScroll: true });
       opts.onClose?.(byEsc);
       listeners.forEach((fn) => fn(stack.length > 0));
     },
@@ -136,8 +161,41 @@ export function openModal(content: HTMLElement, opts: { escCloses?: boolean; onC
   if (opts.escCloses === false && !opts.closeButton && content.classList.contains('modal')) content.classList.add('blocking');
   window.addEventListener('keydown', onKey, true);
   stack.push(modal);
+  root.append(backdrop);
+  if (modalWindow) {
+    const dlg = backdrop as HTMLDialogElement;
+    // The browser's own Esc (a close request): handled here, so the stack and onClose always hear it.
+    dlg.addEventListener('cancel', (e) => {
+      e.preventDefault();
+      if (opts.escCloses === false || !onTop()) return;
+      byEsc = true;
+      modal.close();
+    });
+    // Closed by the browser after all (it closes on a second Esc it wasn't allowed to cancel).
+    dlg.addEventListener('close', () => {
+      if (closed) return;
+      if (opts.escCloses === false && dlg.isConnected) return dlg.showModal();
+      byEsc = true;
+      modal.close();
+    });
+    window.addEventListener('keydown', onKeyAfter);
+    dlg.showModal();
+    liftToasts(dlg);
+    // Once the caller has finished setting the window up (Settings picks its pane after this returns),
+    // unless it put focus somewhere of its own choosing meanwhile.
+    const shown = document.activeElement;
+    queueMicrotask(() => {
+      if (!closed && (document.activeElement === shown || !dlg.contains(document.activeElement))) focusInside(content);
+    });
+  }
   listeners.forEach((fn) => fn(true));
   return modal;
+}
+
+/** The topmost window that is a dialog (not a side panel), for the toasts to ride on. */
+function topWindow(): HTMLElement | null {
+  for (let i = stack.length - 1; i >= 0; i--) if (!stack[i].side) return stack[i].backdrop;
+  return null;
 }
 
 /**

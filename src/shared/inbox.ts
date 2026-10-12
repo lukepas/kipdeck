@@ -153,6 +153,18 @@ export function nextUp(view: InboxView, except?: string): RosterEntry | undefine
   return undefined;
 }
 
+/**
+ * Where the pane goes once you've answered or approved `answeredId`: nowhere while it still asks
+ * (`stillAsking`, its status or another request), else the next that needs you, then the next to
+ * review, the same as after a merge. Undefined with nothing else waiting: it stays on the one answered.
+ */
+export function advanceAfterAnswer(view: InboxView, answeredId: string, stillAsking: boolean): RosterEntry | undefined {
+  return stillAsking ? undefined : nextUp(view, answeredId);
+}
+
+/** The tab an agent opens on when the pane moves to it: its terminal while it asks, else what it changed. */
+export const nextTab = (e: Pick<RosterEntry, 'status'>): 'terminal' | 'changes' => (e.status === 'needs_input' ? 'terminal' : 'changes');
+
 /** The reminders that are rows of their own in Needs you: the ones about no agent already listed. */
 export function looseReminders(reminders: readonly Reminder[], listed: ReadonlySet<string>, now: number, project?: string): Reminder[] {
   return reminders.filter((r) => (!r.worker || !listed.has(r.worker)) && !snoozedReminder(r, now) && (!project || r.floor === project));

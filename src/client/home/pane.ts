@@ -16,7 +16,7 @@ import { h } from '../ui/dom';
 import { icon } from '../ui/icons';
 import { modelBadge } from '../ui/provider';
 import type { Actions } from './actions';
-import { onProject } from './deploy';
+import { onProject } from './on-project';
 import * as lazy from './lazy';
 import { agentMark, currentView, entryTitle, waitingNow, whereLabel } from './list';
 import { commentsOf, installBrief, reviewBrief } from './brief';
@@ -24,10 +24,7 @@ import { questionCard } from './question';
 import { approvalCard } from './approval';
 import { emptyState, markCleared, placeDeckPlan } from './empty';
 import { spendUi } from './spend-slot';
-import { home, type PaneTab } from './state';
-
-/** Wide enough for the list and the pane side by side (lite.css). */
-const wide = () => matchMedia('(min-width: 900px)').matches;
+import { home, wide, type PaneTab } from './state';
 
 const TABS: { id: PaneTab; label: string }[] = [
   { id: 'terminal', label: 'Terminal' },

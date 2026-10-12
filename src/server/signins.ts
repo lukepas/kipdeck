@@ -114,8 +114,8 @@ export class SignIns {
   /** What to tell someone who needs `which` signed in first. */
   why(which: SignInKind): string {
     return which === 'claude'
-      ? `Sign in to Claude first (${HELP_WHERE}): your workers run on your own Claude plan`
-      : `Sign in to GitHub first (${HELP_WHERE}): the office acts on GitHub as you`;
+      ? `Sign in to Claude first (${HELP_WHERE}): your agents run on your own Claude plan`
+      : `Sign in to GitHub first (${HELP_WHERE}): Kipdeck acts on GitHub as you`;
   }
 
   /**
@@ -220,7 +220,7 @@ export class SignIns {
       await this.look(id, true);
       return undefined;
     }
-    if (!this.gh) return "The GitHub CLI (gh) isn't installed on the office's machine";
+    if (!this.gh) return "The GitHub CLI (gh) isn't installed on the machine Kipdeck runs on";
     if (!GITHUB_TOKEN.test(token)) return "That doesn't look like a GitHub token (ghp_..., github_pat_...)";
     const s = this.load(id);
     delete s.github;
@@ -232,7 +232,7 @@ export class SignIns {
 
   /** Uses the office machine's own sign-in (admins only). */
   useOffice(id: string, which: SignInKind): string | undefined {
-    if (!this.mayUseOffice(id)) return "Only admins can use the office's own sign-ins";
+    if (!this.mayUseOffice(id)) return "Only admins can use this Kipdeck's own sign-ins";
     this.stop(id, which);
     const s = this.load(id);
     s[which] = { use: 'office' };
@@ -376,7 +376,7 @@ export class SignIns {
   }
 
   private startClaude(id: string): string | undefined {
-    if (!this.claude) return "Claude Code isn't installed where the office can run it - paste a token from `claude setup-token` instead";
+    if (!this.claude) return "Claude Code isn't installed where Kipdeck can run it - paste a token from `claude setup-token` instead";
     this.stop(id, 'claude');
     const l = this.get(id);
     // BROWSER=true: Claude "opens" the page with the `true` command and just prints it, for the browser to show.
@@ -444,7 +444,7 @@ export class SignIns {
   }
 
   private startGithub(id: string): string | undefined {
-    if (!this.gh) return "The GitHub CLI (gh) isn't installed on the office's machine";
+    if (!this.gh) return "The GitHub CLI (gh) isn't installed on the machine Kipdeck runs on";
     this.stop(id, 'github');
     const l = this.get(id);
     const env = { ...this.githubEnv(id), BROWSER: 'true', GH_BROWSER: 'true' };
@@ -496,7 +496,7 @@ export class SignIns {
     const s = this.load(id);
     const how = this.how(id, s, 'claude');
     if (!this.claude) {
-      l.claude = how === 'token' ? { status: 'ok', who: 'a pasted token' } : { status: 'none', error: "Claude Code isn't installed on the office's machine" };
+      l.claude = how === 'token' ? { status: 'ok', who: 'a pasted token' } : { status: 'none', error: "Claude Code isn't installed on the machine Kipdeck runs on" };
       return;
     }
     const env = how === 'office' ? this.base() : this.apply(id, this.base(), [], 'claude');
@@ -523,7 +523,7 @@ export class SignIns {
     const s = this.load(id);
     const how = this.how(id, s, 'github');
     if (!this.gh) {
-      l.github = { status: 'none', error: "The GitHub CLI (gh) isn't installed on the office's machine" };
+      l.github = { status: 'none', error: "The GitHub CLI (gh) isn't installed on the machine Kipdeck runs on" };
       return;
     }
     const r = await run(this.gh, ['api', 'user', '--jq', '{login, id, name}'], how === 'office' ? this.base() : this.githubEnv(id));
@@ -603,7 +603,7 @@ export class SignIns {
     const base = this.base();
     const xdg = base.XDG_CONFIG_HOME || path.join(os.homedir(), '.config');
     const includes = base.GIT_CONFIG_GLOBAL ? [base.GIT_CONFIG_GLOBAL] : [path.join(xdg, 'git', 'config'), path.join(os.homedir(), '.gitconfig')];
-    const lines = [`# Written by ${PRODUCT}: git for this account, on top of the office machine's own settings.`, '[include]', ...includes.map((p) => `\tpath = ${quote(p)}`)];
+    const lines = [`# Written by ${PRODUCT}: git for this account, on top of this Kipdeck machine's own settings.`, '[include]', ...includes.map((p) => `\tpath = ${quote(p)}`)];
     if (this.gh) {
       for (const host of ['https://github.com', 'https://gist.github.com']) {
         lines.push(`[credential ${quote(host)}]`, '\thelper =', `\thelper = ${quote(`!'${this.gh.replace(/'/g, `'\\''`)}' auth git-credential`)}`);

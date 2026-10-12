@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { checkAgents, checkGithub, signedIn } from '../src/server/firstrun.js';
+import { checkAgents, checkAgentsAsync, checkGithub, findConfigured, signedIn } from '../src/server/firstrun.js';
 import { Building } from '../src/server/building.js';
 import { Telemetry } from '../src/server/telemetry.js';
 import { setupHandlers } from '../src/server/ws/handlers/setup.js';
@@ -31,6 +31,20 @@ test('Claude Code, Codex and Cursor are always listed, the beta agents only when
   assert.equal(agents.find((a) => a.provider === 'codex')?.fix, 'npm install -g @openai/codex');
   assert.equal(agents.find((a) => a.provider === 'claude')?.signedIn, false);
   assert.equal(agents.find((a) => a.provider === 'claude')?.fix, 'claude auth login');
+});
+
+test('the office\'s own --agent counts as its CLI, on the PATH or not', async () => {
+  const home = tmp();
+  const asked: string[] = [];
+  const onPath = new Set(['codex']);
+  const find = async (cmd: string) => (asked.push(cmd), cmd === '/opt/tools/claude' || onPath.has(cmd) ? cmd : null);
+  const agents = await checkAgentsAsync(findConfigured('/opt/tools/claude', find), {}, home);
+  assert.equal(agents.find((a) => a.provider === 'claude')?.installed, true);
+  assert.equal(agents.find((a) => a.provider === 'codex')?.installed, true);
+  assert.ok(!asked.includes('claude'), 'the PATH is not asked for a claude it does not run');
+  // A custom --agent leaves every CLI to the PATH, and a configured one that isn't there is missing.
+  assert.equal((await checkAgentsAsync(findConfigured('my-agent', find), {}, home)).find((a) => a.provider === 'claude')?.installed, false);
+  assert.equal((await checkAgentsAsync(findConfigured('/gone/codex', find), {}, home)).find((a) => a.provider === 'codex')?.installed, false);
 });
 
 test("sign-in is read from each CLI's own files and keys, and left unsaid where it can't be told", () => {
@@ -92,7 +106,7 @@ function fakeCtx(admin: boolean, startedIn?: string) {
   const warned: string[] = [];
   const opened: string[] = [];
   const ctx = {
-    cfg: { dataDir: data, startedIn },
+    cfg: { dataDir: data, startedIn, agentCmd: 'claude' },
     building: new Building(data, path.join(root, 'projects')),
     floors: new Map(),
     telemetry: new Telemetry(data),
@@ -115,7 +129,7 @@ test('only admins add the folder the office was started in, or switch the usage 
 
   const admin = fakeCtx(true);
   setupHandlers['setup.useFolder'](admin.ctx, admin.c, { t: 'setup.useFolder' });
-  assert.deepEqual(admin.warned, ['The office was not started inside a git repository']);
+  assert.deepEqual(admin.warned, ['Kipdeck was not started inside a git repository']);
 
   const here = fakeCtx(true);
   const dir = repo(path.join(here.root, 'web'));

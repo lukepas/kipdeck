@@ -30,7 +30,7 @@ It takes a few minutes the first time:
     ssh -N -L 4600:localhost:4600 root@203.0.113.7
 
   then open http://localhost:4600/claim?t=…
-  It shows the office password once: write it down.
+  It shows the shared password once: write it down.
 ```
 
 Everything goes through SSH, so there are no certificates to manage, and `localhost` counts as a secure origin, so voice and screen sharing work. Claude signs in from the office: the first worker asks you to type `/login` in its terminal. If GitHub isn't signed in yet, run `gh auth login` from a shell at any desk (**B**). Do both while you're in on the office password: those are the machine's own sign-ins. Teammates you give [accounts](../README.md#add-users) sign in to their own Claude and GitHub in **☰ → 🔐 Your sign-ins**, and their workers run on their own plan. To update, run the same line again, or use **⬆️ Upgrade the office** in the **☰** menu. Options go after `bash -s --`: `--project owner/repo` clones a first floor, and `--help` lists the rest.
@@ -120,7 +120,7 @@ In about two minutes, `up`:
 1. Launches a **t3.xlarge** (4 vCPU, 16 GiB) Ubuntu 24.04 instance with a 50 GiB disk and a fixed Elastic IP.
 2. Creates a security group that opens **only SSH, only to your IP**. The office listens on `127.0.0.1:4600` on the machine and is never on the internet. Everyone reaches it through an SSH tunnel, so there are no certificates to manage, and voice and screen sharing work.
 3. Runs [`deploy/provision.sh`](../deploy/provision.sh) on it: Node 22, git, the GitHub CLI, Claude Code and the office, under systemd, so it comes back after a crash or reboot and workers keep running through a restart.
-4. Opens a tunnel and your browser at http://localhost:4600. **The first page shows the office password once. Write it down.**
+4. Opens a tunnel and your browser at http://localhost:4600. **The first page shows the shared password once. Write it down.**
 
 `--project` is optional: it clones that repo as the first floor. Leave it out and pick projects in the elevator.
 
@@ -170,7 +170,7 @@ git clone https://github.com/zbagdzevicius/kipdeck && cd kipdeck
 deploy/azure.sh up --project your-org/your-repo --claude-token "$(claude setup-token)"
 ```
 
-`up` puts everything in a resource group of its own, `agent-office`, and launches a **Standard_D4as_v5** VM (4 vCPU and 16 GiB, like the t3.xlarge on AWS, at about the same price) with Ubuntu 24.04, a 64 GiB Premium SSD and a static IP. Its firewall opens **only SSH, only to your IP**. Then it runs the same [`deploy/provision.sh`](../deploy/provision.sh) and opens the office through an SSH tunnel at http://localhost:4600. **The first page shows the office password once. Write it down.**
+`up` puts everything in a resource group of its own, `agent-office`, and launches a **Standard_D4as_v5** VM (4 vCPU and 16 GiB, like the t3.xlarge on AWS, at about the same price) with Ubuntu 24.04, a 64 GiB Premium SSD and a static IP. Its firewall opens **only SSH, only to your IP**. Then it runs the same [`deploy/provision.sh`](../deploy/provision.sh) and opens the office through an SSH tunnel at http://localhost:4600. **The first page shows the shared password once. Write it down.**
 
 Every command from the AWS script works the same, with `deploy/azure.sh` in its place: `open`, `status`, `logs`, `ssh`, `update`, `invite`, `allow`, `service`, `resize Standard_D8as_v5`, `pause` (deallocates the VM, so only the disk and IP are billed), `resume` and `destroy` (deletes the resource group). One more, `connect`, lets a second computer manage the office. `--location` picks the region (default: your `az` default location, else `eastus`), `--subscription` the subscription and `--size` the VM size. The details are in [docs/azure.md](azure.md).
 
@@ -188,7 +188,7 @@ In about five minutes, `up`:
 1. Creates a Railway project with one service, built from this checkout with [`deploy/container/Dockerfile`](../deploy/container/Dockerfile): Node 22, git, the GitHub CLI and sshd, with Claude Code installed on first start.
 2. Adds a **volume on `/data`** for everything the office keeps: the password, accounts, floors and settings, the projects, Claude's and GitHub's sign-ins, teammates' keys and the SSH host key. Restarts and redeploys replace the container, never the volume.
 3. Puts Railway's **TCP proxy** in front of the container's SSH, and nothing else. The office listens on `127.0.0.1:4600` inside the container and has no public URL: everyone reaches it through an SSH tunnel, as on AWS.
-4. Opens a tunnel and your browser at http://localhost:4600. **The first page shows the office password once. Write it down.**
+4. Opens a tunnel and your browser at http://localhost:4600. **The first page shows the shared password once. Write it down.**
 
 The agents and GitHub sign in as on AWS: `--claude-token`, `--anthropic-api-key`, `--github-token` or `--no-github-token`.
 
@@ -217,7 +217,7 @@ In a few minutes, `up`:
 1. Creates a Fly app with one machine, a `shared-cpu-4x` with 8 GB in the region nearest you, built from this checkout with the same [`deploy/container/Dockerfile`](../deploy/container/Dockerfile) as on Railway.
 2. Adds a **volume on `/data`** for everything the office keeps, so restarts, redeploys and resizes lose none of it.
 3. Gives the app a **dedicated IPv4 address** with SSH on a random port, and nothing else. The office listens on `127.0.0.1:4600` inside the machine and has no public URL: everyone reaches it through an SSH tunnel, as on AWS.
-4. Opens a tunnel and your browser at http://localhost:4600. **The first page shows the office password once. Write it down.**
+4. Opens a tunnel and your browser at http://localhost:4600. **The first page shows the shared password once. Write it down.**
 
 The agents and GitHub sign in as on AWS: `--claude-token`, `--anthropic-api-key`, `--github-token` or `--no-github-token`.
 
@@ -251,7 +251,7 @@ In about five minutes, `up`:
 1. Creates a Dokploy project with one application, and uploads this checkout for Dokploy to build with [`deploy/container/Dockerfile`](../deploy/container/Dockerfile), the same image as on Railway.
 2. Mounts a **Docker volume on `/data`** for everything the office keeps. Deploys and restarts replace the container, never the volume.
 3. Publishes the container's SSH on **port 2222 of the server** (`--ssh-port` picks another), and nothing else: no domain, and the office listens on `127.0.0.1:4600` inside the container. Everyone reaches it through an SSH tunnel, as on AWS. A firewall in front of the server has to let that port through.
-4. Opens a tunnel and your browser at http://localhost:4600. **The first page shows the office password once. Write it down.**
+4. Opens a tunnel and your browser at http://localhost:4600. **The first page shows the shared password once. Write it down.**
 
 The agents and GitHub sign in as on AWS: `--claude-token`, `--anthropic-api-key`, `--github-token` or `--no-github-token`. `--server <name>` runs it on one of Dokploy's remote servers.
 
