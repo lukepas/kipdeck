@@ -173,7 +173,7 @@ export function branches(r: Rundown, now: Date): string {
       const cls = l.isDefault ? 'ln def' : l.merged ? 'ln mg' : 'ln';
       const fork = l.isDefault ? '' : `<path class="${cls}" d="M${x(l.from).toFixed(1)} ${baseY} C ${(x(l.from) + 14).toFixed(1)} ${baseY}, ${(x(l.from) + 4).toFixed(1)} ${y}, ${(x(l.from) + 18).toFixed(1)} ${y}"/>`;
       const label = `${l.isDefault ? '' : `+${l.ahead} / -${l.behind} · `}${l.date.slice(0, 10)}${l.merged && !l.isDefault ? ' · merged' : ''}`;
-      const wt = l.worktree ? `<tspan class="wt"> · worktree${l.worktree.owner ? ` ${esc(l.worktree.owner)}` : ''}</tspan>` : '';
+      const wt = l.worktree ? `<tspan class="wt"> · worktree${l.worktree.owner ? ` of ${esc(l.worktree.owner)}` : ''}</tspan>` : '';
       const end = Math.max(x(l.to), x(l.from) + 22);
       return `${fork}<line class="${cls}" x1="${(l.isDefault ? x(0) : x(l.from) + 18).toFixed(1)}" y1="${y}" x2="${end.toFixed(1)}" y2="${y}"/><circle cx="${end.toFixed(1)}" cy="${y}" r="4" style="fill:${l.isDefault ? 'var(--accent)' : 'var(--progress)'}"/>
 <text x="${X1 + 14}" y="${y + 4}"${l.merged && !l.isDefault ? ' opacity=".55"' : ''}>${esc(clipTo(l.name, 34))}<tspan class="lt"> ${esc(label)}</tspan>${wt}</text>`;

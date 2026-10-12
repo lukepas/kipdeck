@@ -2,6 +2,7 @@
 // usage read off the session transcript and booked in the budget, and tasks the office names.
 import path from 'node:path';
 import { FAILS_TO_DESPAIR, outputFailed, toolAction } from '../../shared/actions.js';
+import { HOLD_MS } from '../approvals.js';
 import { MCP_READ_ONLY, writeClaudeMcpConfig } from '../office-workers.js';
 import { writeState } from '../safefs.js';
 import { QUEUE_AGENT_DISALLOWED_TOOLS } from '../stations.js';
@@ -16,6 +17,9 @@ import type { ProviderAdapter } from './types.js';
  * second, this many times in all: long enough for a dev-server reload.
  */
 const HOOK_TRIES = 6;
+
+/** How long Claude Code waits on the permission hook (seconds): longer than the office holds a request (approvals.ts HOLD_MS). */
+export const HOLD_S = HOLD_MS / 1000 + 5 * 60;
 
 /** First-run screens Claude shows before it can take a prompt. */
 const SETUP_PROMPT = /trust this folder|Do you trust the files|Select login method|Choose the text style|Press Enter to continue|Bypass Permissions mode/i;
@@ -53,8 +57,15 @@ process.stdin.on('end', () => {
   const url = new URL(process.env.AGENT_OFFICE_HOOK_URL + '/hooks/claude');
   url.searchParams.set('worker', process.env.AGENT_OFFICE_WORKER_ID);
   url.searchParams.set('event', event);
+  // A permission request waits for its answer from the inbox, and prints it for Claude to read.
+  const held = event === 'PermissionRequest';
   const send = (tries) => {
-    const req = http.request(url, { method: 'POST', timeout: 3000, headers: { authorization: 'Bearer ' + process.env.AGENT_OFFICE_HOOK_TOKEN, 'content-type': 'application/json' } }, (res) => res.resume());
+    const req = http.request(url, { method: 'POST', timeout: held ? ${HOLD_S - 10} * 1000 : 3000, headers: { authorization: 'Bearer ' + process.env.AGENT_OFFICE_HOOK_TOKEN, 'content-type': 'application/json' } }, (res) => {
+      if (!held) return res.resume();
+      let out = '';
+      res.on('data', (c) => (out += c));
+      res.on('end', () => res.statusCode === 200 && process.stdout.write(out));
+    });
     req.on('error', (err) => {
       if (err.code === 'ECONNREFUSED' && tries > 1) setTimeout(() => send(tries - 1), 1000);
     });
@@ -67,14 +78,19 @@ process.stdin.on('end', () => {
   );
   const hooks: Record<string, unknown[]> = {};
   for (const [event, matcher] of events) {
+    // A permission request waits for the inbox's answer (server/approvals.ts) and prints it, which is
+    // how Claude Code reads a PermissionRequest hook's decision; nothing printed and it asks in the terminal.
+    const held = event === 'PermissionRequest';
+    const limit = held ? `-m ${HOLD_S - 10} --retry-max-time 10` : '-m 3';
     const curl =
-      `curl -sS -m 3 --retry ${HOOK_TRIES - 1} --retry-delay 1 --retry-connrefused -X POST -H "Authorization: Bearer $AGENT_OFFICE_HOOK_TOKEN" -H "Content-Type: application/json" ` +
+      `curl -sS -f ${limit} --retry ${HOOK_TRIES - 1} --retry-delay 1 --retry-connrefused -X POST -H "Authorization: Bearer $AGENT_OFFICE_HOOK_TOKEN" -H "Content-Type: application/json" ` +
       `--data-binary @- "$AGENT_OFFICE_HOOK_URL/hooks/claude?worker=$AGENT_OFFICE_WORKER_ID&event=${event}"`;
+    const out = held ? '2>/dev/null' : '>/dev/null 2>&1';
     const command =
       `if [ -z "$AGENT_OFFICE_WORKER_ID" ] || [ -z "$AGENT_OFFICE_HOOK_URL" ]; then exit 0; fi; ` +
-      `if command -v curl >/dev/null 2>&1; then ${curl} >/dev/null 2>&1; ` +
-      `else ${shq(process.execPath)} ${shq(nodeHook)} ${event} >/dev/null 2>&1; fi; true`;
-    hooks[event] = [{ ...(matcher ? { matcher } : {}), hooks: [{ type: 'command', command }] }];
+      `if command -v curl >/dev/null 2>&1; then ${curl} ${out}; ` +
+      `else ${shq(process.execPath)} ${shq(nodeHook)} ${event} ${out}; fi; true`;
+    hooks[event] = [{ ...(matcher ? { matcher } : {}), hooks: [{ type: 'command', command, ...(held ? { timeout: HOLD_S } : {}) }] }];
   }
   // Looking at the office's workers doesn't need anyone's say-so; hiring and sending home still asks.
   const permissions = { allow: MCP_READ_ONLY };
@@ -219,6 +235,9 @@ export const claude: ProviderAdapter<undefined, ClaudeSetup> = {
     // The queue agent only ever adds to the queue: without these it can't touch the checkout's files.
     if (station === 'queue') args.push('--disallowedTools', ...QUEUE_AGENT_DISALLOWED_TOOLS);
     if (resumeSessionId) args.push('--resume', resumeSessionId);
+    // A session still running in someone's terminal (see adopt.ts): carry on a copy of it. Once Claude
+    // reports the copy's own id, resuming that one needs no fork.
+    if (resumeSessionId && info.forkOf === resumeSessionId) args.push('--fork-session');
     // `--` so a prompt like "- fix login" is never parsed as a CLI option.
     if (prompt) args.push('--', prompt);
     return { args };

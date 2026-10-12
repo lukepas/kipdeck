@@ -26,7 +26,7 @@ kipdeck rundown install --dry-run
 
 `kipdeck rundown [path]` runs the skill's own script (`quick`): it collects the facts, takes the parts and statuses from the last `/rundown` judgement when the skill left one and infers them from the folders otherwise, writes `.rundown/` exactly as the skill does (kept out of git through `.git/info/exclude`), and prints where the page is, the next milestone, the next step, what changed, the open decisions and the parts, about ten lines. `--no-gh` leaves out GitHub's issues and pull requests. The summary's next step is the one the office infers from the code when no `/rundown` picked one (marked "inferred from the code"), with the parts counted in one line (*9 parts: 2 done, 7 in progress*). The same guards apply: a path that isn't a folder, or a folder outside any git checkout, stops it with exit 2 and nothing is written; your home folder or `/` is only mapped when named.
 
-`kipdeck rundown install` copies the package's `dist/rundown/rundown.mjs`, `skills/rundown/SKILL.md` and `skills/rundown/README.md` into `~/.claude/skills/rundown/`, with the installer's list, backup and diff (below). `npx kipdeck rundown install` does it without installing Kipdeck. `kipdeck rundown --help` has the options.
+`kipdeck rundown install` copies the package's `dist/rundown/rundown.mjs`, `skills/rundown/SKILL.md` and `skills/rundown/README.md` into `~/.claude/skills/rundown/`, with the installer's list, backup and diff (below). `npx github:zbagdzevicius/kipdeck rundown install` does it without installing Kipdeck. `kipdeck rundown --help` has the options.
 
 ## The skill
 

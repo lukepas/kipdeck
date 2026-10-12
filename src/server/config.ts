@@ -14,6 +14,7 @@ import { commandLineLabs } from './labs.js';
 import { telemetryForbidden } from './telemetry.js';
 import { brandEnv } from './brandenv.js';
 import { freshDemoHome, type DemoWorkspace } from './demo/workspace.js';
+import { startedAs } from './runcmd.js';
 
 export interface Config {
   /** The office's own folder: the building's data lives in its .agent-office. */
@@ -112,43 +113,43 @@ from GitHub (cloned with your \`gh\` login into the projects folder).
 Started inside a git repository, that repository is its first project. The
 browser's setup card does the rest: which agents are installed, GitHub (optional).
 
-Started from anywhere, the office keeps its data in --home. Given a [dir] (or
-started in a project where an office already ran), it keeps its data in
-<dir>/.agent-office as it always has, and that project starts out as a floor
-(an admin can take it off in the elevator like any other).
+Started from anywhere, Kipdeck keeps its data in --home. Given a [dir] (or
+started in a project where Kipdeck already ran), it keeps its data in
+<dir>/.agent-office as it always has, and that project is its first project
+(an admin can remove it from the project list like any other).
 
 Commands:
-  open                    Open the running office in your browser, signed in
+  open                    Open the running Kipdeck in your browser, signed in
                           (a new sign-in link; see open --help)
   attach                  Move an agent you started in a terminal (Claude Code,
                           Codex, Cursor) into the inbox: its session carries on
-                          as one of the office's agents (see attach --help)
+                          as one of Kipdeck's agents (see attach --help)
   setup                   Pick the folder projects are cloned into and clone
-                          projects as floors: a walkthrough in a terminal, or
+                          projects into it: a walkthrough in a terminal, or
                           just --projects / --project for scripts (see setup --help)
-  prune                   Remove leftover worker worktrees (.agent-office/worktrees/)
+  prune                   Remove leftover agent worktrees (.agent-office/worktrees/)
                           and their office/* branches. Anything with uncommitted
                           changes or unpushed commits is kept unless --force is given.
   accounts                Invite, list and revoke people's own accounts, and switch
                           the shared password off or on (see accounts --help)
-  tunnel                  On your own computer, for an office that runs somewhere
-                          else: every web server a worker starts there opens on the
+  tunnel                  On your own computer, for a Kipdeck that runs somewhere
+                          else: every web server an agent starts there opens on the
                           same port here, by itself (see tunnel --help)
   rundown                 Write or refresh a checkout's project map in .rundown/,
                           no Claude needed; rundown install adds the /rundown
                           skill to Claude Code (see rundown --help)
 
 Options:
-      --home <dir>        Where the office keeps its data when no [dir] is given
+      --home <dir>        Where Kipdeck keeps its data when no [dir] is given
                           (default ~/agent-office, env AGENT_OFFICE_HOME)
-      --projects <dir>    Where new floors are cloned, as <dir>/<owner>/<repo>
+      --projects <dir>    Where new projects are cloned, as <dir>/<owner>/<repo>
                           (default ~/agent-office, env AGENT_OFFICE_PROJECTS).
-                          Also settable from Settings in the office
+                          Also settable from Settings
   -p, --port <n>          Port to listen on (env PORT). Without it, 4600 or the
                           next free port after it
   -H, --host <addr>       Address to bind (default 127.0.0.1: only this machine).
                           0.0.0.0 lets other computers on your network in
-      --password <pw>     Office password (env AGENT_OFFICE_PASSWORD).
+      --password <pw>     Shared password (env AGENT_OFFICE_PASSWORD).
                           Without one, a random password is generated once and
                           saved in <dir>/.agent-office/config.json
       --claim-token <t>   Show the generated password exactly once, at /claim?t=<t>
@@ -156,30 +157,30 @@ Options:
                           is kept and the password is never displayed again.
       --reset-password    Forget the generated password (a new one is made on the
                           next start) and exit
-      --no-open           Don't open the office in your browser when it starts
+      --no-open           Don't open Kipdeck in your browser when it starts
                           (env AGENT_OFFICE_NO_OPEN=1)
       --agent <cmd>       Default agent command (default "claude", env AGENT_OFFICE_AGENT)
       --agent-args <str>  Extra args for the configured agent, e.g. "--model opus"
-                          Workers can also run Codex or Cursor, and in beta OpenCode,
+                          Agents can also run Codex or Cursor, and in beta OpenCode,
                           Grok, Muse Code, DeepSeek Harness or Pi (picked in the UI)
-      --dsh-profile <n>   DeepSeek Harness profile for its workers, over the ACP
+      --dsh-profile <n>   DeepSeek Harness profile for its agents, over the ACP
                           server (default "acp", env AGENT_OFFICE_DSH_PROFILE)
       --tls-cert <file>   Serve HTTPS with this certificate (PEM)
       --tls-key <file>    ...and this private key (PEM)
       --self-signed       Serve HTTPS with a generated self-signed certificate
       --trust-proxy       Trust X-Forwarded-* headers (behind Caddy/nginx)
-      --allowed-host <n>  Another name the office is reached at (repeatable; env
+      --allowed-host <n>  Another name Kipdeck is reached at (repeatable; env
                           AGENT_OFFICE_ALLOWED_HOSTS, comma separated). It answers
                           to IP addresses, localhost, this machine's name and the
                           public host already; ".example.com" allows every name under it
       --worker-env <names>
-                          More of the office's environment variables to pass to
-                          workers, comma separated, a trailing * for a prefix
+                          More of Kipdeck's environment variables to pass to
+                          agents, comma separated, a trailing * for a prefix
                           ("AWS_PROFILE,SENTRY_*"; repeatable; env
-                          AGENT_OFFICE_WORKER_ENV). Workers get an allowlist
+                          AGENT_OFFICE_WORKER_ENV). Agents get an allowlist
                           by default: what a terminal, the usual toolchains and
                           the agents' sign-ins need
-      --inherit-env       Pass workers the office's whole environment instead
+      --inherit-env       Pass agents Kipdeck's whole environment instead
                           (env AGENT_OFFICE_INHERIT_ENV=1)
       --turn <url>        Add a TURN server for voice (repeatable), e.g.
                           turn:user:pass@turn.example.com:3478 (env
@@ -187,18 +188,19 @@ Options:
       --budget <usd>      Daily budget for tracked Claude Code spend (env
                           AGENT_OFFICE_BUDGET). Everyone is warned when the
                           day's spend passes it. OpenCode/Codex/Grok/Muse spend is excluded
-      --budget-pause      ...and no new workers can be hired until the next
+      --budget-pause      ...and no new agents can be deployed until the next
                           day (env AGENT_OFFICE_BUDGET_PAUSE=1)
-      --max-workers <n>   Run at most this many workers at once, across every
-                          floor (env AGENT_OFFICE_MAX_WORKERS). Hiring past it
+      --max-workers <n>   Run at most this many agents at once, across every
+                          project (env AGENT_OFFICE_MAX_WORKERS). Deploying past it
                           is refused. Admins can lower the limit from 
                           Settings, but not raise it past this
-      --webhook <url>     Post to this Slack or Discord webhook when a worker
-                          needs input, finishes or gets stuck (env AGENT_OFFICE_WEBHOOK).
-                          Also settable from Settings in the office; "" turns it off
+      --webhook <url>     Post to this Slack or Discord webhook when an agent
+                          needs input, finishes or gets stuck and its push goes
+                          unanswered (env AGENT_OFFICE_WEBHOOK).
+                          Also settable from Settings; "" turns it off
       --labs <names>      Hold labs on so admins can't switch them off (env AGENT_OFFICE_LABS):
                           boards, bridge (the Deck), ops, meetings, voice, ambience,
-                          proof, or all. All are on by default. A leading minus holds
+                          proof, rundown, or all. All are off by default. A leading minus holds
                           one off instead (--labs -proof,-voice), and none holds all off
       --telemetry         Share anonymous usage numbers (env KIPDECK_TELEMETRY=1):
                           minutes to the first agent, answer and merge, and
@@ -306,7 +308,7 @@ export function loadConfig(argv: string[]): Config {
     switch (a) {
       case '-h':
       case '--help':
-        process.stdout.write(HELP);
+        process.stdout.write(HELP + startedAs());
         process.exit(0);
       case '-p':
       case '--port':

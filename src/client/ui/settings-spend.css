@@ -1,0 +1,6 @@
+/* Settings > Agents: a project per line with its permission mode, and the two budget boxes. */
+.spend-modes { display: flex; flex-direction: column; gap: 6px; }
+.spend-mode-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0; font-size: 13px; }
+.spend-mode-row b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.spend-mode { flex: 0 1 260px; min-width: 0; height: 32px; padding: 0 8px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-1); color: var(--text); font: 400 13px var(--font-ui); }
+.spend-caps input { flex: 1 1 120px; min-width: 0; }

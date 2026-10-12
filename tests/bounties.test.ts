@@ -33,7 +33,7 @@ function fakeFloor(dir: string) {
     github: { pulls: { items: [] as GhPull[] }, issues: { items: [{ number: 12, title: 'Fix the lift', state: 'OPEN' }] }, repoInfo: async () => ({ nameWithOwner: 'WebDevCody/agent-office', methods: [] }) },
     // The office's own rule (Floor.officePull): never a fork's, an office/ branch or a worker's PR.
     officePull: (p: GhPull) => !p.fork && p.headRefName.startsWith('office/'),
-    workers: { list: () => [{ id: 'w1', name: 'Ada', pr: { number: 77, url: '' } }], ownerOf: (id: string) => (id === 'w1' ? 'acct1' : undefined) },
+    workers: { list: () => [{ id: 'w1', name: 'Ada', task: { name: 'Fix the cart' }, pr: { number: 77, url: '' } }], ownerOf: (id: string) => (id === 'w1' ? 'acct1' : undefined) },
     watch: { bounty: (kind: string, e: any) => timeline.push({ kind, e }) },
   };
   return { floor, timeline };
@@ -103,7 +103,7 @@ test("a fork's pull request never claims a bounty, even from an office/ branch c
   assert.equal(chain.claimantWallet, OPERATOR);
   const claimed = s.timeline.find((x) => x.kind === 'bounty-claimed')!;
   assert.match(claimed.e.tx, /^mock-tx-\d+$/);
-  assert.equal(claimed.e.name, 'Ada');
+  assert.equal(claimed.e.name, 'Fix the cart');
 });
 
 test('with no payout wallet the bounty stays unclaimed and the inbox asks for one', async (t) => {
@@ -185,7 +185,7 @@ test("a person's merge waits for an admin, whose approval pays the operator and 
   // The review inbox's line for it.
   const payouts = bountyPayouts({ id: 'f1', name: 'Office' }, s.b.state(s.floor as any));
   const inbox = reviewInbox([], [], undefined, payouts);
-  assert.equal(inbox[0].reason, 'Approve payout of 20.00 TEST to Ada for PR #77');
+  assert.equal(inbox[0].reason, 'Approve payout of 20.00 TEST for PR #77 ("Fix the cart")');
   assert.equal(inbox[0].action, 'approve-payout');
   assert.equal(s.mock.balance(OPERATOR), 0n);
 
@@ -197,7 +197,7 @@ test("a person's merge waits for an admin, whose approval pays the operator and 
   const paid = s.timeline.find((x) => x.kind === 'bounty-paid')!;
   assert.equal(paid.e.tx, r.sig);
   assert.equal(paid.e.pr, 77);
-  assert.match(paid.e.text, /Grace approved: paid 20 TEST to Ada for PR #77/);
+  assert.match(paid.e.text, /Grace approved: paid 20 TEST for PR #77 \("Fix the cart"\)/);
   const msg = s.sent.find((m) => m.t === 'bounty.paid') as Extract<ServerMsg, { t: 'bounty.paid' }>;
   assert.deepEqual({ issue: msg.issue, pr: msg.pr, amount: msg.amount }, { issue: 12, pr: 77, amount: '20000000' });
   // Once.

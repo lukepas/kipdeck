@@ -87,9 +87,9 @@ function firstLine(s: string): string {
 /**
  * Each level's one name, the same on every surface: the callout's chip (in capitals), the rail, the
  * selected unit's card, Mission control's rows and the hint bar. The ranking's names (LEVEL_LABEL),
- * with a parked unit simply "Ready" (the status pill's word for an idle one).
+ * with a parked agent simply "Idle" (the status pill's word for it).
  */
-export const STATE_NAME: Record<Attention['level'], string> = { ...LEVEL_LABEL, parked: 'Ready' };
+export const STATE_NAME: Record<Attention['level'], string> = { ...LEVEL_LABEL, parked: 'Idle' };
 
 /** Labels that only say "it needs an answer", which the level's name says already. */
 const STOCK_ASK = /^needs (an answer|input|you)$/i;

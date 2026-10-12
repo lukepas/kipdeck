@@ -17,7 +17,7 @@ const fx = makeRundownFixture();
 after(() => rmSync(fx.tmp, { recursive: true, force: true }));
 
 const fakeFloor = (dir: string) =>
-  ({ id: 'f1', dir, def: { id: 'f1', name: 'Fixture deck' }, workers: { list: () => [{ deskId: 'desk-1', name: 'Ana', worktree: { path: path.relative(dir, fx.worktree) } }] }, github: { pulls: { items: [], fetchedAt: 0 }, issues: { items: [], fetchedAt: 0 } } }) as unknown as Floor;
+  ({ id: 'f1', dir, def: { id: 'f1', name: 'Fixture deck' }, workers: { list: () => [{ deskId: 'desk-1', name: 'Ana', kind: 'agent', task: { name: 'Add the feature', summary: '' }, worktree: { path: path.relative(dir, fx.worktree) } }] }, github: { pulls: { items: [], fetchedAt: 0 }, issues: { items: [], fetchedAt: 0 } } }) as unknown as Floor;
 
 test('the facts: git, files, tests and manifests, and none of the traps sprung', async () => {
   const cache = new Map();
@@ -68,8 +68,8 @@ test("the office's rundown of a floor: inferred, its diff base in .agent-office,
   const r = await computeRundown(fakeFloor(fx.repo), new Map(), Date.now());
   assert.equal(r.project.name, 'Fixture deck');
   assert.equal(r.generator.name, 'agent-office');
-  // The unit holding the worktree, by its call sign.
-  assert.equal(r.facts.git!.worktrees.find((w) => w.branch === 'feature/x')?.owner, 'A-01');
+  // The agent holding the worktree, by its task (never its nickname or seat).
+  assert.equal(r.facts.git!.worktrees.find((w) => w.branch === 'feature/x')?.owner, 'Add the feature');
   assert.ok(r.parts.length > 0 && r.parts.every((p) => p.statusSource === 'inferred'));
   assert.ok(existsSync(path.join(fx.repo, '.agent-office', 'rundown', 'state.json')));
   assert.equal(existsSync(path.join(fx.repo, '.rundown')), false);

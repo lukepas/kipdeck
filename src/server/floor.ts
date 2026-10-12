@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { stoodDown } from '../shared/copy.js';
+import { agentRef } from '../shared/agentname.js';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import type { ChangesState, FloorInfo, GhPull, Mission, ProjectInfo, QueueState, ServerMsg, TimelineEvent, WorkerInfo } from '../shared/protocol.js';
@@ -163,7 +164,7 @@ export class Floor {
     if (unsafe) throw new Error(unsafe);
     mkdirSync(dataDir, { recursive: true, mode: 0o700 });
     const shipped = trackedState(def.dir);
-    if (shipped.size) console.warn(`kipdeck: the ${def.name} floor's repository ships ${shipped.size} file${shipped.size === 1 ? '' : 's'} in .agent-office; the office ignores them (see docs/security.md)`);
+    if (shipped.size) console.warn(`kipdeck: the repository of the project ${def.name} ships ${shipped.size} file${shipped.size === 1 ? '' : 's'} in .agent-office; Kipdeck ignores them (see docs/security.md)`);
     excludeFromGit(def.dir);
     this.project = projectInfo(def.dir, def.name, ctx.agentCmd, ctx.agentArgs);
     this.docs = new Docs(def.dir);
@@ -319,13 +320,13 @@ export class Floor {
       (workerId, repo) => {
         const w = this.workers.get(workerId);
         if (!w) return undefined;
-        if (!repo) return { name: w.name, cwd: w.worktree ? path.join(def.dir, w.worktree.path) : def.dir, rel: w.worktree?.path ?? '', worktreeBase: w.worktree?.base };
+        if (!repo) return { name: agentRef(w), cwd: w.worktree ? path.join(def.dir, w.worktree.path) : def.dir, rel: w.worktree?.path ?? '', worktreeBase: w.worktree?.base };
         // One of the other floors' repositories it works in: diffed against, and PRs opened against, that floor's branch.
         const r = w.repos?.find((x) => x.floor === repo);
         if (!r) return undefined;
         const other = ctx.floor(r.floor);
         return {
-          name: w.name,
+          name: agentRef(w),
           cwd: path.join(def.dir, r.path),
           rel: r.path,
           worktreeBase: r.base,
@@ -430,7 +431,7 @@ export class Floor {
 
   private goHome(worker: WorkerInfo, why: string, head?: string, heads?: Record<string, string | undefined>) {
     const done = this.workers.kill(worker.id, undefined, head, heads);
-    this.ctx.toast(this, stoodDown(worker.name, why));
+    this.ctx.toast(this, stoodDown(agentRef(worker, { start: true }), why));
     void done.then(({ note, error }) => {
       if (note) this.ctx.toast(this, note);
       if (error) this.ctx.toast(this, error, 'warn');

@@ -26,7 +26,7 @@ type Group = AttentionLevel | 'agents';
 const GROUPS: readonly Group[] = ['needs-you', 'stuck', 'review', 'working', 'parked', 'agents'];
 /** Open unless you fold them: the ones that need a person. */
 const OPEN_BY_DEFAULT: ReadonlySet<Group> = new Set(['needs-you', 'stuck', 'review']);
-const GROUP_LABEL: Record<Group, string> = { ...LEVEL_LABEL, parked: 'Ready', agents: 'Board agents' };
+const GROUP_LABEL: Record<Group, string> = { ...LEVEL_LABEL, parked: 'Idle', agents: 'Board agents' };
 
 const FOLD_KEY = storageKey('rail-groups');
 

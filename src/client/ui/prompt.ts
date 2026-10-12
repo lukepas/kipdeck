@@ -58,14 +58,14 @@ export function repoPicker(options: { id: string; name: string }[] | undefined, 
 }
 
 export function openPrompt(opts: PromptOptions) {
-  const ta = h('textarea', { rows: 7, placeholder: opts.placeholder ?? 'What should the worker work on?', 'aria-label': 'Prompt' }) as HTMLTextAreaElement;
+  const ta = h('textarea', { rows: 7, placeholder: opts.placeholder ?? 'What should the agent work on?', 'aria-label': 'Prompt' }) as HTMLTextAreaElement;
   ta.value = opts.initial ?? '';
   const wtBox = h('input', { type: 'checkbox', id: 'wt-toggle' }) as HTMLInputElement;
   wtBox.checked = worktreePref();
   const wtRow = opts.worktreeOption
     ? h(
         'label',
-        { for: 'wt-toggle', style: 'display:flex;gap:8px;align-items:center;margin:10px 0 0;font-weight:700;cursor:pointer', title: 'Isolate this worker on its own branch so parallel workers never collide' },
+        { for: 'wt-toggle', style: 'display:flex;gap:8px;align-items:center;margin:10px 0 0;font-weight:700;cursor:pointer', title: 'Keep this agent on its own branch so agents working in parallel never collide' },
         wtBox,
         'Work in its own git worktree & branch',
     )
@@ -162,15 +162,15 @@ function inspectWorktree(workerId: string, ask: () => void): Promise<WorktreeSta
     setTimeout(() => {
       if (worktreeChecks.get(workerId) !== resolve) return;
       worktreeChecks.delete(workerId);
-      resolve({ exists: true, dirty: 0, ahead: 0, unpushed: 0, error: 'the office did not answer' });
+      resolve({ exists: true, dirty: 0, ahead: 0, unpushed: 0, error: 'Kipdeck did not answer' });
     }, 8000);
   });
 }
 
 const CLEANUP_LABEL: Record<WorktreeCleanup, string> = {
-  all: 'Stand down and remove both',
-  worktree: 'Stand down and remove worktree',
-  keep: 'Stand down',
+  all: 'Stop and remove both',
+  worktree: 'Stop and remove worktree',
+  keep: 'Stop agent',
 };
 
 /**
@@ -220,12 +220,12 @@ export function sendHomeDialog(opts: SendHomeOptions) {
   const no = h('button.btn', { type: 'button' }, 'Never mind');
   const form = h(
     'form.modal',
-    { role: 'dialog', 'aria-label': `Send ${opts.name} home?` },
-    h('header', {}, h('h2', {}, `Send ${opts.name} home?`)),
+    { role: 'dialog', 'aria-label': `Stop ${opts.name}?` },
+    h('header', {}, h('h2', {}, `Stop ${opts.name}?`)),
     h(
       'div.body',
       {},
-      h('p', { style: 'margin:0 0 12px;font-weight:700' }, `This stops the session at ${opts.where} for everyone and frees the desk. ${opts.name} worked ${across ? `in worktrees of ${across.join(', ')}, each` : 'in its own worktree'} on ${branch}:`),
+      h('p', { style: 'margin:0 0 12px;font-weight:700' }, `This stops its session for everyone. It worked ${across ? `in worktrees of ${across.join(', ')}, each` : 'in its own worktree'} on ${branch}:`),
       list,
       status,
     ),
@@ -277,15 +277,15 @@ export function lostWorktreeDialog(opts: LostWorktreeOptions) {
   const { name, others } = opts;
   const { branch } = opts.worktree;
   const folder = opts.workspace ?? opts.worktree.path;
-  const title = `${name}'s worktree was deleted`;
+  const title = `Worktree deleted: ${name}`;
   const what = {
-    here: `Its branch ${branch} is still here. Rebuilding checks it out again in the same place, and ${name} carries on its conversation; only uncommitted changes went with the folder.`,
-    origin: `Its branch ${branch} was deleted too, but it had been pushed: rebuilding checks origin's copy out again in the same place, and ${name} carries on its conversation.`,
-    gone: `Its branch ${branch} was deleted too and was never pushed, so the work on it is gone. Rebuilding makes the branch again from where it started, and ${name} carries on its conversation.`,
+    here: `Its branch ${branch} is still here. Rebuilding checks it out again in the same place, and the agent carries on its conversation; only uncommitted changes went with the folder.`,
+    origin: `Its branch ${branch} was deleted too, but it had been pushed: rebuilding checks origin's copy out again in the same place, and the agent carries on its conversation.`,
+    gone: `Its branch ${branch} was deleted too and was never pushed, so the work on it is gone. Rebuilding makes the branch again from where it started, and the agent carries on its conversation.`,
   }[opts.lost.branch];
   const one = h('button.btn.primary', { type: 'button' }, 'Rebuild worktree');
   const all = others.length ? h('button.btn', { type: 'button' }, `Rebuild all ${others.length + 1}`) : null;
-  const home = h('button.btn.danger', { type: 'button' }, 'Stand down...');
+  const home = h('button.btn.danger', { type: 'button' }, 'Stop agent...');
   const look = opts.openTerminal ? h('button.btn', { type: 'button' }, 'Open terminal') : null;
   const el = h(
     'div.modal.lost-worktree',
@@ -294,9 +294,9 @@ export function lostWorktreeDialog(opts: LostWorktreeOptions) {
     h(
       'div.body',
       {},
-      h('p', { style: 'margin:0 0 10px;font-weight:700' }, `${folder} was deleted outside agent-office, so ${name} ${opts.openTerminal ? 'is running in a folder that no longer exists' : "can't start there"}.`),
+      h('p', { style: 'margin:0 0 10px;font-weight:700' }, `${folder} was deleted outside Kipdeck, so the agent ${opts.openTerminal ? 'is running in a folder that no longer exists' : "can't start there"}.`),
       h('p.wt-status', { style: 'margin:0' }, what),
-      others.length ? h('p.wt-status.warn', {}, `${plural(others.length, 'other worker')} on this deck lost ${others.length === 1 ? 'its worktree' : 'their worktrees'} too: ${others.join(', ')}.`) : null,
+      others.length ? h('p.wt-status.warn', {}, `${plural(others.length, 'other agent')} in this project lost ${others.length === 1 ? 'its worktree' : 'their worktrees'} too: ${others.join(', ')}.`) : null,
     ),
     h('footer', {}, home, h('span.grow'), look, all, one),
   );

@@ -1,4 +1,5 @@
 import './terminal.css';
+import { agentHeading, agentRef } from '../../shared/agentname';
 import { termMeta } from './term-meta';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
@@ -79,18 +80,22 @@ export interface TerminalOptions {
 }
 
 /** The keypad's keys: what each types, or a function of the terminal for the ones that depend on its mode. */
-const KEYPAD: { label: string; title: string; keys: string | ((term: Terminal) => string); touch?: boolean }[] = [
+// The ones that interrupt the agent (Esc, ^C) are last, away from the answers, and on a touch screen
+// take a second tap (`stops`), so a thumb that slips off 3 doesn't end forty minutes of work.
+const KEYPAD: { label: string; title: string; keys: string | ((term: Terminal) => string); touch?: boolean; stops?: boolean }[] = [
   { label: '1', title: 'Answer 1 (yes, in a permission prompt)', keys: '1' },
   { label: '2', title: 'Answer 2', keys: '2' },
   { label: '3', title: 'Answer 3', keys: '3' },
-  { label: 'Esc', title: 'Esc: close a menu, or interrupt the agent', keys: '\x1b' },
-  { label: '^C', title: 'Ctrl+C', keys: '\x03' },
   // The keys a phone's keyboard hasn't got: only on a touch screen.
   { label: 'Up', title: 'Up', keys: (t) => (t.modes.applicationCursorKeysMode ? '\x1bOA' : '\x1b[A'), touch: true },
   { label: 'Down', title: 'Down', keys: (t) => (t.modes.applicationCursorKeysMode ? '\x1bOB' : '\x1b[B'), touch: true },
   { label: 'Enter', title: 'Enter', keys: '\r', touch: true },
   { label: 'Tab', title: 'Tab', keys: '\t', touch: true },
+  { label: 'Esc', title: 'Esc: close a menu, or interrupt the agent', keys: '\x1b', stops: true },
+  { label: '^C', title: 'Ctrl+C', keys: '\x03', stops: true },
 ];
+/** A touch screen, where Esc and ^C on the keypad ask for a second tap. */
+const coarse = () => matchMedia('(pointer: coarse)').matches;
 
 let current: { workerId: string; modal: Modal; find(f: TerminalFind): void; reply(): void; screen(): string[] } | null = null;
 const listeners = new Set<(msg: ServerMsg) => void>();
@@ -129,7 +134,7 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
   if (!info) return;
 
   const dot = unitSign(info.deskId);
-  const title = h('h2', {}, info.kind === 'agent' ? `${engineLabel(info, store.project)} · ${info.name}` : info.name);
+  const title = h('h2', {}, info.kind === 'agent' ? `${engineLabel(info, store.project)} · ${agentHeading(info)}` : 'Shell');
   const pill = h('span.pill', {}, '');
   const cost = h('span.cost', {});
   const viewers = h('div.viewers', {});
@@ -146,7 +151,7 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
     title: 'Send Esc to the terminal (Ctrl+[): closes a menu like /skills, or interrupts the agent. The Esc key on its own leaves the terminal',
     'aria-label': 'Send Esc to the terminal',
   }, 'Esc');
-  const changesBtn = h('button.btn', { type: 'button', title: 'What this worker changed: files, diff, commit, open a PR (C at the desk)' }, 'Changes');
+  const changesBtn = h('button.btn', { type: 'button', title: 'What this agent changed: files, diff, commit, open a PR' }, 'Changes');
   const closeBtn = h('button.btn.close', { title: 'Leave the console (Esc or Ctrl+]) · the Esc button or Ctrl+[ sends Esc to the terminal', 'aria-label': 'Close' }, icon('close', 16));
   const host = h('div.term-host', { 'data-drop': 'Drop screenshots or files here to put them in the terminal' });
   const keys = h('div.term-keys', { role: 'group', 'aria-label': 'Keys' });
@@ -174,7 +179,7 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
   );
   host.append(mic.live);
   // The keypad has an Esc of its own, and a on its prompt box.
-  const el = h('div.modal.term', { role: 'dialog', 'aria-label': `${info.name} console` }, h('header', {}, dot, title, pill, cost, viewers, typed, modelsBtn, keypad ? null : mic.button, keypad ? null : escBtn, onChanges ? changesBtn : null, closeBtn), tabs.bar, meta.el, host, tabs.pages, keypad);
+  const el = h('div.modal.term', { role: 'dialog', 'aria-label': `Terminal of ${agentRef(info)}` }, h('header', {}, dot, title, pill, cost, viewers, typed, modelsBtn, keypad ? null : mic.button, keypad ? null : escBtn, onChanges ? changesBtn : null, closeBtn), tabs.bar, meta.el, host, tabs.pages, keypad);
 
   const term = new Terminal({
     fontFamily: '"JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace',
@@ -516,8 +521,19 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
     const b = h('button.btn', { type: 'button', title: k.title, 'aria-label': k.title, class: k.touch ? 'touch-only' : '' }, k.label);
     // Not the terminal's focus: a key from here shouldn't bring up the phone's keyboard.
     b.addEventListener('pointerdown', (e) => e.preventDefault());
+    let armed: ReturnType<typeof setTimeout> | undefined;
     b.addEventListener('click', () => {
       if (b.hasAttribute('disabled')) return;
+      if (k.stops && coarse() && !armed) {
+        b.textContent = 'Tap again';
+        b.classList.add('armed');
+        armed = setTimeout(() => ((armed = undefined), (b.textContent = k.label), b.classList.remove('armed')), 2_500);
+        return;
+      }
+      clearTimeout(armed);
+      armed = undefined;
+      b.textContent = k.label;
+      b.classList.remove('armed');
       sendSize(true);
       sayTyping();
       term.input(typeof k.keys === 'string' ? k.keys : k.keys(term));

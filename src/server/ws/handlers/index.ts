@@ -2,9 +2,12 @@
 // floor. A new feature adds its handler file and a line here.
 import type { ClientMsg } from '../../../shared/protocol.js';
 import { accountsHandlers } from './accounts.js';
+import { approvalsHandlers, approvalsHooks } from './approvals.js';
 import { bountiesHandlers, bountiesView } from './bounties.js';
+import { briefHandlers } from './brief.js';
 import { changesHandlers, changesHooks } from './changes.js';
 import { floorHandlers, projectView } from './floors.js';
+import { gateHandlers } from './gate.js';
 import { githubHandlers, issuesView, pullsView } from './github.js';
 import { inboxHandlers } from './inbox.js';
 import { labsHandlers } from './labs.js';
@@ -13,6 +16,7 @@ import { missionHandlers, missionView } from './mission.js';
 import { paceHandlers } from './pace.js';
 import { planHandlers, planView } from './plan.js';
 import { presenceHandlers } from './presence.js';
+import { pushHandlers, pushHooks } from './push.js';
 import { queueHandlers, queueView } from './queue.js';
 import { reputationHandlers } from './reputation.js';
 import { rundownHandlers, rundownHooks } from './rundown.js';
@@ -21,6 +25,7 @@ import { setupHandlers } from './setup.js';
 import { signalHandlers } from './signal.js';
 import { showcaseHandlers } from './showcase.js';
 import { signinsHandlers } from './signins.js';
+import { spendHandlers } from './spend.js';
 import { teamHandlers } from './team.js';
 import { timelineHandlers } from './timeline.js';
 import { usageHandlers } from './usage.js';
@@ -31,9 +36,12 @@ import type { FeatureHooks, HandlerMap, ViewPieces } from './types.js';
 /** Each domain's handlers put together, in alphabetical order. */
 export const handlers: HandlerMap<ClientMsg> = {
   ...accountsHandlers,
+  ...approvalsHandlers,
   ...bountiesHandlers,
+  ...briefHandlers,
   ...changesHandlers,
   ...floorHandlers,
+  ...gateHandlers,
   ...githubHandlers,
   ...inboxHandlers,
   ...labsHandlers,
@@ -42,6 +50,7 @@ export const handlers: HandlerMap<ClientMsg> = {
   ...paceHandlers,
   ...planHandlers,
   ...presenceHandlers,
+  ...pushHandlers,
   ...queueHandlers,
   ...reputationHandlers,
   ...rundownHandlers,
@@ -50,6 +59,7 @@ export const handlers: HandlerMap<ClientMsg> = {
   ...signalHandlers,
   ...showcaseHandlers,
   ...signinsHandlers,
+  ...spendHandlers,
   ...teamHandlers,
   ...timelineHandlers,
   ...usageHandlers,
@@ -61,7 +71,7 @@ export const handlers: HandlerMap<ClientMsg> = {
  * The features that keep something per person on a floor, in the order they let go of it when
  * someone leaves the floor or the office (see FeatureHooks): the order the office has always done it in.
  */
-export const features: readonly FeatureHooks[] = [workerHooks, changesHooks, whiteboardHooks, rundownHooks];
+export const features: readonly FeatureHooks[] = [workerHooks, changesHooks, whiteboardHooks, rundownHooks, approvalsHooks, pushHooks];
 
 /** What someone arriving on a floor is sent (see office/views.ts): a piece from each feature, in the order it has always gone out. */
 export const views: ViewPieces = {

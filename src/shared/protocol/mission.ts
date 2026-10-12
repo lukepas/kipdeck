@@ -4,6 +4,8 @@
 import type { AgentProvider } from './agents.js';
 import type { GhPull } from './github.js';
 import type { WorkerAction, WorkerKind, WorkerStatus, WorkerTask } from './workers.js';
+import type { Hold } from './spend.js';
+import type { Autonomy } from '../autonomy.js';
 
 /**
  * A worker put aside on purpose, so it stops asking for attention: until a time, or until its
@@ -107,6 +109,9 @@ export interface RosterEntry {
   workedMs?: number;
   workingSince?: number;
   snooze?: Snooze;
+  /** Its permission mode (WorkerInfo.mode), and its pause (WorkerInfo.hold). */
+  mode?: Autonomy;
+  hold?: Hold;
 }
 
 /** What reviewers said of a pull request: approved, changes requested, or a review still required. */

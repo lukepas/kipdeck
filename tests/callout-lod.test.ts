@@ -128,7 +128,7 @@ test('the middle line: a tool call as a short verb, cut to 22, else the status p
 });
 
 test('a status phrase with no label says the plain word', () => {
-  assert.equal(statusPhrase({ level: 'parked', label: '' }), 'Ready');
+  assert.equal(statusPhrase({ level: 'parked', label: '' }), 'Idle');
   assert.equal(statusPhrase({ level: 'working', label: '  ' }), 'Working');
 });
 

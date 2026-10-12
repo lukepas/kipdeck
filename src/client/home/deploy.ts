@@ -12,6 +12,8 @@ import { agentMark, CERTIFIED } from './list';
 import { agentFound } from './setup';
 import { home } from './state';
 import { storageKey } from '../shared/storage-key';
+import { askOnceAtDeploy } from '../pwa/ask';
+import { pushName } from '../pwa';
 
 const LAST_AGENT = storageKey('agent');
 
@@ -38,7 +40,7 @@ function lastAgent(): AgentProvider | undefined {
 /** Opens the sheet. `prompt` fills the box (the first-run starter task), `provider` picks the agent; `started` hears when an agent was asked for. */
 export function openDeploy(net: Net, opts: { prompt?: string; provider?: AgentProvider; started?(at: number): void } = {}) {
   const floors = store.floors.filter((f) => !f.cloning);
-  if (!floors.length) return toast('Add a project first: the office has none open', 'warn');
+  if (!floors.length) return toast('Add a project first: none is open yet', 'warn');
   const project = h('select', { id: 'deploy-project', 'aria-label': 'Project' }, ...floors.map((f) => h('option', { value: f.id }, f.name))) as HTMLSelectElement;
   project.value = floors.some((f) => f.id === home.project) ? home.project : (store.floor ?? floors[0].id);
 
@@ -131,6 +133,8 @@ export function openDeploy(net: Net, opts: { prompt?: string; provider?: AgentPr
     const choice = { provider, model: fields.model(), effort: fields.effort() };
     const floor = project.value;
     modal.close();
+    // The first Deploy asks once whether this device may hear when an agent needs you.
+    askOnceAtDeploy(pushName(), toast);
     try {
       localStorage.setItem(LAST_AGENT, provider);
     } catch {

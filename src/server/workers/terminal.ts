@@ -1,5 +1,6 @@
 // A worker's terminal as the office mirrors it: a headless xterm, read off as screen frames for the
 // browsers and as text for what's on it.
+import { notRunning } from './says.js';
 import headless from '@xterm/headless';
 import serialize from '@xterm/addon-serialize';
 import type { Run, WorkerInfo } from '../../shared/protocol.js';
@@ -140,8 +141,8 @@ export function screenText(term: HeadlessTerminal, from = 0): string {
   return out.join('\n');
 }
 
-/** What a browser opening the terminal of a worker that isn't running sees. */
+/** What a browser opening the terminal of an agent that isn't running sees. */
 export function offlineBanner(info: WorkerInfo): string {
   const hint = info.kind === 'shell' ? ' Press R to restart it.' : info.sessionId ? ' Press R to resume the session.' : '';
-  return `\x1b[2m${info.name} is not running.${hint}\x1b[0m\r\n`;
+  return notRunning(info, hint);
 }

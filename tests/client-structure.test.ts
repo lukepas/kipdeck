@@ -81,3 +81,10 @@ test('the home page loads no three.js, and none of the 3D office: what it shares
     assert.ok(graph(path.join(client, 'main.ts')).has(path.join(client, shared)), `the 3D office uses ${shared}`);
   }
 });
+
+test("the home page's first load leaves out the dialogs and Mission control's actions: they load when wanted", () => {
+  const first = graph(path.join(client, 'lite.ts'));
+  for (const later of ['ui/prompt.ts', 'ui/dictate.ts', 'ui/mission/act.ts', 'ui/sendhome.ts']) {
+    assert.ok(!first.has(path.join(client, later)), `lite.ts imports ${later} up front: load it through home/lazy.ts`);
+  }
+});

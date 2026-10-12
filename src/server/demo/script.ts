@@ -243,7 +243,10 @@ export const SEED_FILES: Record<string, string> = {
 
 const TESTS_PASS = ['', '> acme-shop-demo test', '> node --test', '', '# tests 9', '# pass 9', '# fail 0'];
 
-/** The fleet: one asks a question at about 0:20, one finishes with a diff at about 0:35, one at about 0:50, two keep working. */
+/**
+ * The fleet: the demo opens with one question in Needs you (about 0:03) and one change in To review
+ * (about 0:12), so the loop is there to try at once; a third change arrives at about 0:50, and two keep working.
+ */
 export const FLEET: DemoAgent[] = [
   {
     key: 'rate-limit',
@@ -253,12 +256,12 @@ export const FLEET: DemoAgent[] = [
     waited: 41,
     steps: [
       { after: 2, tool: 'Read: api/login.js', say: ['Reading api/login.js and how sessions start.'] },
-      { after: 4, tool: 'Grep: rateLimit', say: ['No rate limiter in the repository yet: writing a small one.'] },
-      { after: 6, tool: 'Write: api/rate-limit.js', write: { 'api/rate-limit.js': RATE_LIMIT } },
-      { after: 5, tool: 'Edit: api/login.js', write: { 'api/login.js': LOGIN_LIMITED }, say: ['Five tries a minute per address and per email, then 429 with Retry-After.'] },
-      { after: 5, tool: 'Write: api/rate-limit.test.js', write: { 'api/rate-limit.test.js': RATE_LIMIT_TEST } },
-      { after: 5, tool: 'Bash: npm test', say: TESTS_PASS },
-      { after: 5, finish: 'Rate limit POST /api/login: five tries a minute per address and per email', say: ['Done: 3 files, tests pass. Ready for review.'] },
+      { after: 2, tool: 'Grep: rateLimit', say: ['No rate limiter in the repository yet: writing a small one.'] },
+      { after: 2, tool: 'Write: api/rate-limit.js', write: { 'api/rate-limit.js': RATE_LIMIT } },
+      { after: 2, tool: 'Edit: api/login.js', write: { 'api/login.js': LOGIN_LIMITED }, say: ['Five tries a minute per address and per email, then 429 with Retry-After.'] },
+      { after: 2, tool: 'Write: api/rate-limit.test.js', write: { 'api/rate-limit.test.js': RATE_LIMIT_TEST } },
+      { after: 1, tool: 'Bash: npm test', say: TESTS_PASS },
+      { after: 1, finish: 'Rate limit POST /api/login: five tries a minute per address and per email', say: ['Done: 3 files, tests pass. Ready for review.'] },
     ],
   },
   {
@@ -268,10 +271,10 @@ export const FLEET: DemoAgent[] = [
     task: 'Fix the flaky checkout test',
     waited: 12,
     steps: [
-      { after: 3, tool: 'Read: web/checkout.test.js' },
-      { after: 5, tool: 'Bash: npm test -- web', say: ['', 'not ok 1 - checkout shows the total', '  # failed 2 of 5 runs: .total was empty'] },
-      { after: 5, tool: 'Read: web/checkout.js', say: ['.total is drawn twice and the first one is empty while the order loads.'] },
-      { after: 5, ask: 'The total is empty while the order loads. How should I fix the test?', choices: ['Fix the selector', 'Update the snapshot'] },
+      { after: 1, tool: 'Read: web/checkout.test.js' },
+      { after: 1, tool: 'Bash: npm test -- web', say: ['', 'not ok 1 - checkout shows the total', '  # failed 2 of 5 runs: .total was empty', '# fail 1'] },
+      { after: 0.5, tool: 'Read: web/checkout.js', say: ['.total is drawn twice and the first one is empty while the order loads.'] },
+      { after: 0.5, ask: 'The total is empty while the order loads. How should I fix the test?', choices: ['Fix the selector', 'Update the snapshot'] },
       { after: 4, tool: 'Edit: web/checkout.test.js', write: { 'web/checkout.test.js': CHECKOUT_TEST_FIXED } },
       { after: 5, tool: 'Bash: npm test -- web --repeat 5', say: ['', 'ok 1 - checkout shows the total (5 of 5 runs)'] },
       { after: 4, finish: 'Checkout test waits for the order total by its role, not the first .total', say: ['Done: the test passed 5 runs out of 5.'] },

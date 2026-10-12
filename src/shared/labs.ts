@@ -1,7 +1,7 @@
 // Labs: the parts of the office beyond the product's core loop, each behind one switch. Every lab is
-// on as the office ships, so a new office shows all of it (the Deck first of all); an admin switches
-// any of them off from the Labs window. The core loop is the inbox at /: see what needs you, answer,
-// review, merge. Every lab's code stays compiled and tested; a lab that is off is only hidden (its
+// off as the office ships, so a new office opens on the inbox and nothing else; an admin switches any
+// of them on from the Labs window (an office that saved its choices keeps them). The core loop is the
+// inbox at /: see what needs you, answer, review, merge. Every lab's code stays compiled and tested; a lab that is off is only hidden (its
 // menu rows, its settings pane, its routes), never deleted. A lab being on never asks the browser
 // for anything by itself: the microphone and screen sharing wait for a click, sound for the first
 // click or key, and Proof of Merge only talks to a testnet with its own flags and keys. Pure, so the
@@ -17,7 +17,7 @@ export type Labs = Record<LabId, boolean>;
 /** What a person reads in the Labs window: a name, one line on what turning it on brings back. */
 export const LAB_META: Readonly<Record<LabId, { name: string; what: string }>> = {
   boards: { name: 'GitHub boards and queue', what: "Issues, Pull requests, the Task queue and Mission control in the home page's menu and commands. The inbox already shows every agent's pull request and checks." },
-  bridge: { name: 'Deck (3D)', what: 'Enter the Deck from the home page: your agents at their stations on a 3D starship bridge (/deck), and the deck plan in the pane while no agent is selected. The Deck works as a wall display for a team room.' },
+  bridge: { name: 'Deck (3D)', what: 'Enter the Deck from the avatar menu: your agents at their stations on a 3D starship bridge (/deck), and the deck plan under the empty pane. The Deck works as a wall display for a team room.' },
   ops: { name: 'Goals and timeline', what: 'Goals and milestones, the Timeline and Crew tabs in Mission control, and the Services board.' },
   meetings: { name: 'Meetings', what: 'The Review bay, where agents work through a question together, and the planning whiteboard.' },
   voice: { name: 'Voice', what: 'Voice chat, screen sharing, and the dictation mic in prompt boxes and terminals. The browser asks for the microphone or screen only when you click to use them.' },
@@ -26,9 +26,9 @@ export const LAB_META: Readonly<Record<LabId, { name: string; what: string }>> =
   rundown: { name: 'Rundown', what: "A map of each project's parts, milestones, activity and decisions, in the inbox and on the Deck's holo table." },
 };
 
-/** Everything on: the office as it ships. An admin's labs.json overrides any of them. */
+/** Everything off: the office as it ships, the inbox alone. An admin's labs.json overrides any of them. */
 export function defaultLabs(): Labs {
-  return Object.fromEntries(LAB_IDS.map((id) => [id, true])) as Labs;
+  return Object.fromEntries(LAB_IDS.map((id) => [id, false])) as Labs;
 }
 
 export const isLabId = (v: unknown): v is LabId => LAB_IDS.includes(v as LabId);

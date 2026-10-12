@@ -1,4 +1,4 @@
-// Labs (shared/labs.ts, server/labs.ts): every part beyond the inbox on by default, switched off by an
+// Labs (shared/labs.ts, server/labs.ts): every part beyond the inbox off by default, switched on by an
 // admin or held on from the command line, and what each switch hides while it is off: Proof of
 // Merge's routes, its payouts in the review inbox and its menu rows; the Deck's ambience. And that a
 // lab being on asks the browser for nothing by itself (the mic, the screen and sound wait for you).
@@ -19,8 +19,8 @@ import type { ServerMsg } from '../src/shared/protocol.js';
 /** Every lab switched off, as an admin can. */
 const allOff = () => Object.fromEntries(LAB_IDS.map((id) => [id, false])) as ReturnType<typeof defaultLabs>;
 
-test('every lab is on as the office ships, the Deck is called the Deck, and each says what it brings', () => {
-  assert.deepEqual(defaultLabs(), { boards: true, bridge: true, ops: true, meetings: true, voice: true, ambience: true, proof: true, rundown: true });
+test('every lab is off as the office ships, the Deck is called the Deck, and each says what it brings', () => {
+  assert.deepEqual(defaultLabs(), { boards: false, bridge: false, ops: false, meetings: false, voice: false, ambience: false, proof: false, rundown: false });
   assert.equal(LAB_META.bridge.name, 'Deck (3D)');
   assert.match(LAB_META.bridge.what, /\/deck\b/);
   assert.doesNotMatch(LAB_META.bridge.what + LAB_META.ambience.name, /Bridge view|\/bridge\b/);
@@ -55,51 +55,62 @@ test("an admin's switches are kept on disk; the command line's stay on whatever 
   const labs = new Labs(dir, ['ops']);
   assert.deepEqual(labs.state().forced, ['ops']);
   assert.equal(labs.on('ops'), true);
-  assert.equal(labs.on('proof'), true, 'on as the office ships');
-  assert.deepEqual(labs.set({ proof: false, ops: false }, 'Ana'), ['proof']);
+  assert.equal(labs.on('proof'), false, 'off as the office ships');
+  assert.equal(labs.on('bridge'), false, 'the Deck too');
+  assert.deepEqual(labs.set({ bridge: true, ops: false }, 'Ana'), ['bridge']);
   assert.equal(labs.on('ops'), true, 'held on from the command line');
   const saved = JSON.parse(readFileSync(path.join(dir, 'labs.json'), 'utf8'));
-  assert.equal(saved.on.proof, false);
+  assert.equal(saved.on.bridge, true);
   assert.equal(saved.by, 'Ana');
   // Back after a restart, without the command line's.
   const again = new Labs(dir);
-  assert.equal(again.on('proof'), false);
-  assert.equal(again.on('ops'), false);
   assert.equal(again.on('bridge'), true);
-  assert.deepEqual(again.set({ proof: false }, 'Ana'), [], 'nothing changed');
+  assert.equal(again.on('ops'), false);
+  assert.equal(again.on('proof'), false);
+  assert.deepEqual(again.set({ bridge: true }, 'Ana'), [], 'nothing changed');
 });
 
-test('an office that saved labs while they were off by default gets every lab on, and keeps who switched', (t) => {
-  const dir = mkdtempSync(path.join(tmpdir(), 'ao-labs-old-'));
+test("an office that saved its labs keeps every choice in them, and keeps who switched", (t) => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'ao-labs-saved-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
-  // What a real older labs.json looks like: one switch flipped, all seven written out.
-  const old = { on: { boards: false, bridge: true, ops: false, meetings: false, voice: false, ambience: false, proof: false }, by: 'Ana', at: 1 };
-  writeFileSync(path.join(dir, 'labs.json'), JSON.stringify(old));
+  // An office that saved its labs while they shipped on: what it had stays, trues and falses alike.
+  writeFileSync(path.join(dir, 'labs.json'), JSON.stringify({ v: 2, on: { boards: true, bridge: true, ops: true, meetings: true, voice: true, ambience: true, proof: false, rundown: true }, by: 'Ana', at: 1 }));
   const labs = new Labs(dir);
-  for (const id of LAB_IDS) assert.equal(labs.on(id), true, `${id}: its false was the old default, not a choice`);
+  for (const id of LAB_IDS) assert.equal(labs.on(id), id !== 'proof', `${id}: kept as saved`);
   assert.equal(labs.state().by, 'Ana');
   assert.equal(labs.state().at, 1);
-  // The next switch writes the new format, and from then on a false is a choice.
-  labs.set({ proof: false }, 'Ana');
+  // A file that doesn't name a lab (one added since) leaves it at the default, off.
+  writeFileSync(path.join(dir, 'labs.json'), JSON.stringify({ v: 2, on: { bridge: true } }));
+  assert.equal(new Labs(dir).on('bridge'), true);
+  assert.equal(new Labs(dir).on('meetings'), false, 'not named in the file: the default, off');
+  writeFileSync(path.join(dir, 'labs.json'), '{ not json');
+  assert.equal(new Labs(dir).on('bridge'), false, 'a broken file means the defaults');
+  assert.equal(new Labs(undefined).on('bridge'), false, 'no file at all: the defaults');
+});
+
+test('the oldest labs.json (no v) keeps only its trues, and the next switch writes the v2 format', (t) => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'ao-labs-old-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  // What a real oldest labs.json looks like: one switch flipped, all seven written out.
+  writeFileSync(path.join(dir, 'labs.json'), JSON.stringify({ on: { boards: false, bridge: true, ops: false, meetings: false, voice: false, ambience: false, proof: false }, by: 'Ana', at: 1 }));
+  const labs = new Labs(dir);
+  assert.equal(labs.on('bridge'), true, 'switched on: kept');
+  for (const id of LAB_IDS.filter((x) => x !== 'bridge')) assert.equal(labs.on(id), false, id);
+  labs.set({ voice: true }, 'Ana');
   const saved = JSON.parse(readFileSync(path.join(dir, 'labs.json'), 'utf8'));
   assert.equal(saved.v, 2);
   const again = new Labs(dir);
-  assert.equal(again.on('proof'), false, 'switched off after the upgrade: it stays off');
   assert.equal(again.on('voice'), true);
-  // A new-format file that doesn't name a lab (one added later) leaves it on.
-  writeFileSync(path.join(dir, 'labs.json'), JSON.stringify({ v: 2, on: { bridge: false } }));
-  assert.equal(new Labs(dir).on('bridge'), false);
-  assert.equal(new Labs(dir).on('meetings'), true, 'not named in the file: the default, on');
-  writeFileSync(path.join(dir, 'labs.json'), '{ not json');
-  assert.equal(new Labs(dir).on('bridge'), true, 'a broken file means the defaults');
+  assert.equal(again.on('bridge'), true);
 });
 
 test('the command line holds labs off, whatever the admin switches', (t) => {
   const dir = mkdtempSync(path.join(tmpdir(), 'ao-labs-off-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   const labs = new Labs(dir, ['ops'], ['proof', 'voice']);
+  labs.set({ bridge: true, voice: true }, 'Ana');
   assert.equal(labs.on('proof'), false);
-  assert.equal(labs.on('voice'), false);
+  assert.equal(labs.on('voice'), false, 'held off, whatever the admin switched');
   assert.equal(labs.on('bridge'), true);
   assert.deepEqual(labs.state().heldOff, ['voice', 'proof']);
   assert.deepEqual(labs.set({ proof: true }, 'Ana'), [], 'held off from the command line');
@@ -107,11 +118,11 @@ test('the command line holds labs off, whatever the admin switches', (t) => {
   assert.equal(new Labs(dir).state().heldOff, undefined, 'nothing held off without the command line');
 });
 
-test('the Labs window says every lab is on unless switched off, and which are held from the command line', async () => {
+test('the Labs window says every lab is off until switched on, and which are held from the command line', async () => {
   const { labsIntro, labHeld } = await import('../src/client/ui/labs.js');
-  assert.match(labsIntro(true), /on unless you switch it off/);
-  assert.match(labsIntro(false), /on unless an admin switches it off/);
-  assert.doesNotMatch(labsIntro(true) + labsIntro(false), /off unless/);
+  assert.match(labsIntro(true), /off until you switch it on/);
+  assert.match(labsIntro(false), /off until an admin switches it on/);
+  assert.doesNotMatch(labsIntro(true) + labsIntro(false), /on unless/);
   const state = { on: defaultLabs(), forced: ['ops' as const], heldOff: ['proof' as const] };
   assert.equal(labHeld(state, 'proof'), 'off');
   assert.equal(labHeld(state, 'ops'), 'on');
@@ -148,15 +159,15 @@ test('only an admin switches labs, and everyone hears which are on, without a to
     broadcast: (msg: ServerMsg) => sent.push({ msg }),
   } as unknown as Ctx;
   const client = (accountId: string) => ({ accountId, peer: { name: accountId === 'admin' ? 'Ana' : 'Bo' } }) as unknown as Client;
-  labsHandlers['labs.set'](ctx, client('member'), { t: 'labs.set', patch: { proof: false } });
-  assert.equal(labs.on('proof'), true);
-  assert.deepEqual(warned, ['Only admins can switch labs on or off']);
-  labsHandlers['labs.set'](ctx, client('admin'), { t: 'labs.set', patch: { proof: false } });
+  labsHandlers['labs.set'](ctx, client('member'), { t: 'labs.set', patch: { proof: true } });
   assert.equal(labs.on('proof'), false);
+  assert.deepEqual(warned, ['Only admins can switch labs on or off']);
+  labsHandlers['labs.set'](ctx, client('admin'), { t: 'labs.set', patch: { proof: true } });
+  assert.equal(labs.on('proof'), true);
   assert.deepEqual(toasts, []);
   const last = sent.at(-1)!.msg as Extract<ServerMsg, { t: 'labs' }>;
   assert.equal(last.t, 'labs');
-  assert.equal(last.state.on.proof, false);
+  assert.equal(last.state.on.proof, true);
 });
 
 test("Proof of Merge's routes are all behind its lab, and nothing else is", () => {
@@ -176,10 +187,10 @@ test('without Proof of Merge, no payout waits in the review inbox or counts towa
   store.floors = [{ id: 'f1', name: 'Deck' } as never];
   store.me = { admin: true };
   store.bounties = { f1: { enabled: true, items: [{ issue: 44, amount: '50000000', decimals: 6, symbol: 'USDC', phase: 'awaiting-approval', txs: [{ at: 5 }], claimPr: 9 }] } } as never;
-  store.labs = { on: { ...defaultLabs(), proof: false }, forced: [] };
+  store.labs = { on: defaultLabs(), forced: [] };
   assert.deepEqual(store.inbox().map((i) => i.action), []);
   assert.equal(store.counts().review, 0);
-  store.labs = { on: defaultLabs(), forced: [] };
+  store.labs = { on: { ...defaultLabs(), proof: true }, forced: [] };
   assert.deepEqual(store.inbox().map((i) => i.action), ['approve-payout']);
   assert.equal(store.counts().review, 1);
 });

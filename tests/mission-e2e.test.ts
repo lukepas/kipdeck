@@ -155,10 +155,10 @@ test('the home page: Mission control from the menu, editing the mission in place
   assert.equal(await missionOpen(page), 1);
   assert.equal(await modal.locator('.mc-milestone .mc-ms-head .mc-text').innerText(), 'Auth rewrite');
 
-  // 1 and 3 switch tabs; the Attention tab is calm with nobody hired.
+  // 1 and 3 switch tabs; the Attention tab is calm with no agents yet.
   await page.keyboard.press('1');
   assert.equal(await modal.locator('.mc-tab[aria-selected=true]').innerText(), 'Attention');
-  await modal.locator('.mc-empty', { hasText: 'Nobody is hired yet' }).waitFor();
+  await modal.locator('.mc-empty', { hasText: 'No agents yet' }).waitFor();
   await page.keyboard.press('4');
   assert.match(await modal.locator('.mc-tab[aria-selected=true]').innerText(), /^Timeline/);
   // What just happened is on the timeline, newest first, as text.

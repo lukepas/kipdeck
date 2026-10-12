@@ -21,7 +21,7 @@ export { renderStrip } from './strip';
 export { digestCard, openDigest, recallDigest, watchAway } from './digest';
 export { missionDocked } from './dock';
 
-const TAB_LABEL: Record<MissionTab, string> = { attention: 'Attention', goals: 'Goals', review: 'Review', timeline: 'Timeline', crew: 'Crew' };
+const TAB_LABEL: Record<MissionTab, string> = { attention: 'Attention', goals: 'Goals', review: 'Review', timeline: 'Timeline', crew: 'Records' };
 
 /** The tabs on offer: Attention and Review always; Goals, Timeline and Crew with Goals and timeline on in Labs. */
 export function missionTabs(): MissionTab[] {

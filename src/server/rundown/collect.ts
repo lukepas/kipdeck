@@ -16,7 +16,7 @@ export interface CollectOptions {
   budgetMs: number;
   /** Stats of files already read, by blob: kept between runs by whoever calls (the office per floor). */
   cache?: StatCache;
-  /** A worktree's owner (the office's unit call sign), by its absolute path. */
+  /** A worktree's owner (the agent on it, named by its task), by its absolute path. */
   owner?(path: string): string | null;
   /** How the root is shown (tildified, or the floor's name). */
   shownRoot?: string;

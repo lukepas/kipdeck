@@ -7,7 +7,8 @@ import { reminderSnoozed } from '../../../shared/reminders';
 import type { Reminder } from '../../../shared/protocol';
 import { store } from '../../state';
 import { h } from '../dom';
-import { reminderAction, runReminder, snoozeReminder, type MissionDeps } from './act';
+import { reminderAction } from '../../../shared/reminders';
+import { runReminder, snoozeReminder, type MissionDeps } from './act';
 
 /** The reminders open now, the snoozed ones left out. */
 export function openReminders(now = Date.now()): Reminder[] {

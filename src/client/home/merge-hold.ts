@@ -5,6 +5,7 @@
 // main", with how long the change waited on you, or why it didn't merge. A merge can't be taken back
 // once GitHub or git has it, so the time to change your mind is before.
 
+import { agentBadge } from '../../shared/agentname';
 import { mergeWords } from '../../shared/inbox';
 import type { RosterEntry, ShipRecord } from '../../shared/protocol';
 import { waitWords } from '../../shared/wait';
@@ -21,7 +22,7 @@ interface Hold {
   tick: ReturnType<typeof setInterval>;
   toast: HTMLElement;
   /** What it said before, for the toast once the merge lands. */
-  entry: Pick<RosterEntry, 'into' | 'pr' | 'name'> & { title: string };
+  entry: Pick<RosterEntry, 'into' | 'pr'> & { title: string };
 }
 
 const holds = new Map<string, Hold>();
@@ -65,13 +66,13 @@ export function holdMerge(e: RosterEntry, title: string, send: () => void, chang
     'div.toast.hold',
     { role: 'status', style: `--hold-ms:${ms}ms` },
     h('span.toast-icon', { 'aria-hidden': 'true' }, icon('working', 14)),
-    h('span.toast-text', {}, mergeWords(e), h('small', {}, `${title} (${e.name}). Undo keeps it unmerged.`)),
+    h('span.toast-text', {}, mergeWords(e), h('small', {}, `${title} (${agentBadge(e)}). Undo keeps it unmerged.`)),
     left,
     undo,
     h('span.hold-bar', { 'aria-hidden': 'true' }),
   );
   document.getElementById('toasts')?.append(toast);
-  const entry = { into: e.into, pr: e.pr, name: e.name, title };
+  const entry = { into: e.into, pr: e.pr, title };
   const hold: Hold = {
     until,
     toast,

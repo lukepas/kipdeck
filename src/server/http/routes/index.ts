@@ -6,10 +6,12 @@ import { actionRoutes } from './actions.js';
 import { agentRoutes } from './agents.js';
 import { authRoutes } from './auth.js';
 import { demoRoutes } from './demo.js';
+import { deviceRoutes } from './devices.js';
 import { fileRoutes } from './files.js';
 import { githubRoutes } from './github.js';
 import { localRoutes } from './local.js';
 import { pageRoutes } from './pages.js';
+import { pushRoutes } from './push.js';
 import { reputationRoutes } from './reputation.js';
 import { rundownRoutes } from './rundown.js';
 import { searchRoutes } from './search.js';
@@ -30,6 +32,8 @@ export const routes: readonly Route[] = [
   authRoutes.claimable,
   authRoutes.claim,
   authRoutes.link,
+  // A phone trading its pairing code for a device session (the Pair a phone QR code).
+  deviceRoutes.redeem,
   // Commands on this computer with the office's local key (kipdeck open, attach).
   localRoutes.link,
   localRoutes.attach,
@@ -42,6 +46,10 @@ export const routes: readonly Route[] = [
   pageRoutes.join,
   pageRoutes.favicon,
   pageRoutes.appIcon,
+  // The installable app: its service worker, manifest and icons, fetched without a session.
+  pushRoutes.worker,
+  pushRoutes.manifest,
+  pushRoutes.icons,
   // Proof of Merge (Labs, testnets), each only while the lab is on.
   // The public "Fund this issue" Action (devnet), for opted-in repositories only.
   proof(actionRoutes.manifest),
@@ -68,8 +76,23 @@ export const routes: readonly Route[] = [
   searchRoutes.search,
   serviceRoutes.forwards,
   githubRoutes.github,
+  // Push to your devices: subscribing, a test, and a notification's buttons.
+  pushRoutes.state,
+  pushRoutes.subscribe,
+  pushRoutes.unsubscribe,
+  pushRoutes.test,
+  pushRoutes.act,
   // Rundown (Labs): a project's map page as a download.
   rundownRoutes.map,
+  // Pairing phones, the devices paired so far, and the inbox's own addresses (/a/..., /p/...).
+  deviceRoutes.pair,
+  deviceRoutes.pairStatus,
+  deviceRoutes.device,
+  deviceRoutes.devices,
+  deviceRoutes.rename,
+  deviceRoutes.revoke,
+  deviceRoutes.agentPage,
+  deviceRoutes.projectPage,
   pageRoutes.home,
   pageRoutes.deck,
   pageRoutes.bridge,

@@ -13,13 +13,17 @@ import { AGE_PREFIX, ageLabel, ALWAYS_OPEN, buildInbox, changeSummary, INBOX_SEC
 import type { Waiting } from '../../shared/metrics';
 import { waitTone, waitWords } from '../../shared/wait';
 import type { Reminder, RosterEntry } from '../../shared/protocol';
-import { headline, rowStatus } from '../../shared/rowtext';
+import { rowStatus } from '../../shared/rowtext';
+import { agentName, agentRef, type Nameable } from '../../shared/agentname';
 import { PROVIDER_META, type AgentProvider } from '../../shared/providers';
 import { store } from '../state';
 import { h } from '../ui/dom';
 import { icon, LEVEL_ICON } from '../ui/icons';
 import { countdownWords, heldUntil, inFlight } from './merge-hold';
+import { approvalRow } from './approval';
 import { home } from './state';
+import { proposalRows, proposalWaits } from './proposals';
+import { spendUi } from './spend-slot';
 
 export interface ListDeps {
   /** A row's primary button. */
@@ -44,11 +48,20 @@ export function agentMark(provider: AgentProvider | undefined, kind: RosterEntry
   return h('span.agent-mark', { class: `p-${provider ?? 'agent'}`, title: label, 'aria-hidden': 'true' }, letters);
 }
 
-/** What the agent is on, in plain words: its task, else its first prompt (on this project), else what it's doing. */
-export function entryTitle(e: RosterEntry): string {
+/** The entry with what this page knows of its worker (its title and first prompt, on this project). */
+function nameable(e: RosterEntry): Nameable {
   const w = e.floor === store.floor ? store.workers.get(e.id) : undefined;
-  const head = headline(e.task ?? (w?.title ? { name: w.title } : undefined), w?.prompt ?? e.activity);
-  return head.title || (e.status === 'idle' ? 'Waiting for a task' : 'Getting started');
+  return { ...e, title: w?.title, prompt: w?.prompt };
+}
+
+/** What the agent is on, in plain words: its one name (shared/agentname.ts), the same as every surface. */
+export function entryTitle(e: RosterEntry): string {
+  return agentName(nameable(e));
+}
+
+/** The agent as a toast or a dialog names it: its task in quotes, else "the Codex agent". */
+export function entryRef(e: RosterEntry, start = false): string {
+  return agentRef(nameable(e), { start });
 }
 
 /** "api / fix-the-login-3f2a": the project, and the branch when it has one of its own (the pane's header). */
@@ -83,7 +96,7 @@ export function waitingNow(view: InboxView = currentView()): Waiting {
   const listed = new Set(store.roster.map((e) => e.id));
   const loose = looseReminders(store.reminders, listed, now, home.project || undefined);
   return {
-    needYou: [...view.sections['needs-you'].map((r) => r.att.since), ...(home.owner === 'mine' ? [] : loose.map((r) => r.since))],
+    needYou: [...view.sections['needs-you'].map((r) => r.att.since), ...(home.owner === 'mine' ? [] : loose.map((r) => r.since)), ...proposalWaits()],
     toReview: view.sections.review.filter((r) => !inFlight(r.entry.id)).map((r) => r.att.since),
   };
 }
@@ -107,11 +120,13 @@ function workingStatus(r: Ranked, title: string): string {
 function row(r: Ranked, section: InboxSection, deps: ListDeps, now: number): HTMLElement {
   const e = r.entry;
   const title = entryTitle(e);
-  const { action, label } = rowAction(r.att);
+  // A permission request from its hook: Approve, what it wants to run and its risk tags (approval.ts).
+  const ask = approvalRow(e.id);
+  const { action, label } = ask ? { action: rowAction(r.att).action, label: ask.label } : rowAction(r.att);
   const provider = PROVIDER_META[e.provider ?? 'claude']?.label ?? 'Agent';
   // Working: what it's doing right now (workingStatus). To review: what it changed. Otherwise why it's
   // here, in the ranking's words.
-  const status = section === 'working' ? workingStatus(r, title) : (section === 'review' && changeSummary(e.work)) || rowStatus(r.att, title);
+  const status = ask ? ask.status : section === 'working' ? workingStatus(r, title) : (section === 'review' && changeSummary(e.work)) || rowStatus(r.att, title);
   const selected = home.selected === e.id;
   const where = rowWhere(e);
   const owner = ownerLabel(e);
@@ -121,10 +136,10 @@ function row(r: Ranked, section: InboxSection, deps: ListDeps, now: number): HTM
   // A merge on its way: the row no longer waits on you, so its clock stops and its status counts down.
   const away = held || inFlight(e.id);
   const style = waits && !away ? `--wait:${waitShare(r.att.since, now).toFixed(3)}` : '';
-  const spoken = [`${title}: ${e.name}`, provider, LEVEL_LABEL[r.att.level], waits && !away ? `${AGE_PREFIX[section]} ${waitWords(now - r.att.since)}` : '', owner ? `deployed by ${e.createdBy}` : ''].filter(Boolean).join(', ');
+  const spoken = [title, provider, LEVEL_LABEL[r.att.level], waits && !away ? `${AGE_PREFIX[section]} ${waitWords(now - r.att.since)}` : '', owner ? `deployed by ${e.createdBy}` : ''].filter(Boolean).join(', ');
   return h(
     'li.row',
-    { class: `l-${r.att.level} s-${section}${selected ? ' selected' : ''}${r.att.snoozed ? ' snoozed' : ''}${held ? ' holding' : ''}`, 'data-id': e.id, 'data-section': section, style: style || undefined },
+    { class: `l-${r.att.level} s-${section}${ask ? ' approval' : ''}${selected ? ' selected' : ''}${r.att.snoozed ? ' snoozed' : ''}${held ? ' holding' : ''}`, 'data-id': e.id, 'data-section': section, style: style || undefined },
     h(
       'button.row-main',
       { type: 'button', 'aria-current': selected ? 'true' : undefined, 'aria-label': spoken, onclick: () => home.select(e.id, section === 'review' ? 'changes' : 'terminal') },
@@ -133,7 +148,7 @@ function row(r: Ranked, section: InboxSection, deps: ListDeps, now: number): HTM
         'span.row-text',
         {},
         h('span.row-title', {}, title),
-        h('span.row-sub', {}, held ? h('span.row-status.row-hold', { 'data-until': String(until), 'data-prefix': 'Merging in' }, `Merging in ${countdownWords(until - now)}`) : h('span.row-status', { title: r.att.reason ?? r.att.label }, away ? 'Merging...' : status), owner ? h('span.row-owner', { title: `Deployed by ${e.createdBy}` }, owner) : null, where ? h('span.row-where', {}, where) : null),
+        h('span.row-sub', {}, held ? h('span.row-status.row-hold', { 'data-until': String(until), 'data-prefix': 'Merging in' }, `Merging in ${countdownWords(until - now)}`) : h('span.row-status', { title: r.att.reason ?? r.att.label }, away ? 'Merging...' : status), ask?.tags ?? null, owner ? h('span.row-owner', { title: `Deployed by ${e.createdBy}` }, owner) : null, ...(spendUi()?.rowBadges(e) ?? []), where ? h('span.row-where', {}, where) : null),
       ),
       away ? null : ageEl(section, r.att, now),
     ),
@@ -158,7 +173,7 @@ function reminderRow(r: Reminder, deps: ListDeps, now: number): HTMLElement {
 
 /**
  * A row's clock: "waiting 38s" in its wait's tone. A wait on you carries `data-since`, so clock.ts
- * ticks its text each second without drawing the list again; the calm sections ("ready 2h", "snoozed
+ * ticks its text each second without drawing the list again; the calm sections ("idle 2h", "snoozed
  * 1h") move on with the 30 second redraw.
  */
 function ageEl(section: InboxSection, att: { since: number; snoozed?: boolean }, now: number): HTMLElement {
@@ -199,7 +214,8 @@ export function renderList(root: HTMLElement, deps: ListDeps, firstRun: () => HT
   const now = Date.now();
   const view = currentView();
   const listed = new Set(store.roster.map((e) => e.id));
-  const loose = looseReminders(store.reminders, listed, now, home.project || undefined).map((r) => reminderRow(r, deps, now));
+  // Agents' requests (proposals.ts) wait in Needs you first, then reminders about no agent in the list.
+  const loose = [...proposalRows(now), ...looseReminders(store.reminders, listed, now, home.project || undefined).map((r) => reminderRow(r, deps, now))];
   const anyAgent = store.roster.some((e) => !home.project || e.floor === home.project);
   if (!anyAgent && !loose.length && !home.query) {
     root.replaceChildren(firstRun());

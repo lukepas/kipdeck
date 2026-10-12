@@ -77,6 +77,7 @@ export function onConnection(ctx: Ctx, ws: WebSocket, url: URL, session: Session
     prompts: prompts.state(),
     leaveOnMerge: leaveOnMerge.state(),
     labs: ctx.labs.state(),
+    gate: ctx.gate.state(),
     roster: ctx.rosterEntries(),
     reviewQueue: ctx.reviewQueue(),
     ...(ctx.viewer() ? { viewer: ctx.viewer() } : {}),

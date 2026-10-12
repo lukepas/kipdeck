@@ -13,8 +13,12 @@
 }
 .modal.term .xterm-viewport { scrollbar-color: var(--line-strong) transparent; }
 .modal.term header { background: var(--surface-1); }
-.modal.term .term-host { flex: 1; min-height: 0; padding: 14px 12px 10px 16px; background: var(--void); }
-.modal.term .term-host .xterm { height: 100%; }
+/* The padding is the terminal's own, not its box's: the fit addon measures the box's border-box width and
+   takes off only the terminal's padding, so padding here made it a few columns too wide and cut off the
+   end of each line (most of all on a phone). */
+.modal.term .term-host { flex: 1; min-height: 0; padding: 0; background: var(--void); }
+.modal.term .term-host .xterm { height: 100%; padding: 14px 12px 10px 16px; }
+.modal.term .term-host .xterm, .modal.term .term-host .xterm .xterm-viewport { background-color: #0d131a; }
 /* Files dragged over a terminal, and on their way to the office: they go in where its cursor is. */
 .modal.term .term-host { position: relative; }
 .modal.term.dropping .term-host::after, .modal.term.uploading .term-host::after { content: attr(data-drop); position: absolute; inset: 10px; z-index: 10; display: grid; place-items: center; padding: 16px; text-align: center; border: 1px dashed var(--act); border-radius: var(--radius); background: rgb(13 19 26 / .88); color: var(--text); font-size: 15px; font-weight: 500; pointer-events: none; }
@@ -42,9 +46,11 @@
 @media (pointer: coarse) {
   .term-keypad .term-say { flex-wrap: wrap; }
   .term-keys { flex-basis: 100%; overflow-x: auto; }
-  .term-keys .btn { flex: 1 0 auto; height: 40px; }
+  .term-keys .btn { flex: 1 0 auto; height: 44px; }
   .term-keys .btn.touch-only { display: inline-flex; }
 }
+/* Esc or ^C waiting for its second tap (terminal.ts KEYPAD). */
+.term-keys .btn.armed { background: var(--stuck-tint); color: var(--bad); }
 .term-say { display: flex; gap: 8px; }
 .modal .term-say input[type=text] { flex: 1; min-width: 0; padding: 8px 10px; }
 .modal.term header .typed { font-size: 12px; font-weight: 400; color: var(--muted); white-space: nowrap; }

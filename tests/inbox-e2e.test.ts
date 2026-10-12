@@ -123,11 +123,39 @@ test('deploy, needs you, answer, review, merge: the loop on the home page', asyn
   // First run: one card, one button, and no checklist or Shipped today yet.
   await page.locator('.first-run').waitFor({ timeout: 15_000 });
   assert.equal(await page.locator('#checklist:not(.hidden)').count(), 0);
+  // The task box asks what you were about to ask, with three suggestions from the repository; one
+  // fills the box, and Deploy opens the sheet on it.
+  await page.locator('.first-run .st-ask', { hasText: /^What were you about to ask .+\?$/ }).waitFor({ timeout: 30_000 });
+  const chips = page.locator('.first-run .st-chip');
+  await chips.first().waitFor({ timeout: 15_000 });
+  assert.equal(await chips.count(), 3);
+  assert.equal(await page.locator('.first-run .st-go').isDisabled(), true, 'nothing to deploy until there is a task');
+  await page.locator('#first-task').fill('Fix the typo in the footer');
+  assert.equal(await page.locator('.first-run .st-go').isDisabled(), false, 'typing a task enables Deploy');
+  const picked = (await chips.nth(1).getAttribute('title')) ?? '';
+  await chips.nth(1).click();
+  assert.equal(await page.locator('#first-task').inputValue(), picked);
+  assert.deepEqual(await page.locator('.first-run .st-chip[aria-pressed="true"]').allInnerTexts(), [await chips.nth(1).innerText()], 'the picked chip shows as picked');
+  // The empty pane shows the loop's three steps (whatever the labs), not a blueprint.
+  assert.deepEqual((await page.locator('.pane .pv-step .pv-sec').allInnerTexts()).map((s) => s.trim()), ['It works', 'It asks', 'You review']);
+  await page.locator('.first-run .st-go').click();
+  const firstSheet = page.locator('.modal.deploy');
+  await firstSheet.waitFor();
+  assert.equal(await firstSheet.locator('#deploy-prompt').inputValue(), picked);
+  await page.keyboard.press('Escape');
+  await firstSheet.waitFor({ state: 'detached' });
+  assert.equal(await page.locator('#first-task').inputValue(), picked, 'closing the sheet keeps the task in the box');
 
   await deploy(page, '[ask] Fix the flaky checkout test (demo)');
   await row(page, 'needs-you', 'Fix the flaky checkout test').waitFor({ timeout: 30_000 });
   // The agent it just asked for is selected, its terminal in the pane.
   await page.locator('.pane.has-agent .pane-title h2', { hasText: 'Fix the flaky checkout test' }).waitFor({ timeout: 15_000 });
+  // One name (docs/inbox.md, One name): the task is the name and the CLI a badge, never a nickname.
+  const sub = await page.locator('.pane.has-agent .pane-title p').innerText();
+  assert.match(sub, /^Claude Code/, sub);
+  // The deck's nicknames (src/server/workers/worker.ts) are never shown on the home page.
+  const { NAMES } = await import('../src/server/workers/worker.js');
+  assert.doesNotMatch(sub, new RegExp(`\\b(${NAMES.join('|')})\\b`), sub);
   await deploy(page, '[done] Write the README quickstart (demo)');
   await row(page, 'review', 'Write the README quickstart').waitFor({ timeout: 30_000 });
   assert.match(await page.locator('.sec-needs-you .sec-h').innerText(), /Needs you\s*1/);
@@ -146,6 +174,8 @@ test('deploy, needs you, answer, review, merge: the loop on the home page', asyn
   await page.keyboard.type('fix the selector');
   await page.keyboard.press('Enter');
   await row(page, 'review', 'Fix the flaky checkout test').waitFor({ timeout: 30_000 });
+  // The settled toast names it by its task, as its row does.
+  await page.locator('#toasts .toast', { hasText: /Answered "Fix the flaky checkout test[^"]*"\. Back at work\./ }).waitFor({ timeout: 10_000 });
   await page.locator('.sec-needs-you .sec-empty', { hasText: 'Nothing needs you' }).waitFor();
 
   // Review: the Changes tab with what it changed and the branch it goes into, then Merge.
@@ -169,7 +199,7 @@ test('deploy, needs you, answer, review, merge: the loop on the home page', asyn
   await page.locator('.pane .rv-merge').focus();
   await page.keyboard.press('Enter');
   await hold.waitFor({ timeout: 5_000 });
-  assert.match(await hold.locator('.toast-text small').innerText(), /^Write the README quickstart \(/);
+  assert.match(await hold.locator('.toast-text small').innerText(), /^Write the README quickstart.* \(Claude Code\)\. Undo keeps it unmerged\.$/);
   await page.waitForFunction(() => document.activeElement?.matches('.pane .rv-undo'), null, { timeout: 5_000 });
   assert.match(await page.locator('#pulse .pulse-stat').nth(1).innerText(), /^1\s*to review/);
   assert.match(await row(page, 'review', 'Write the README quickstart').locator('.row-status').innerText(), /^Merging in \ds$/);
@@ -221,7 +251,7 @@ test('the keys: ? lists them, Esc closes it, / searches, Ctrl+K finds an agent',
   await page.keyboard.press('?');
   const keys = page.locator('.modal.keys-help');
   await keys.waitFor();
-  assert.equal(await keys.locator('dt').count(), 7, 'six shortcuts, and D for the Deck (on by default)');
+  assert.equal(await keys.locator('dt').count(), 6, 'six shortcuts; no D with the Deck lab off, as it ships');
   assert.equal(await keys.locator('header .close').count(), 1);
   await page.keyboard.press('Escape');
   await keys.waitFor({ state: 'detached' });

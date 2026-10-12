@@ -18,7 +18,7 @@ const MAX_COUNT_BYTES = 8 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
 export interface ChangesTarget {
-  /** The worker's name, for toasts. */
+  /** The agent as a sentence names it (shared/agentname.ts agentRef), for toasts. */
   name: string;
   /** Absolute directory it works in. */
   cwd: string;
@@ -220,7 +220,7 @@ export class Changes {
   /** The diff of one changed file, as `git diff` prints it. */
   async diff(workerId: string, filePath: string, repo?: string): Promise<{ diff: string; truncated: boolean } | string> {
     const t = this.target(workerId, repo);
-    if (!t) return 'No such worker';
+    if (!t) return 'No such agent';
     const file = await this.changedFile(workerId, repo, t, filePath);
     if (typeof file === 'string') return file;
     try {
@@ -251,7 +251,7 @@ export class Changes {
   async file(workerId: string, filePath: string, side: 'old' | 'new', repo?: string): Promise<ImageResult> {
     if (!changedImageType(filePath)) return { status: 415, error: 'Only pictures can be previewed' };
     const t = this.target(workerId, repo);
-    if (!t) return { status: 404, error: 'No such worker' };
+    if (!t) return { status: 404, error: 'No such agent' };
     const file = await this.changedFile(workerId, repo, t, filePath);
     if (typeof file === 'string') return { status: 404, error: file };
     // A renamed file was something else before; its old side is only a picture if that name was one.
@@ -289,7 +289,7 @@ export class Changes {
       await git(['add', '-A'], t.cwd);
       await git(['commit', '-q', '-m', msg], t.cwd, 120_000, env);
       const subject = msg.split('\n')[0];
-      this.events.toast(`${who} committed "${subject.length > 60 ? `${subject.slice(0, 57)}...` : subject}" at ${t.name}'s desk`, 'info');
+      this.events.toast(`${who} committed "${subject.length > 60 ? `${subject.slice(0, 57)}...` : subject}" for ${t.name}`, 'info');
     });
   }
 
@@ -301,12 +301,12 @@ export class Changes {
         if (!file?.uncommitted) return 'That file has no uncommitted changes';
         if (file.status === '?') await git(['clean', '-f', '--', file.path], t.cwd);
         else await git(['restore', '--source=HEAD', '--staged', '--worktree', '--', ...(file.from ? [file.from] : []), file.path], t.cwd);
-        this.events.toast(`${who} discarded the changes to ${path.basename(file.path)} at ${t.name}'s desk`, 'info');
+        this.events.toast(`${who} discarded the changes to ${path.basename(file.path)} for ${t.name}`, 'info');
       } else {
         const n = w.last?.files.filter((f) => f.uncommitted).length ?? 0;
         await git(['reset', '-q', '--hard'], t.cwd);
         await git(['clean', '-fd'], t.cwd);
-        this.events.toast(`${who} discarded ${n ? `${n} uncommitted change${n > 1 ? 's' : ''}` : 'the uncommitted changes'} at ${t.name}'s desk`, 'info');
+        this.events.toast(`${who} discarded ${n ? `${n} uncommitted change${n > 1 ? 's' : ''}` : 'the uncommitted changes'} of ${t.name}`, 'info');
       }
       return undefined;
     });
@@ -374,7 +374,7 @@ export class Changes {
   /** Runs one commit / discard / PR at a time per checkout, showing watchers that it's in progress. */
   private async action(workerId: string, repo: string | undefined, label: string, fn: (t: ChangesTarget, w: Watch) => Promise<string | undefined>): Promise<string | undefined> {
     const t = this.target(workerId, repo);
-    if (!t) return 'No such worker';
+    if (!t) return 'No such agent';
     const key = watchKey(workerId, repo);
     const w = this.entry(workerId, repo);
     if (w.busy) return `Hold on - still ${w.busy.toLowerCase().replace(/...$/, '')}`;
@@ -399,7 +399,7 @@ export class Changes {
     w.polling = true;
     try {
       const t = this.target(w.workerId, w.repo);
-      const state = t ? await this.compute(w, t) : errorState(w, '', 'No such worker');
+      const state = t ? await this.compute(w, t) : errorState(w, '', 'No such agent');
       if (w.busy) state.busy = w.busy;
       const key = JSON.stringify({ ...state, at: 0 });
       if (key !== w.lastKey) {

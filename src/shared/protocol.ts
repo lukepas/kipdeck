@@ -6,6 +6,7 @@
 
 import type { AccountsClientMsg, AccountsServerMsg, SignInsClientMsg, TeamClientMsg } from './protocol/accounts.js';
 import type { BountiesClientMsg, BountiesServerMsg } from './protocol/bounties.js';
+import type { BriefClientMsg, BriefServerMsg } from './protocol/brief.js';
 import type { ChangesClientMsg, ChangesServerMsg } from './protocol/changes.js';
 import type { FloorClientMsg, FloorServerMsg, PlanClientMsg } from './protocol/floors.js';
 import type { GitHubClientMsg, GitHubServerMsg } from './protocol/github.js';
@@ -27,10 +28,15 @@ import type { UsageClientMsg, UsageServerMsg } from './protocol/usage.js';
 import type { WorkerClientMsg, WorkerServerMsg } from './protocol/workers.js';
 import type { RundownClientMsg, RundownServerMsg } from './protocol/rundown.js';
 import type { SignalClientMsg, SignalServerMsg } from './protocol/signal.js';
+import type { ApprovalsClientMsg, ApprovalsServerMsg } from './protocol/approvals.js';
+import type { GateClientMsg, GateServerMsg } from './protocol/gate.js';
+import type { SpendClientMsg, SpendServerMsg } from './protocol/spend.js';
+import type { PushClientMsg } from './protocol/push.js';
 
 export * from './protocol/accounts.js';
 export * from './protocol/agents.js';
 export * from './protocol/bounties.js';
+export * from './protocol/brief.js';
 export * from './protocol/changes.js';
 export * from './protocol/floors.js';
 export * from './protocol/github.js';
@@ -52,6 +58,10 @@ export * from './protocol/usage.js';
 export * from './protocol/workers.js';
 export * from './protocol/rundown.js';
 export * from './protocol/signal.js';
+export * from './protocol/approvals.js';
+export * from './protocol/gate.js';
+export * from './protocol/spend.js';
+export * from './protocol/push.js';
 
 export type ClientMsg =
   | PresenceClientMsg
@@ -78,7 +88,12 @@ export type ClientMsg =
   | InboxClientMsg
   | SetupClientMsg
   | RundownClientMsg
-  | SignalClientMsg;
+  | SignalClientMsg
+  | BriefClientMsg
+  | ApprovalsClientMsg
+  | GateClientMsg
+  | SpendClientMsg
+  | PushClientMsg;
 
 export type ServerMsg =
   | PresenceServerMsg
@@ -103,4 +118,8 @@ export type ServerMsg =
   | InboxServerMsg
   | SetupServerMsg
   | RundownServerMsg
-  | SignalServerMsg;
+  | SignalServerMsg
+  | BriefServerMsg
+  | ApprovalsServerMsg
+  | GateServerMsg
+  | SpendServerMsg;
