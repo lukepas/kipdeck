@@ -22,6 +22,16 @@ Pay-on-merge bounties already exist, and we don't claim the escrow idea. What we
 - Only attestations by attesters you trust count when the board is rebuilt, since anyone can write to a public schema, and only payouts released by the trusted attester count as paid.
 - Only public repositories an admin names are attested, and who merged is a keyed pseudonym, not a hash anyone can reverse by trying every GitHub id.
 
+## How do I run it with Proof of Merge on?
+
+Every lab is off as Kipdeck ships, Proof of Merge included, so a plain run opens on the inbox alone. Start it with the lab held on:
+
+```sh
+npx github:zbagdzevicius/kipdeck --labs proof
+```
+
+From a clone it is `node bin/agent-office.js --labs proof`, and `--demo --labs proof` does the same for the scripted demo. Nothing goes on chain until an admin sets up bounties in Settings with testnet keys; any chain flag (`--attest`, `--reputation`, `--x402`) also holds the lab on. See [docs/labs.md](../../docs/labs.md).
+
 ## Why testnet?
 
 The rules don't ask for mainnet. Mainnet waits on an independent audit of the program and the contracts, and on a multisig upgrade authority. The approver can already be an admin's browser wallet instead of a key on the office's machine. Every address is public: the escrow program on Solana devnet (`JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6`), the proof-of-merge schema on Base Sepolia (`0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900`), and the rest in [colosseum-worlds-fair.md](colosseum-worlds-fair.md). There is no token, no NFT and no points, so there is nothing to launch.

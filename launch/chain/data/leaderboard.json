@@ -1,28 +1,28 @@
 {
   "schema": "agent-office/proof-of-merge-leaderboard@1",
   "license": "CC0-1.0",
-  "asOf": 1791610567,
+  "asOf": 1791806057,
   "boards": [
     {
-      "asOf": 1791610567,
+      "asOf": 1791806057,
       "window": "30d",
       "by": "harness",
       "rows": []
     },
     {
-      "asOf": 1791610567,
+      "asOf": 1791806057,
       "window": "30d",
       "by": "agent",
       "rows": []
     },
     {
-      "asOf": 1791610567,
+      "asOf": 1791806057,
       "window": "all",
       "by": "harness",
       "rows": []
     },
     {
-      "asOf": 1791610567,
+      "asOf": 1791806057,
       "window": "all",
       "by": "agent",
       "rows": []
