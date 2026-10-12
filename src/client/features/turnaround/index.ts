@@ -35,7 +35,7 @@ export function installTurnaround(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'driv
   const line = new Hairline();
   const wash = bayWash();
   ctx.scene.add(wall.mesh, line.mesh, wash);
-  const bar = h('span.captains-bar', { title: "Today on this deck: units back from stuck that landed their work, and pull requests merged or closed", hidden: true });
+  const bar = h('span.captains-bar', { title: "Today on this deck: agents back from stuck that landed their work, and pull requests merged or closed", hidden: true });
   document.getElementById('dock')?.before(bar);
 
   let clock = 0;

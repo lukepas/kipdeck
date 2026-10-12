@@ -18,6 +18,8 @@
 /* ---- The top bar ---- */
 .topbar { position: absolute; top: 0; left: 0; right: 0; height: var(--bar); display: flex; gap: 6px; align-items: center; padding: 0 8px 0 14px; background: var(--hud-fill); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); z-index: 3; }
 .topbar > * { pointer-events: auto; }
+/* The tape stripe (docs/design.md, Warmth): the one ornament in the chrome, hung just under the bar's hairline. */
+.topbar::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: var(--tape-stripe-height); background: var(--tape-stripe); pointer-events: none; }
 .topbar .brand { padding-right: 14px; margin-right: 2px; border-right: 1px solid var(--line); height: 24px; }
 .project { display: flex; align-items: baseline; gap: 8px; min-width: 0; max-width: 30vw; height: 32px; padding: 0 8px; border-radius: var(--radius); cursor: pointer; align-items: center; }
 .project:hover { background: var(--surface-3); }

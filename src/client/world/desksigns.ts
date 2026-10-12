@@ -25,7 +25,7 @@ function paintFace(canvas: HTMLCanvasElement, label: DeskLabel) {
   canvas.height = h;
   const ctx = canvas.getContext('2d')!;
   ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = 'rgba(13,19,26,0.6)';
+  ctx.fillStyle = 'rgba(19,16,13,0.6)';
   ctx.fillRect(0, 0, w, h);
   ctx.strokeStyle = DECK.steel;
   ctx.lineWidth = 3;

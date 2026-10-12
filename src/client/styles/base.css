@@ -111,8 +111,8 @@ code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tab
    one sentence, and the time in mono. A unit that needs you is a toast too, which folds into the top
    bar's counter after a while (features/needsyou). */
 #toasts { position: fixed; right: 12px; top: 56px; z-index: 45; display: flex; flex-direction: column; gap: 8px; align-items: stretch; width: min(380px, calc(100vw - 24px)); pointer-events: none !important; }
-.toast { position: relative; display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; column-gap: 10px; align-items: baseline; padding: 10px 12px 10px 14px; font-size: 13px; font-weight: 500; line-height: 1.4; color: var(--text); background: var(--hud-fill); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--hud-shadow); animation: rise var(--t-ui) var(--ease); overflow-wrap: anywhere; }
-.toast::after { content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px; border-radius: var(--radius) 0 0 var(--radius); background: var(--line-strong); }
+.toast { position: relative; display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; column-gap: 10px; align-items: baseline; padding: 10px 12px 10px 14px; font-size: 13px; font-weight: 500; line-height: 1.4; color: var(--text); background: var(--hud-fill); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border: 1px solid var(--line); border-radius: var(--radius-panel); box-shadow: var(--hud-shadow); animation: rise var(--t-ui) var(--ease); overflow-wrap: anywhere; }
+.toast::after { content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px; border-radius: var(--radius-panel) 0 0 var(--radius-panel); background: var(--line-strong); }
 .toast-icon { align-self: start; padding-top: 2px; color: var(--muted); }
 .toast-text small { display: block; margin-top: 2px; font-size: 12px; font-weight: 400; color: var(--muted); }
 .toast.warn::after { background: var(--review); }
@@ -142,7 +142,7 @@ code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tab
 /* ---------- Modals ---------- */
 .backdrop { position: fixed; inset: 0; background: var(--scrim); display: grid; place-items: center; padding: 16px; z-index: 50; animation: fade var(--t-ui) var(--ease); }
 @keyframes fade { from { opacity: 0; } }
-.modal { position: relative; background: var(--surface-1); border: 1px solid var(--line-strong); border-radius: var(--radius); width: min(560px, 100%); max-height: calc(100vh - 32px); display: flex; flex-direction: column; overflow: hidden; animation: rise var(--t-ui) var(--ease); }
+.modal { position: relative; background: var(--surface-1); border: 1px solid var(--line-strong); border-radius: var(--radius-modal); width: min(560px, 100%); max-height: calc(100vh - 32px); display: flex; flex-direction: column; overflow: hidden; animation: rise var(--t-ui) var(--ease); }
 /* A window you have to answer before going on (no Esc): a 2px Signal rule on top. */
 .modal.blocking { border-top: 2px solid var(--signal); }
 .modal header { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 8px 10px 8px 16px; border-bottom: 1px solid var(--line); background: var(--surface-1); }
@@ -150,7 +150,7 @@ code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tab
 .modal .body { padding: 16px; overflow: auto; }
 .modal footer { display: flex; gap: 8px; justify-content: flex-end; padding: 10px 16px; border-top: 1px solid var(--line); background: var(--surface-1); align-items: center; }
 .modal footer .grow { flex: 1; font-size: 12px; color: var(--muted); }
-.modal textarea, .modal input[type=text], .modal input[type=password], .modal input[type=number], .modal input[type=url], .modal input[type=search], .modal select { width: 100%; font: inherit; font-size: 14px; color: var(--text); border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 8px 10px; background: var(--void); outline: none; resize: vertical; }
+.modal textarea, .modal input[type=text], .modal input[type=password], .modal input[type=number], .modal input[type=url], .modal input[type=search], .modal select { width: 100%; font: inherit; font-size: 14px; color: var(--text); border: 1px solid var(--line-input); border-radius: var(--radius); padding: 8px 10px; background: var(--void); outline: none; resize: vertical; }
 .modal textarea:focus, .modal input:is([type=text], [type=password], [type=number], [type=url], [type=search]):focus, .modal select:focus { border-color: var(--act); }
 .modal ::placeholder { color: var(--faint); }
 .modal label { font-weight: 600; font-size: 13px; display: block; margin-bottom: 6px; color: var(--text); }

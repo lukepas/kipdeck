@@ -151,7 +151,7 @@ export function mountHud(actions: HudAction[], settings: Settings, save: () => v
     const workers = [...store.workers.values()];
     // Hired onto desks, bean bags and the meeting room's table; the board agents at their kiosks don't count.
     const hired = workers.filter((w) => !DESK_BY_ID.get(w.deskId)?.station).length;
-    const workersTitle = hired ? `${hired} unit${hired === 1 ? '' : 's'} on this deck` : 'No units on this deck yet';
+    const workersTitle = hired ? `${hired} agent${hired === 1 ? '' : 's'} on this deck` : 'No agents on this deck yet. Give one a job to start.';
     // What needs someone has its own chip on the bar (the 'mission' action), so this just counts them.
     items.push(panelChip('workers', 'units', 'Agents', hired, workersTitle));
     // Redrawn only when it looks different, so a busy worker's updates don't swap a button out from under a click.

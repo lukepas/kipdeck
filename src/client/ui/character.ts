@@ -4,6 +4,7 @@ import { HAIR_COLOR_NAMES, HAIR_COLORS, HAIR_STYLES, SKIN_TONES, randomLook, ran
 import { AVATAR_COLORS, saveProfile, store, type Profile } from '../state';
 import { Person } from '../world/character';
 import { toonUnique } from '../world/toon';
+import { DECK } from '../world/office/materials';
 import { h, openModal } from './dom';
 import { icon } from './icons';
 
@@ -29,8 +30,8 @@ class Preview {
     this.renderer.shadowMap.enabled = true;
     this.renderer.toneMapping = THREE.NeutralToneMapping;
 
-    // The deck's light: a cool fill from above and the slate below, and one cool key.
-    this.scene.add(new THREE.HemisphereLight('#AEB8C4', '#0D131A', 1.6));
+    // The deck's light: a warm fill from above and the graphite below, and one pale key.
+    this.scene.add(new THREE.HemisphereLight('#C8BCAD', DECK.void, 1.6));
     const sun = new THREE.DirectionalLight('#DCE3EA', 2.4);
     sun.position.set(-3, 6, 5);
     sun.castShadow = true;

@@ -70,7 +70,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
   // Voice chat: an open mic, or muted until you hold V.
   const talkRow = choiceRow('Voice chat', [[false, 'Open mic'], [true, 'Push to talk']], () => settings.pushToTalk, (pushToTalk) => change({ pushToTalk }));
   // The alarm when a worker stops to ask you something; picking one plays it.
-  const alarmRow = choiceRow<NeedsYouSound>('When a unit needs you', [['once', 'Once'], ['remind', 'Keep reminding me'], ['off', 'Off']], () => settings.needsYouSound, (needsYouSound) => {
+  const alarmRow = choiceRow<NeedsYouSound>('When an agent needs you', [['once', 'Once'], ['remind', 'Keep reminding me'], ['off', 'Off']], () => settings.needsYouSound, (needsYouSound) => {
     change({ needsYouSound });
     if (needsYouSound !== 'off') sound.cue('needs-you');
   });
@@ -112,8 +112,8 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
       blurb: 'How loud the bridge is for you, and how voice chat works.',
       body: [
         setting('Sound', 'you', ...sounds.main, h('p.setting-note', {}, 'On from your first click or key (browsers allow sound no sooner). Shift+M turns it all off and on again anywhere on the deck. Voice chat has its own level.')),
-        setting('Mixer', 'you', ...sounds.mixer, h('p.setting-note', {}, 'Each group under the main volume. Alerts are never turned down by the deck: everything else steps back while a unit needs you, Calm and Silent running quieten the ambience, and a hidden tab plays the alerts only.')),
-        setting('When a unit needs you', 'you', alarmRow, h('p.setting-note', {}, 'The needs-you cue the moment a unit on your deck stops to ask you something or wants a permission. Keep reminding me plays it again, softly, every 30 seconds until someone opens the terminal of that unit. A unit you snoozed in Mission control stays quiet. It plays while sound is on and Alerts are up.')),
+        setting('Mixer', 'you', ...sounds.mixer, h('p.setting-note', {}, 'Each group under the main volume. Alerts are never turned down by the deck: everything else steps back while an agent needs you, Calm and Silent running quieten the ambience, and a hidden tab plays the alerts only.')),
+        setting('When an agent needs you', 'you', alarmRow, h('p.setting-note', {}, 'The needs-you cue the moment an agent on your deck stops to ask you something or wants a permission. Keep reminding me plays it again, softly, every 30 seconds until someone opens the terminal of that agent. An agent you snoozed in Mission control stays quiet. It plays while sound is on and Alerts are up.')),
         setting('Voice chat', 'you', talkRow, h('p.setting-note', {}, "Either way, V joins voice, holding V talks and you're muted once you let go, and M mutes or unmutes your mic (Shift+M is the deck's own sound). With push to talk you join muted. Leave voice from the menu.")),
       ],
     },

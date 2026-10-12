@@ -51,7 +51,8 @@ export function commandSteps() {
   document.querySelectorAll<HTMLElement>('.cmd-text').forEach((el) => {
     if (el.children.length) return; // the Labs command holds its own buttons
     const steps = (el.textContent ?? '').split(' && ');
-    if (steps.length < 2 && !/\/\//.test(steps[0])) return;
+    // One step with no slash in it (no address, no github:owner/repo) has nowhere to break.
+    if (steps.length < 2 && !/\//.test(steps[0])) return;
     el.replaceChildren(
       ...steps.flatMap((step, i) => {
         const span = document.createElement('span');

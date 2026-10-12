@@ -87,6 +87,17 @@ function ownerLabel(e: RosterEntry): string {
 }
 
 /**
+ * How many wait on you across every project and filter, so a search or a project pick never hides a
+ * question from the warm gate (warm.ts, empty.ts, kip-moments.ts). `except` is left out: the agent
+ * you just answered, which may not have left Needs you yet.
+ */
+export function needsYouNow(except?: string): number {
+  const all = buildInbox(store.ranked());
+  const n = waitingNow(all).needYou.length;
+  return except && all.sections['needs-you'].some((r) => r.entry.id === except) ? n - 1 : n;
+}
+
+/**
  * When each row in Needs you (its loose reminders too) and in To review started waiting: the same
  * buckets the list draws, so the pulse never counts differently from the sections under it. A change
  * whose merge is held or under way waits on the merge now, not on you, so it isn't counted.
@@ -186,7 +197,7 @@ function ageEl(section: InboxSection, att: { since: number; snoozed?: boolean },
 const EMPTY: Record<InboxSection, string> = {
   'needs-you': 'Nothing needs you.',
   review: 'Nothing to review.',
-  working: 'No agent is working right now.',
+  working: "Nobody's working right now. Give an agent a job when you're ready.",
   idle: '',
 };
 
@@ -199,7 +210,7 @@ function section(s: InboxSection, view: InboxView, extra: HTMLElement[], deps: L
   const nobody = !view.counts['needs-you'] && !view.counts.review && !extra.length;
   if (s === 'review' && nobody) return null;
   if (s === 'needs-you' && nobody) {
-    return h('section.sec.sec-needs-you.empty.nobody', {}, h('p.sec-empty.e-nobody', {}, icon('check', 14), h('span', {}, h('b', {}, 'Nobody waiting.'), ' Every agent has what it needs from you.')));
+    return h('section.sec.sec-needs-you.empty.nobody', {}, h('p.sec-empty.e-nobody', {}, icon('check', 14), h('span', {}, h('b', {}, 'Nobody waiting.'), ' The crew has what it needs from you.')));
   }
   const open = !foldable || home.idleOpen;
   const head = foldable
@@ -222,7 +233,7 @@ export function renderList(root: HTMLElement, deps: ListDeps, firstRun: () => HT
     return;
   }
   const parts = INBOX_SECTIONS.map((s) => section(s, view, s === 'needs-you' ? loose : [], deps, now)).filter((x): x is HTMLElement => !!x);
-  if (home.query && !INBOX_SECTIONS.some((s) => view.sections[s].length)) parts.unshift(h('p.sec-empty.search-empty', {}, `No agent matches "${home.query}".`));
+  if (home.query && !INBOX_SECTIONS.some((s) => view.sections[s].length)) parts.unshift(h('p.sec-empty.search-empty', {}, `No agent matches "${home.query}". Try fewer words, or clear the search.`));
   root.replaceChildren(...parts);
 }
 

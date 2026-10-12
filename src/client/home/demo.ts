@@ -1,7 +1,7 @@
 // The demo (`kipdeck --demo`, see shared/demo.ts): a small Demo tag in the top bar (the whole note is
 // its tooltip), and the coach strip over the inbox (coach.ts, loaded only in a demo office), which
-// walks the loop the demo opens with and ends on "Run it on your repo". A demo office has no Get
-// started checklist (shipped.ts): the strip is its guide.
+// walks the loop the demo opens with and ends on "Run it on your repo" (shared/democoach.ts). A demo
+// office has no Get started checklist (shipped.ts): the strip is its guide.
 import { demoNote, type DemoInfo } from '../../shared/demo';
 import type { ServerMsg } from '../../shared/protocol';
 import { h } from '../ui/dom';

@@ -1,14 +1,14 @@
 // The merge hold: Merge doesn't merge at once. For MERGE_HOLD_MS a toast says what is about to happen
 // and where ("Squash-merging PR #12 into main"), with the task, a countdown and Undo (Esc or u undo the
 // latest, keys.ts); only then is the merge sent. Until it lands the change no longer counts as waiting
-// on you (inFlight). The same toast then says how it went: a settled check and "Merged PR #12 into
-// main", with how long the change waited on you, or why it didn't merge. A merge can't be taken back
+// on you (inFlight). The same toast then says how it went: a settled check and "Merged: <task>. Waited
+// on you 32s." with where it went ("Merged PR #12 into main"), or why it didn't merge. A merge can't be taken back
 // once GitHub or git has it, so the time to change your mind is before.
 
 import { agentBadge } from '../../shared/agentname';
 import { mergeWords } from '../../shared/inbox';
 import type { RosterEntry, ShipRecord } from '../../shared/protocol';
-import { waitWords } from '../../shared/wait';
+import { firstMergeLine, landedNote, mergedLine } from '../../shared/warm';
 import { h } from '../ui/dom';
 import { icon } from '../ui/icons';
 import { settle } from './beat';
@@ -109,10 +109,17 @@ export function undoMerge(id: string, changed: () => void) {
   changed();
 }
 
-/** The office answered a merge this page sent: its toast says how it went. False when this page has no toast for it. */
-export function mergeLanded(workerId: string, result: { error?: string; record?: ShipRecord }, note?: string): boolean {
+/** What the landed toast says after the fact: whether it is this browser's first merge, how many are on today's tape, and whether nothing needs you (else the warm clause is left off). */
+export interface LandedSay {
+  first: boolean;
+  onTape: number;
+  quiet: boolean;
+}
+
+/** The office answered a merge this page sent: its toast says how it went, and is handed back. Undefined when this page has no toast for it. */
+export function mergeLanded(workerId: string, result: { error?: string; record?: ShipRecord }, say: LandedSay = { first: false, onTape: 0, quiet: false }): HTMLElement | undefined {
   const s = sent.get(workerId);
-  if (!s) return false;
+  if (!s) return undefined;
   sent.delete(workerId);
   const text = s.toast.querySelector('.toast-text');
   s.toast.classList.remove('hold');
@@ -120,14 +127,14 @@ export function mergeLanded(workerId: string, result: { error?: string; record?:
     s.toast.classList.add('warn');
     text?.replaceChildren(result.error);
     fade(s.toast, 6000);
-    return true;
+    return s.toast;
   }
-  const waited = result.record?.waitedMs;
-  // What merged, how long it waited on you, and then the note (the first merge's) or where it went.
-  const wait = waited === undefined ? '' : ` It waited on you ${waitWords(waited)}.`;
-  const said = `${s.entry.title}.${wait} ${note ?? "It's in Shipped today."}`;
-  text?.replaceChildren(mergeWords(s.entry, true), h('small', {}, said));
+  // "Merged: <task>. Waited on you 32s.", the day's tape count while nothing needs you, and where it
+  // went under it; the first merge says its one sentence alone.
+  const line = mergedLine(s.entry.title, result.record?.waitedMs, say.onTape);
+  const note = landedNote(line, say.first ? firstMergeLine(s.entry.title, say.quiet) : undefined, say.quiet);
+  text?.replaceChildren(note.fact, ...(note.after ? [' ', h('span.warm-said', {}, note.after)] : []), ...(note.where ? [h('small', {}, `${mergeWords(s.entry, true)}.`)] : []));
   settle(s.toast);
-  fade(s.toast, 4500);
-  return true;
+  fade(s.toast, note.ms);
+  return s.toast;
 }
