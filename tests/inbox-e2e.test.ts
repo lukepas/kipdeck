@@ -212,7 +212,7 @@ test('deploy, needs you, answer, review, merge: the loop on the home page', asyn
   // this browser is one short sentence, with no wait beside it and no line under it.
   await page.locator('.pane .rv-merge').click();
   await page.locator('.ship', { hasText: 'Write the README quickstart' }).waitFor({ timeout: 30_000 });
-  const landed = page.locator('#toasts .toast.settled', { hasText: 'First merge: Write the README quickstart!' });
+  const landed = page.locator('#toasts .toast.settled', { hasText: /^First merge: Write the README quickstart[^.!]*!$/ });
   await landed.waitFor({ timeout: 5_000 });
   assert.doesNotMatch(await landed.innerText(), /Waited|Merged into/);
   assert.match(await page.locator('.shipped .sec-total').innerText(), /^1 merged/);
