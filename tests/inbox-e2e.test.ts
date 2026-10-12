@@ -332,7 +332,9 @@ test('after an answer the pane moves on: the next that asks, then the next to re
   if (why) return t.skip(why);
   const { page, errors, context } = await signedIn({ width: 1440, height: 900 });
   t.after(() => context.close());
-  await page.locator('.sec-review .row').first().waitFor({ timeout: 15_000 });
+  // Its own one to review, so it stands without the loop test before it.
+  await deploy(page, '[done] Sort the release notes (demo)');
+  await row(page, 'review', 'Sort the release notes').waitFor({ timeout: 30_000 });
   const asks = ['Rename the checkout button', 'Tidy the footer links'];
   await deploy(page, `[ask] ${asks[0]} (demo)`);
   await deploy(page, `[ask] ${asks[1]} (demo)`);
