@@ -416,7 +416,7 @@
     var rnd = []; for (var i = 0; i < N; i++) { var x = Math.sin(i * 12.9898) * 43758.5453; rnd.push(x - Math.floor(x)); }
     var rank = rnd.map(function (v, i) { return [v, i]; }).sort(function (a, b) { return a[0] - b[0]; });
     var isAgent = new Array(N); rank.forEach(function (r, k) { isAgent[r[1]] = k < AGENT; });
-    var TAM = 520, SAM = TAM * Math.sqrt(1.85 / 4.07), SOM = Math.max(10, TAM * Math.sqrt(7.2 / 4070));
+    var TAM = 520, SAM = TAM * Math.sqrt(1.24 / 2.71), SOM = Math.max(10, TAM * Math.sqrt(4.8 / 2710));
     var BOT = H - 48, X0 = W - TAM, Y0 = BOT - TAM;                                // squares share the bottom-right corner
     var aIdx = 0, targets = {};
     var side = Math.ceil(Math.sqrt(AGENT)), step = (TAM - 40) / side;
