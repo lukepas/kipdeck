@@ -46,8 +46,8 @@ export const approval = once(() => import('./approval-card'));
 export const accounts = once(() => import('../ui/accounts'), (m) => m.routeAccountsMessage);
 export const proposal = once(() => import('./proposal-window'));
 export const pair = once(() => import('../ui/pair'));
-/** The warm moments: the greeting and Kip in the all-clear pane, the merge's cheer, the first job (warm.ts). */
-export const warm = once(() => import('./warm'));
+/** Kip in the quiet moments: the all-clear pane, the setup card, the merge's cheer, the first job (kip-moments.ts). */
+export const kipMoments = once(() => import('./kip-moments'));
 
 /** After a reconnect the office has forgotten which terminal and which changes this page follows: tell it again. */
 export async function rewatch(net: Net) {

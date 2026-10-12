@@ -3,6 +3,7 @@
    The glow and the grain stay behind Kip and around the card, never under it, and the light sets
    drop both. Orange is kept for someone who needs you, so the button and the focus ring are ink (--act). */
 @import './styles/tokens.css';
+@import './styles/kip.css';
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -58,11 +59,8 @@ button.link:hover { background: none; color: var(--text); }
    sits on the card's top edge. Nothing here takes a click or focus. */
 .signin-kip { position: relative; z-index: 1; display: flex; justify-content: center; align-items: flex-end; width: min(360px, 100%); height: 112px; margin: 0 auto -7px; pointer-events: none; }
 .signin-glow { position: absolute; left: 0; right: 0; top: -24px; bottom: 7px; background: var(--sunset); opacity: .7; -webkit-mask-image: radial-gradient(50% 100% at 50% 100%, black 30%, transparent 100%); mask-image: radial-gradient(50% 100% at 50% 100%, black 30%, transparent 100%); }
-.signin-kip .kip { position: relative; display: block; width: 96px; height: 96px; color: var(--text); }
-.signin-kip .kip svg { display: block; width: 100%; height: 100%; }
-.signin-kip .kip-fill { fill: var(--surface-1); }
-.signin-kip .kip-ground { display: none; }
-.signin-kip .kip-swish { opacity: .6; }
+.signin-kip .kip { position: relative; display: block; width: 74px; height: 96px; }
+.signin-kip .kip svg { display: block; width: 100%; height: 100%; overflow: visible; }
 /* No Kip over a failure (docs/voice.md#where-fun-is-forbidden): while the card shows an error, or the
    signed-out card says why a link didn't work, he and the glow step out. Hidden, not removed, so the
    card and the field you were typing in stay where they were. */

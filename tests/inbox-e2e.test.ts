@@ -175,7 +175,7 @@ test('deploy, needs you, answer, review, merge: the loop on the home page', asyn
   await page.keyboard.press('Enter');
   await row(page, 'review', 'Fix the flaky checkout test').waitFor({ timeout: 30_000 });
   // The settled toast names it by its task, as its row does.
-  await page.locator('#toasts .toast', { hasText: /Answered "Fix the flaky checkout test[^"]*"\. Back at work\./ }).waitFor({ timeout: 10_000 });
+  await page.locator('#toasts .toast', { hasText: /^Fix the flaky checkout test.* is back at work\./ }).waitFor({ timeout: 10_000 });
   await page.locator('.sec-needs-you .sec-empty', { hasText: 'Nothing needs you' }).waitFor();
 
   // Review: the Changes tab with what it changed and the branch it goes into, then Merge.

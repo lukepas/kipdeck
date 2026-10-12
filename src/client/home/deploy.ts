@@ -37,8 +37,8 @@ function lastAgent(): AgentProvider | undefined {
   }
 }
 
-/** Opens the sheet. `prompt` fills the box (the first-run starter task), `provider` picks the agent; `started` hears when an agent was asked for, and its task. */
-export function openDeploy(net: Net, opts: { prompt?: string; provider?: AgentProvider; started?(at: number, task: string): void } = {}) {
+/** Opens the sheet. `prompt` fills the box (the first-run starter task), `provider` picks the agent; `started` hears when an agent was asked for. */
+export function openDeploy(net: Net, opts: { prompt?: string; provider?: AgentProvider; started?(at: number): void } = {}) {
   const floors = store.floors.filter((f) => !f.cloning);
   if (!floors.length) return toast('Add a project first: none is open yet', 'warn');
   const project = h('select', { id: 'deploy-project', 'aria-label': 'Project' }, ...floors.map((f) => h('option', { value: f.id }, f.name))) as HTMLSelectElement;
@@ -87,7 +87,7 @@ export function openDeploy(net: Net, opts: { prompt?: string; provider?: AgentPr
   };
   paintChips();
 
-  const ta = h('textarea', { rows: 5, id: 'deploy-prompt', placeholder: 'What should it do? For example: add rate limiting to /api/login', 'aria-label': 'Task' }) as HTMLTextAreaElement;
+  const ta = h('textarea', { rows: 5, id: 'deploy-prompt', placeholder: "What's the job? For example: add rate limiting to /api/login", 'aria-label': 'Task' }) as HTMLTextAreaElement;
   ta.value = opts.prompt ?? '';
   const install = absent.length
     ? h('div.deploy-other', {}, h('label', {}, 'Not on this computer yet'), ...absent.map((p) => h('p.deploy-note', {}, `${PROVIDER_META[p].label}: `, h('code', {}, agentFound(p)?.fix ?? ''), ' ', h('button.btn.small', { type: 'button', onclick: () => pick(p) }, 'Pick anyway'))))
@@ -146,7 +146,7 @@ export function openDeploy(net: Net, opts: { prompt?: string; provider?: AgentPr
       const at = Date.now();
       net.send({ t: 'worker.spawn', deskId, prompt, worktree: !!store.project?.branch, provider: choice.provider, model: choice.model, effort: choice.effort });
       home.check('deploy');
-      opts.started?.(at, prompt);
+      opts.started?.(at);
     });
   };
   form.addEventListener('submit', (e) => {

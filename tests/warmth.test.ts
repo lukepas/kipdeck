@@ -1,102 +1,120 @@
-// The inbox's warm moments (src/shared/warmth.ts, client/home/warm.ts, client/home/kip/): the greeting
-// by local time, Kip's pose in the all-clear pane, the gate that keeps every warm beat away while
-// anyone needs you, the first job's words, and Kip's poses kept small, inline, decorative and lazy.
+// How the inbox's warmth is put together (docs/voice.md, docs/design.md#warmth-the-crew-look): one
+// shared module for its words and rules (src/shared/warm.ts), the words on the page up front
+// (client/home/warm.ts), Kip and his beats loaded lazily (client/home/kip-moments.ts), one Kip drawing
+// for every flat surface (src/shared/kip-art.ts), one first-merge toast with one Kip, and an all-clear
+// pane of four things.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { aboardWords, calmPose, greeting, quiet, taskName } from '../src/shared/warmth.ts';
-import { funIn } from '../src/shared/voice.ts';
+import { kipStill, type KipStill } from '../src/shared/kip-art.ts';
 
 const root = path.join(import.meta.dirname, '..');
 const read = (f: string) => readFileSync(path.join(root, f), 'utf8');
-const KIP = 'src/client/home/kip';
+const HOME = 'src/client/home';
+const homeTs = readdirSync(path.join(root, HOME)).filter((f) => f.endsWith('.ts'));
+const noComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 
-test('the greeting follows the local hour, with the night shift from 22:00 to 05:00', () => {
-  const at = (h: number) => greeting(h).eyebrow;
-  assert.deepEqual([4, 5, 11, 12, 17, 18, 21, 22, 0].map(at), ['Night shift', 'Morning', 'Morning', 'Afternoon', 'Afternoon', 'Evening', 'Evening', 'Night shift', 'Night shift']);
-  assert.equal(greeting(23).line, "Still up? Nothing needs you. Kip's keeping watch.");
-  assert.equal(greeting(9).line, undefined, 'only the night shift has a line');
-});
-
-test('Kip has his lantern on the night shift, watches while agents work, and naps when nobody does', () => {
-  assert.equal(calmPose(2, 23), 'lantern');
-  assert.equal(calmPose(0, 3), 'lantern');
-  assert.equal(calmPose(3, 10), 'watching');
-  assert.equal(calmPose(0, 15), 'napping');
-});
-
-test('nothing warm while anyone needs you', () => {
-  assert.equal(quiet(0), true);
-  assert.equal(quiet(1), false);
-  assert.equal(quiet(7), false);
-});
-
-test('the first job names its task, fact first, and ends on where it comes back', () => {
-  assert.deepEqual(aboardWords('Fix the flaky checkout test'), { text: 'Fix the flaky checkout test is aboard.', sub: "It'll come back here when it needs you." });
-  assert.equal(taskName('  Add rate limiting to /api/login\nand tests too  '), 'Add rate limiting to /api/login');
-  const long = taskName('x'.repeat(100));
-  assert.equal(long.length, 60);
-  assert.ok(long.endsWith('...'));
-  // No exclamation mark: the product's one is the first merge.
-  assert.ok(!funIn(aboardWords('Fix it').text + aboardWords('Fix it').sub).includes('an exclamation mark'));
-});
-
-const poses = readdirSync(path.join(root, KIP)).filter((f) => f !== 'index.ts' && f.endsWith('.ts'));
-
-test('every pose is in the registry, loaded lazily, and the registry is the only way in', () => {
-  const registry = read(`${KIP}/index.ts`);
-  assert.ok(poses.length >= 6, 'watching, napping, lantern, cheer, wave, sticker');
-  for (const f of poses) assert.match(registry, new RegExp(`import\\('\\./${f.replace('.ts', '')}'\\)`), `${f} is loaded through import()`);
-  // The inbox reaches Kip only through warm.ts, which itself is loaded through lazy.ts.
-  assert.match(read('src/client/home/lazy.ts'), /export const warm = once\(\(\) => import\('\.\/warm'\)\)/);
-  for (const f of ['empty.ts', 'actions.ts', 'setup.ts', 'index.ts', 'list.ts']) assert.doesNotMatch(read(`src/client/home/${f}`), /from '\.\/(kip|warm)'/, `${f} imports Kip or warm.ts up front`);
-});
-
-test("Kip's poses are small inline SVG line art in currentColor, with no hex, no text and no script", () => {
-  for (const f of poses) {
-    const svg = (read(`${KIP}/${f}`).match(/export default '(.*)';/) ?? [])[1];
-    assert.ok(svg, `${f} exports its SVG`);
-    assert.ok(svg.length < 1500, `${f} is ${svg.length} bytes, over 1.5 kB`);
-    assert.match(svg, /^<svg viewBox="0 0 96 96"/, `${f} is on the 96 grid`);
-    assert.match(svg, /stroke="currentColor"/);
-    assert.match(svg, /stroke-width="1\.75"/);
-    assert.doesNotMatch(svg, /#[0-9a-fA-F]{3,6}\b/, `${f} has a hex color`);
-    assert.doesNotMatch(svg, /<(text|script|foreignObject|image)\b|on\w+=/i, `${f} has text, script or an image`);
+test('one module set: the shared words and rules, the words up front, Kip lazily', () => {
+  for (const gone of ['src/shared/warmth.ts', `${HOME}/kip`]) assert.ok(!existsSync(path.join(root, gone)), `${gone} is back: the warmth lives in shared/warm.ts and kip-moments.ts`);
+  for (const f of ['src/shared/warm.ts', `${HOME}/warm.ts`, `${HOME}/warm.css`, `${HOME}/kip-moments.ts`, `${HOME}/kip-moments.css`]) assert.ok(existsSync(path.join(root, f)), `${f} is missing`);
+  // Kip comes into the inbox only through lazy.ts, so none of his art is in the up-front budget.
+  assert.match(read(`${HOME}/lazy.ts`), /export const kipMoments = once\(\(\) => import\('\.\/kip-moments'\)\);/);
+  for (const f of homeTs.filter((f) => f !== 'kip-moments.ts')) {
+    assert.doesNotMatch(read(`${HOME}/${f}`), /from '\.\/kip-moments'|shared\/kip-art'/, `${f} pulls Kip in up front`);
   }
-  assert.match(read(`${KIP}/index.ts`), /setAttribute\('aria-hidden', 'true'\)/, 'a pose is always aria-hidden');
+  // Every greeting, gate and pose rule is in the one shared module; the client's warm.ts only puts words on the page.
+  assert.doesNotMatch(read(`${HOME}/kip-moments.ts`), /\bgreeting\(|firstJobLine|firstMergeLine/);
 });
 
-test('the warm sheet uses tokens only, and only Kip takes the soft curve', () => {
-  const css = read('src/client/home/warm.css');
-  assert.doesNotMatch(css.replace(/\/\*[\s\S]*?\*\//g, ''), /#[0-9a-fA-F]{3,6}\b/, 'no hex in a module sheet');
-  for (const rule of css.replace(/\/\*[\s\S]*?\*\//g, '').split('}').filter((r) => r.includes('--ease-soft'))) assert.match(rule, /kip|tuft/, `--ease-soft outside Kip: ${rule.trim()}`);
+test('one first-merge toast, with one Kip and no sticker', () => {
+  const sayers = homeTs.filter((f) => read(`${HOME}/${f}`).includes('firstMergeLine('));
+  assert.deepEqual(sayers.sort(), ['actions.ts', 'merge-hold.ts'], 'the hold toast says it, and actions.ts only when this page had no hold toast');
+  assert.match(read(`${HOME}/actions.ts`), /mergeLanded\([^\n]*\) \?\? \(first \? toast\(firstMergeLine\(/);
+  for (const f of [...homeTs, 'warm.css', 'kip-moments.css']) assert.doesNotMatch(read(`${HOME}/${f}`), /sticker|\.first-merge|classList\.add\('first-merge'\)/i, `${f} adds a second Kip to the first merge`);
+  // Kip goes in the toast's icon slot, in place of its check: one slot, one Kip.
+  assert.match(read(`${HOME}/kip-moments.ts`), /querySelector<HTMLElement>\('\.toast-icon'\)/);
+});
+
+test('one Kip: the app and the landing page draw the same character from kip-art.ts', () => {
+  assert.match(read('site/landing/src/kip/draw.ts'), /export \{ bodySVG, COLORS, GLOWS \} from '\.\.\/\.\.\/\.\.\/\.\.\/src\/shared\/kip-art\.ts';/);
+  assert.match(read('site/landing/src/kip/poses.ts'), /from '\.\.\/\.\.\/\.\.\/\.\.\/src\/shared\/kip-art\.ts'/);
+  assert.match(read('src/client/signin-art.ts'), /kipStill\('wave'\)/);
+  assert.match(read(`${HOME}/kip-moments.ts`), /kipStill\(pose\)/);
+  // His colours live in one sheet that the landing, the sign-in pages and the inbox all import.
+  assert.match(read('site/landing/src/styles/kip.css'), /@import '\.\.\/\.\.\/\.\.\/\.\.\/src\/client\/styles\/kip\.css';/);
+  assert.match(read('src/client/login.css'), /@import '\.\/styles\/kip\.css';/);
+  assert.match(read(`${HOME}/kip-moments.css`), /@import '\.\.\/styles\/kip\.css';/);
+  for (const f of ['site/landing/src/styles/kip.css', 'src/client/login.css', `${HOME}/kip-moments.css`]) assert.doesNotMatch(read(f), /--kip-fur:/, `${f} keeps a second set of Kip's colours`);
+  // No second drawing anywhere in the app: no line-art Kip on a 96 grid.
+  for (const f of [...homeTs.map((f) => `${HOME}/${f}`), 'src/client/signin-art.ts']) assert.doesNotMatch(read(f), /viewBox="0 0 96 96"/, `${f} draws a Kip of its own`);
+});
+
+const POSES: KipStill[] = ['watching', 'napping', 'lantern', 'cheer', 'wave'];
+
+test("Kip held still: the full drawing, decorative, with no style, script or doubled attribute, and each pose its own", () => {
+  const drawn = POSES.map((p) => kipStill(p));
+  for (const [i, svg] of drawn.entries()) {
+    assert.match(svg, /^<svg viewBox="0 0 100 130" aria-hidden="true" focusable="false">/, POSES[i]);
+    assert.match(svg, /class="k-scarf"/, 'he wears his scarf');
+    assert.doesNotMatch(svg, /\sstyle=|<(script|foreignObject|image|text)\b|\son\w+=/i, `${POSES[i]} has a style, script or text`);
+    for (const tag of svg.match(/<[a-z][^>]*>/g) ?? []) {
+      const names = [...tag.matchAll(/\s([a-zA-Z-]+)=/g)].map((m) => m[1]);
+      assert.equal(new Set(names).size, names.length, `${POSES[i]}: ${tag}`);
+    }
+  }
+  assert.equal(new Set(drawn.map((s) => s.replace(/-\d+"/g, '"').replace(/#kg-(\w+)-\d+/g, ''))).size, POSES.length, 'every pose looks different');
+  // His cheer opens his mouth; on the night shift his wand is lit low; asleep his eyes are shut.
+  assert.match(kipStill('cheer'), /class="k-mouthO"[^>]*opacity="1"/);
+  assert.match(kipStill('lantern'), /class="k-g-green" opacity="\.5"/);
+  assert.match(kipStill('watching'), /class="k-lidL"[^>]*transform="[^"]*scale\(1 0\.12\)/);
+  assert.doesNotMatch(kipStill('napping'), /class="k-lidL"[^>]*transform=/);
+});
+
+test('the warm sheets use tokens only, and only Kip takes the soft curve', () => {
+  for (const f of [`${HOME}/warm.css`, `${HOME}/kip-moments.css`]) assert.doesNotMatch(noComments(read(f)), /#[0-9a-fA-F]{3,6}\b/, `${f}: no hex in a module sheet`);
+  const css = noComments(read(`${HOME}/kip-moments.css`));
+  for (const rule of css.split('}').filter((r) => r.includes('--ease-soft'))) assert.match(rule, /kip|tuft/, `--ease-soft outside Kip: ${rule.trim()}`);
   // Each beat plays once; only Kip's slow breath repeats, at 4s or longer.
   for (const m of css.matchAll(/animation:[^;]*/g)) if (/infinite/.test(m[0])) assert.match(m[0], /kip-breathe (\d+)s/, `a looping animation that is not Kip's breath: ${m[0]}`);
   assert.ok(Number(/kip-breathe (\d+)s/.exec(css)?.[1]) >= 4);
 });
 
-test("Kip and the warm words stay out of the plain modules' sheets and code", () => {
-  for (const f of ['src/client/home/approval-card.ts', 'src/client/home/approval.ts', 'src/client/home/spend.ts', 'src/client/home/spend-control.ts', 'src/client/home/merge-hold.ts']) {
-    assert.doesNotMatch(read(f), /\bkip\b|warm\(\)|celebrate|fillKip/i, `${f} reaches for Kip`);
-  }
+test('the all-clear pane is four things: Kip, the heading, one warm line and the day on one line', () => {
+  const empty = read(`${HOME}/empty.ts`);
+  const clear = empty.slice(empty.indexOf("if (pane.kind === 'clear')"), empty.indexOf('const { next, section'));
+  assert.match(clear, /h\('span\.kip\.pe-kip', \{ 'data-pose': calmPose\(/, 'Kip, his pose in the markup');
+  assert.match(clear, /h\('h2\.warm-clear', \{\}, \.\.\.said\(ALL_CLEAR, calm\)\)/);
+  assert.match(clear, /calm \? clearLine\(now\) : null/);
+  assert.match(clear, /h\('p\.pe-day', \{\}, daySoFar\(/);
+  // No second check mark, no tape-label greeting, and no Shipped list (Shipped today is under the list).
+  assert.doesNotMatch(clear, /icon\('check'|pe-ok|greeting|pe-shipped|Shipped today/);
 });
 
 test('Kip leaves the all-clear pane the moment a question lands, even one outside the filtered view', () => {
   // The pane is drawn again only when its markup changes (pane.ts), so the gate is in the markup.
-  assert.match(read('src/client/home/empty.ts'), /h\('div\.pe-warm', \{ 'data-quiet': needsYouNow\(\) === 0/);
-  // One count of who waits on you, across every project and filter, for the pane and for warm.ts.
-  assert.match(read('src/client/home/list.ts'), /export function needsYouNow\(\): number \{\n\s+return waitingNow\(buildInbox\(store\.ranked\(\)\)\)\.needYou\.length;/);
-  assert.match(read('src/client/home/warm.ts'), /import \{ needsYouNow \} from '\.\/list';/);
+  assert.match(read(`${HOME}/empty.ts`), /const calm = needsYouNow\(\) === 0;\n\s+const kip = calm \?/);
+  // One count of who waits on you, across every project and filter, for the pane and for every warm beat.
+  assert.match(read(`${HOME}/list.ts`), /export function needsYouNow\(except\?: string\): number \{\n\s+const all = buildInbox\(store\.ranked\(\)\);/);
+  assert.match(read(`${HOME}/warm.ts`), /export const quiet = \(except\?: string\) => needsYouNow\(except\) === 0;/);
+  assert.match(read(`${HOME}/kip-moments.ts`), /import \{ quiet \} from '\.\/warm';/);
+});
+
+test("Kip and the warm words stay out of the plain modules' sheets and code", () => {
+  for (const f of ['approval-card.ts', 'approval.ts', 'spend.ts', 'spend-control.ts', 'merge-hold.ts']) {
+    assert.doesNotMatch(read(`${HOME}/${f}`), /\bkip\b|kipMoments|celebrate|fillKip|kip-art/i, `${f} reaches for Kip`);
+  }
 });
 
 test('no Kip and no welcome over a failure on the sign-in pages', () => {
   assert.match(read('src/client/login.css'), /body:has\(\.error:not\(:empty\)\) \.signin-kip, body:has\(#local:not\(\[hidden\]\)\) \.signin-kip \{ visibility: hidden; \}/);
   assert.match(read('src/client/claim.ts'), /function fail\(msg: string\) \{[^}]*\$\('title'\)\.textContent = "This link didn't work";/);
+  // And none over a merge that failed.
+  assert.match(read(`${HOME}/kip-moments.ts`), /if \(!quiet\(\) \|\| el\?\.classList\.contains\('warn'\)\) return;/);
 });
 
 test("the setup card's Kip shows only where the card is wide enough to keep him off its words", () => {
-  const css = read('src/client/home/warm.css');
+  const css = read(`${HOME}/kip-moments.css`);
   assert.match(css, /\.setup-card \{ container-type: inline-size; \}/);
   assert.match(css, /@container \(max-width: 399px\) \{ \.su-kip \{ display: none; \} \}/);
 });
