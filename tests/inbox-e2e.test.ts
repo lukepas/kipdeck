@@ -287,8 +287,10 @@ test('a phone: the list alone, an agent over it with large buttons, Back to the 
   assert.ok(!(await page.locator('.pane').isVisible()), 'no pane beside the list');
   await first.locator('.row-main').click();
   await page.locator('.pane .rv-merge').waitFor();
-  const box = await page.locator('.pane .rv-merge').boundingBox();
-  assert.ok(box && box.height >= 44, `Merge is a large tap target (${box?.height}px)`);
+  // Measured in the page in one go: the review bar is drawn again on every roster tick (pane.ts,
+  // reviewBar), so a button found by one call can be gone by the next.
+  const height = await page.evaluate(() => document.querySelector('.pane .rv-merge')?.getBoundingClientRect().height);
+  assert.ok(height !== undefined && height >= 44, `Merge is a large tap target (${height}px)`);
   const pane = await page.locator('.pane').boundingBox();
   assert.ok(pane && pane.width >= 389, 'the pane covers the screen');
   await page.locator('.pane-back').click();
