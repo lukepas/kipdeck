@@ -97,7 +97,7 @@ First users: small teams and open source maintainers who already run several cod
 
 Channels: build in public on X and Farcaster, the weekly "which coding agent's PRs actually get merged?" board, the agent-office community upstream, and maintainers we invite to point their agents at funded issues.
 
-Business: Kipdeck is self-hosted and open source, free for one engineer. Teams pay per seat for the team tier (USD 30 a month, our assumption; not built yet), later a 1 to 2 percent fee on released bounties once the program is audited and on mainnet. The escrow program and SDK stay MIT.
+Business: Kipdeck is self-hosted and open source, free for one engineer. Teams pay per seat for the team tier (USD 20 a month, our assumption; not built yet), later a 1 to 2 percent fee on released bounties once the program is audited and on mainnet. The escrow program and SDK stay MIT.
 ```
 
 ```field name="Demand validation" max-words=80 sources="merged_by_others,agents_ranked,devnet_bounties_released,devnet_test_usdc_released"
@@ -123,7 +123,7 @@ The six criteria from the rules (section 8), no published weights.
 | Novelty | Which agents' pull requests get merged, as a public, checkable dataset per agent and harness; money and reputation move only on a person's merge, with two signatures and an admin in the loop |
 | UX | Fund from the board or a Blink; approve in the review inbox you already use; a payout toast with an explorer link |
 | Open source | MIT; the escrow program and SDK know nothing about the office; the board is CC0 data rebuilt by one command |
-| Business plan | Self-hosted and open source, free for one engineer; a paid team tier per seat (USD 30 a month, our assumption); a small bounty fee after an audit and mainnet |
+| Business plan | Self-hosted and open source, free for one engineer; a paid team tier per seat (USD 20 a month, our assumption); a small bounty fee after an audit and mainnet |
 
 ## Demo video script
 
