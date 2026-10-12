@@ -51,7 +51,7 @@ export function switchOut(body: HTMLElement) {
 export function createInspector(deps: InspectorDeps) {
   const body = h('div.sel-body');
   const x = h('button.btn.close.corner', { type: 'button', 'aria-label': 'Close', title: 'Close (Esc)', onclick: () => deps.close() }, icon('close', 14));
-  const card = h('section.sel-card', { 'aria-label': 'Selected unit', 'aria-live': 'polite', hidden: true }, body, x);
+  const card = h('section.sel-card', { 'aria-label': 'Selected agent', 'aria-live': 'polite', hidden: true }, body, x);
   document.body.append(card);
 
   let id: string | null = null;

@@ -103,7 +103,7 @@ export function installPalette(ctx: Ctx, parts: PaletteParts) {
       open: free ? hireAt(free) : () => toast('Every desk on this deck is taken', 'warn'),
       walk: free ? () => walkThen(deskSpot(free)!, free.label, hireAt(free), free) : undefined,
     });
-    out.push(at('queue', 'the task queue', { icon: 'queue', kind: 'Action', title: 'Open the task queue', detail: 'Issues and tasks waiting for a unit', keywords: ['backlog', 'tasks'], open: showQueue }));
+    out.push(at('queue', 'the task queue', { icon: 'queue', kind: 'Action', title: 'Open the task queue', detail: 'Issues and tasks waiting for an agent', keywords: ['backlog', 'tasks'], open: showQueue }));
     out.push({ icon: 'settings', kind: 'Action', title: 'Settings', keywords: ['preferences', 'options'], open: () => parts.hud.showSettings() });
     if (store.invites) out.push({ icon: 'invite', kind: 'Action', title: 'Invite teammates', keywords: ['team', 'add people'], open: () => openTeam(net) });
     else if (store.me.admin) out.push({ icon: 'key', kind: 'Action', title: 'Invite people', detail: 'Accounts', keywords: ['invite teammates', 'accounts', 'team'], open: () => openAccounts(net) });
@@ -112,7 +112,7 @@ export function installPalette(ctx: Ctx, parts: PaletteParts) {
 
     out.push(at('issues', 'the Issues board', { icon: 'issue', kind: 'Board', title: 'Issues board', open: () => openBoard('issues', net, actions.boardActions()) }));
     out.push(at('pulls', 'the PR board', { icon: 'pull', kind: 'Board', title: 'PR board', keywords: ['pull requests'], open: () => openBoard('pulls', net, actions.boardActions()) }));
-    out.push(at('services', 'the Services board', { icon: 'services', kind: 'Board', title: 'Services board', detail: 'Web servers the units are running', open: () => openServices() }));
+    out.push(at('services', 'the Services board', { icon: 'services', kind: 'Board', title: 'Services board', detail: 'Web servers the agents are running', open: () => openServices() }));
     out.push(at('whiteboard', 'the whiteboard', { icon: 'board', kind: 'Board', title: 'Whiteboard', open: () => openWhiteboard(net) }));
     out.push(at('meeting', 'the Review bay', { icon: 'meeting', kind: 'Board', title: 'Review bay', keywords: ['call a meeting', 'call a review', 'meeting room'], open: () => meeting.showMeeting() }));
 

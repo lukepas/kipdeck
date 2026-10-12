@@ -89,7 +89,7 @@ export function installMoments(ctx: Ctx, parts: Pick<Parts, 'views' | 'giveWay' 
 
   /** The card for `m`, with its real numbers. */
   function cardFor(m: Moment): MomentCard {
-    const unit = unitOf(m) ?? 'A unit';
+    const unit = unitOf(m) ?? 'An agent';
     if (m.kind === 'recovery') return recoveryCard({ unit, stuckMs: m.stuckMs ?? 0, merged: !!m.merged });
     if (m.kind === 'streak') return streakCard({ merges: m.merges ?? 3 });
     if (m.kind === 'first-merge' || m.kind === 'merge') return firstMergeCard({ unit, pr: m.pr, firstEver: !!m.firstEver });
@@ -145,7 +145,7 @@ export function installMoments(ctx: Ctx, parts: Pick<Parts, 'views' | 'giveWay' 
       recoveries++;
       const pod = unit && podOf(unit.deskId);
       if (pod) sweep.start(pod);
-      parts.alert.say('notice', recoveredLine(unit?.name ?? m.name ?? 'A unit', unit && callSign(unit.deskId), m.stuckMs ?? 0), null, 5000);
+      parts.alert.say('notice', recoveredLine(unit?.name ?? m.name ?? 'An agent', unit && callSign(unit.deskId), m.stuckMs ?? 0), null, 5000);
     } else if (m.kind === 'streak') {
       gestures.play(crew(), 'cheer', GESTURE_MS);
       parts.space.surgeHard();

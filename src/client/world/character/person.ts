@@ -158,7 +158,7 @@ export class Person {
       disposeSprite(this.label);
     }
     const suffix = muted === null ? '' : muted ? '  MIC OFF' : '';
-    this.label = textSprite(`${name}${suffix}`, { face: 'mono', bg: 'rgba(13,19,26,0.86)', border: '#3A4756', size: 32 });
+    this.label = textSprite(`${name}${suffix}`, { face: 'mono', bg: 'rgba(19,16,13,0.86)', border: DECK.steel, size: 32 });
     this.root.add(this.label);
     this.placeLabels();
   }
@@ -174,7 +174,7 @@ export class Person {
       this.doing = null;
     }
     if (text) {
-      this.doing = textSprite(text, { bg: 'rgba(20,27,35,0.86)', color: '#8A97A5', border: '#26313D', size: 24 });
+      this.doing = textSprite(text, { bg: 'rgba(28,24,20,0.86)', color: DECK.muted, border: DECK.line, size: 24 });
       this.doing.position.y = DOING_Y;
       this.doing.visible = this.label?.visible ?? true;
       this.root.add(this.doing);

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { sharp } from '../../world/sharp';
-import { chip as drawChip, chipWidth, type Chip } from './table';
+import { chip as drawChip, chipWidth, withAlpha, type Chip } from './table';
+import { NIGHT } from '../../../shared/tones';
 
 // What every screen on the situation wall (and the capacity panel) is drawn with, so they read alike
 // and from across the deck: a canvas the panel's own shape, painted at 200 units a metre and backed at
@@ -16,17 +17,28 @@ import { chip as drawChip, chipWidth, type Chip } from './table';
 export const UNITS_PER_M = 200;
 const BACKING = 1.5;
 
-/** The ramp boards paint with: the DOM's tokens (styles/tokens.css), plus one lighter muted for distance. */
+/** Halfway between two `#rrggbb` colours. */
+function mid(a: string, b: string): string {
+  const ch = (h: string, i: number) => parseInt(h.slice(1 + i * 2, 3 + i * 2), 16);
+  return '#' + [0, 1, 2].map((i) => Math.round((ch(a, i) + ch(b, i)) / 2).toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * The ramp boards paint with: the DOM's warm graphite (src/shared/tones.ts NIGHT, the same values as
+ * styles/tokens.css), plus one lighter muted for distance.
+ */
 export const INK = {
-  bg: '#121920',
-  card: '#1B232D',
-  cardHi: '#26303C',
-  line: '#2B3744',
-  lineStrong: '#3E4B5A',
-  text: '#E8ECEF',
-  /** Second lines and counts: lighter than the DOM's muted, which goes grey at 20 m. */
-  dim: '#A9B4C0',
-  muted: '#8A97A5',
+  bg: NIGHT.void,
+  card: NIGHT.surface1,
+  cardHi: NIGHT.surface3,
+  line: NIGHT.line,
+  lineStrong: NIGHT.lineStrong,
+  text: NIGHT.text,
+  /** Second lines and counts: halfway from the DOM's muted to working, which holds up at 20 m. */
+  dim: mid(NIGHT.muted, NIGHT.working),
+  muted: NIGHT.muted,
+  /** The board headers' cassette-label ink (docs/design.md, the tape label). Never a state. */
+  tape: NIGHT.tape,
 } as const;
 
 export const UI = (weight: number, size: number) => `${weight} ${size}px Archivo, system-ui, sans-serif`;
@@ -81,15 +93,15 @@ export function screen(widthM: number, heightM: number, unitsPerM: number = UNIT
   return { canvas, g, W, H, texture };
 }
 
-/** The smoked ground every board of the arc paints first: 94% slate, so a frame is never a black rectangle, and the saturated sky behind it (the look stage) never shows through enough to cost its type contrast. */
-export const SMOKED = 'rgba(8,12,18,0.94)';
+/** The smoked ground every board of the arc paints first: 94% warm graphite, so a frame is never a black rectangle, and the saturated sky behind it (the look stage) never shows through enough to cost its type contrast. */
+export const SMOKED = 'rgba(12,10,8,0.94)';
 
-/** The panel's ground: smoked slate with the faintest 1 m-style grid, kept off the rows. */
+/** The panel's ground: smoked graphite with the faintest 1 m-style grid, kept off the rows. */
 export function ground(g: CanvasRenderingContext2D, W: number, H: number) {
   g.clearRect(0, 0, W, H);
   g.fillStyle = SMOKED;
   g.fillRect(0, 0, W, H);
-  g.fillStyle = 'rgba(43,55,68,0.3)';
+  g.fillStyle = 'rgba(70,61,53,0.3)';
   for (let x = 40; x < W; x += 40) g.fillRect(x, 0, 1, H);
   for (let y = 40; y < H; y += 40) g.fillRect(0, y, W, 1);
 }
@@ -111,18 +123,22 @@ export function glowEdge(g: CanvasRenderingContext2D, W: number, H: number, hue:
   band(W, 0, W - depth, 0, W - depth, 0, depth, H);
 }
 
+/** The board headers' tape label (docs/design.md): mono capitals tracked .12em, in the tape's ink. */
+export const TAPE_LABEL = { size: 48, weight: 600, track: 0.12 } as const;
+
 /**
- * The title bar: the board's name in capitals, big and white, at the left, and `right` (its count,
- * in mono) at the right, with a rule under both. Returns where the right-hand text starts, so a
- * board can draw glyphs before it.
+ * The title bar: the board's name as a tape label (mono capitals, tracked, in cassette-label ink) at
+ * the left, and `right` (its count, in mono) at the right, with a rule under both in the colour of the
+ * board's most urgent state. Returns where the right-hand text starts, so a board can draw glyphs
+ * before it. The Attention board keeps its own strict header (features/tv/attention.ts).
  */
 export function titleBar(g: CanvasRenderingContext2D, W: number, title: string, right?: string, ruleHue: string = INK.lineStrong): number {
   const { pad, titleBase, rule } = LAYOUT;
   g.textBaseline = 'alphabetic';
   g.textAlign = 'left';
-  g.fillStyle = INK.text;
-  g.font = UI(700, 52);
-  g.letterSpacing = '4px';
+  g.fillStyle = INK.tape;
+  g.font = MONO(TAPE_LABEL.size, TAPE_LABEL.weight);
+  g.letterSpacing = `${Math.round(TAPE_LABEL.size * TAPE_LABEL.track)}px`;
   g.fillText(title.toUpperCase(), pad, titleBase);
   const titleW = g.measureText(title.toUpperCase()).width;
   g.letterSpacing = '0px';
@@ -197,7 +213,7 @@ export function row(g: CanvasRenderingContext2D, W: number, i: number, r: Row, t
   const y = rowTop(i);
   const x0 = pad;
   const w = W - pad * 2;
-  g.fillStyle = r.lifted ? INK.cardHi : r.quiet ? 'rgba(27,35,45,0.7)' : INK.card;
+  g.fillStyle = r.lifted ? INK.cardHi : r.quiet ? withAlpha(INK.card, 0.7) : INK.card;
   g.fillRect(x0, y, w, rowH);
   if (r.lifted) {
     g.strokeStyle = '#FF6A1A';

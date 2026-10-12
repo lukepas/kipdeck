@@ -96,7 +96,7 @@ export const watchPlinth: Fixture<'watch'> = (site) => {
   const paint = (lines: string[]) => {
     const g = plaque.getContext('2d')!;
     g.clearRect(0, 0, plaque.width, plaque.height);
-    g.fillStyle = 'rgba(11, 18, 25, 0.88)';
+    g.fillStyle = 'rgba(15, 13, 11, 0.88)';
     g.fillRect(0, 0, plaque.width, plaque.height);
     g.fillStyle = DECK.steel;
     g.fillRect(0, 0, plaque.width, 3);
