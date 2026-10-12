@@ -14,7 +14,7 @@ test('a web tab opens https pages on other sites', () => {
 });
 
 test("a web tab never opens the office's own pages, http, or other schemes", () => {
-  for (const raw of ['https://office.example.com/', 'https://office.example.com/api/whoami', 'https://OFFICE.example.com:443/lite']) assert.match(String(webTabUrl(raw, OFFICE)), /office's own pages/, raw);
+  for (const raw of ['https://office.example.com/', 'https://office.example.com/api/whoami', 'https://OFFICE.example.com:443/lite']) assert.match(String(webTabUrl(raw, OFFICE)), /Kipdeck's own pages/, raw);
   for (const raw of ['http://192.168.1.1/', 'http://example.org/', 'javascript:alert(1)', 'data:text/html,<script>1</script>', 'file:///etc/passwd', 'blob:https://x/y']) assert.match(String(webTabUrl(raw, OFFICE)), /Only https/, raw);
   assert.match(String(webTabUrl('https://u:p@example.org/', OFFICE)), /user name/);
   assert.match(String(webTabUrl('not a url', OFFICE)), /web address/);

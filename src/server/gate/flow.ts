@@ -7,6 +7,7 @@ import { headline } from '../../shared/rowtext.js';
 import type { WorkerInfo } from '../../shared/protocol.js';
 import type { Floor } from '../floor.js';
 import type { Ctx } from '../office/context.js';
+import { NOT_RUNNING } from '../workers/says.js';
 import { failureOf, resultWords, runRequest, type Actor, type GateRequest, type Reply } from './actions.js';
 
 /** What a person sees of a request besides who asks and what: its targets, its text, the rest. */
@@ -115,7 +116,7 @@ export async function decide(ctx: Ctx, who: string, id: string, approve: boolean
 function tellProposer(ctx: Ctx, floor: Floor, p: Proposal, text: string) {
   const w = floor.workers.get(p.by.id);
   if (!w || w.kind !== 'agent') return;
-  if (floor.workers.prompt(w.id, text) === 'Worker is not running') ctx.gate.hold(w.id, text);
+  if (floor.workers.prompt(w.id, text) === NOT_RUNNING) ctx.gate.hold(w.id, text);
 }
 
 /** Statuses in which an agent waits for its next message, so a held outcome can be typed in. */

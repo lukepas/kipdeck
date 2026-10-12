@@ -53,8 +53,8 @@ function reachNote(a: PairAddress | undefined, offer: PairOffer): HTMLElement {
     return h(
       'div.pair-note.bad',
       {},
-      h('strong', {}, "Your phone can't reach this office yet."),
-      h('p', {}, offer.loopbackOnly ? 'It listens on this computer only. Restart it with --host 0.0.0.0 to let your local network in, or give it a secure address: Tailscale Serve, or https behind a proxy with AGENT_OFFICE_PUBLIC_URL set.' : 'No address of this office is known that a phone could open.'),
+      h('strong', {}, "Your phone can't reach this Kipdeck yet."),
+      h('p', {}, offer.loopbackOnly ? 'It listens on this computer only. Restart it with --host 0.0.0.0 to let your local network in, or give it a secure address: Tailscale Serve, or https behind a proxy with AGENT_OFFICE_PUBLIC_URL set.' : 'No address of this Kipdeck is known that a phone could open.'),
     );
   }
   if (a.secure) return h('div.pair-note.ok', {}, icon('lock', 14), h('span', {}, `Secure link over https (${VIA[a.via].toLowerCase()}).`));
@@ -62,7 +62,7 @@ function reachNote(a: PairAddress | undefined, offer: PairOffer): HTMLElement {
     'div.pair-note.warn',
     {},
     h('strong', {}, 'Plain HTTP on your local network.'),
-    h('p', {}, 'Anyone on the same Wi-Fi could read what the phone sends, and the phone gets no notifications or microphone over HTTP. For a secure link, put the office on your tailnet (Tailscale Serve) or behind https and set AGENT_OFFICE_PUBLIC_URL. Your phone needs to be on the same network.'),
+    h('p', {}, 'Anyone on the same Wi-Fi could read what the phone sends, and the phone gets no notifications or microphone over HTTP. For a secure link, put Kipdeck on your tailnet (Tailscale Serve) or behind https and set AGENT_OFFICE_PUBLIC_URL. Your phone needs to be on the same network.'),
   );
 }
 
@@ -83,7 +83,7 @@ export async function openPair(opts: { paired?: () => void } = {}) {
     let offer: PairOffer;
     try {
       const res = await fetch('/api/pair', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
-      if (!res.ok) throw new Error(((await res.json().catch(() => ({}))) as { error?: string }).error ?? `The office answered ${res.status}`);
+      if (!res.ok) throw new Error(((await res.json().catch(() => ({}))) as { error?: string }).error ?? `Kipdeck answered ${res.status}`);
       offer = (await res.json()) as PairOffer;
     } catch (err) {
       body.replaceChildren(h('p.pair-intro', {}, `Couldn't make a pairing code: ${(err as Error).message}`));

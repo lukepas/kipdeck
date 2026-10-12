@@ -100,7 +100,7 @@ export class Whiteboard {
       mkdirSync(this.filesDir, { recursive: true, mode: 0o700 });
       writeState(path.join(this.filesDir, `${f.id}.json`), json);
     } catch {
-      return "Couldn't save the picture on the office's machine";
+      return "Couldn't save the picture on the machine Kipdeck runs on";
     }
     this.files.set(f.id, json.length);
     this.fileBytes += json.length;

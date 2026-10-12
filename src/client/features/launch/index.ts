@@ -75,7 +75,11 @@ export interface Launch {
 
 export function installLaunch(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' | 'focus' | 'mission' | 'cinema' | 'selection' | 'overview'>): Launch {
   const crawl = new WatchLog();
-  const cards = new MomentCards(() => parts.focus.backToGame());
+  // The still card yields Esc to a selected unit, as the debrief does (docs/controls.md).
+  const cards = new MomentCards(
+    () => parts.focus.backToGame(),
+    () => !!parts.selection.id(),
+  );
   const panel = new DebriefPanel({
     goTo: (id) => {
       const e = store.roster.find((r) => r.id === id);

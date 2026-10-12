@@ -12,7 +12,7 @@ const MAX_BODY = 16 * 1024;
 
 async function handle(ctx: Ctx, r: RouteRequest) {
   const gateway = ctx.x402;
-  if (!gateway) return send(r.res, 404, { error: 'This office takes no paid tasks' });
+  if (!gateway) return send(r.res, 404, { error: 'This Kipdeck takes no paid tasks' });
   const host = ctx.hosts.requestHost(r.req) ?? `localhost:${ctx.cfg.port}`;
   const https = !!ctx.cfg.tls || (ctx.cfg.trustProxy && r.req.headers['x-forwarded-proto'] === 'https');
   const out = await gateway.handle(r.req, r.url, `${https ? 'https' : 'http'}://${host}`, clientIp(r.req, ctx.cfg.trustProxy), () => readBody(r.req, MAX_BODY));

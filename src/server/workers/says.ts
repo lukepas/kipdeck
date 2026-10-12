@@ -20,6 +20,12 @@ export function exitedLine(info: WorkerInfo, code: number, hint: string): string
   return `\r\n\x1b[2m[${agentBadge(info)} exited with code ${code}${hint}]\x1b[0m\r\n`;
 }
 
+/**
+ * What prompting an agent that isn't running returns. Callers compare against it to wake the agent
+ * with the prompt instead (gate, mission, the HTTP actions), so it lives here once.
+ */
+export const NOT_RUNNING = 'That agent is not running';
+
 /** What a browser opening the terminal of an agent that isn't running sees first. */
 export function notRunning(info: WorkerInfo, hint: string): string {
   return `\x1b[2m${agentBadge(info)} is not running.${hint}\x1b[0m\r\n`;

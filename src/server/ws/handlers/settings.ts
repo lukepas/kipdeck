@@ -28,13 +28,13 @@ export const settingsHandlers = {
   },
   'machine.limit'(ctx, c, msg) {
     const who = c.peer.name;
-    if (!ctx.meOf(c.accountId).admin) return ctx.warn(c, 'Only admins can change the worker limit');
+    if (!ctx.meOf(c.accountId).admin) return ctx.warn(c, 'Only admins can change the agent limit');
     const limit = msg.limit === null ? undefined : parseWorkerLimit(msg.limit);
-    if (msg.limit !== null && limit === undefined) return ctx.warn(c, `The worker limit is a whole number from 1 to ${MAX_WORKER_LIMIT}`);
+    if (msg.limit !== null && limit === undefined) return ctx.warn(c, `The agent limit is a whole number from 1 to ${MAX_WORKER_LIMIT}`);
     const err = ctx.machine.setLimit(limit, who);
     if (err) return ctx.warn(c, err);
     const now = ctx.machine.limit;
-    ctx.toastAll(limit !== undefined ? `${who} set the worker limit to ${now}` : now === undefined ? `${who} took the worker limit off` : `${who} put the worker limit back to ${now} (--max-workers)`);
+    ctx.toastAll(limit !== undefined ? `${who} set the agent limit to ${now}` : now === undefined ? `${who} took the agent limit off` : `${who} put the agent limit back to ${now} (--max-workers)`);
     ctx.pumpQueues();
   },
   'upgrade.check'(ctx) {
@@ -43,10 +43,10 @@ export const settingsHandlers = {
   'upgrade.start'(ctx, c) {
     const who = c.peer.name;
     // It rebuilds and restarts the whole office.
-    if (!ctx.meOf(c.accountId).admin) return ctx.warn(c, 'Only admins can upgrade the office');
+    if (!ctx.meOf(c.accountId).admin) return ctx.warn(c, 'Only admins can upgrade Kipdeck');
     void ctx.upgrader.start(who).then((err) => {
       if (err) ctx.warn(c, err);
-      else ctx.toastAll(`${who} is upgrading the office - it restarts when the new version is built`);
+      else ctx.toastAll(`${who} is upgrading Kipdeck - it restarts when the new version is built`);
     });
   },
   'leaveOnMerge.set'(ctx, c, msg) {
@@ -54,13 +54,13 @@ export const settingsHandlers = {
     const on = msg.on === true;
     if (on === ctx.leaveOnMerge.on) return;
     ctx.leaveOnMerge.set(on, who);
-    ctx.toastAll(on ? `${who} set workers to go home by themselves once their pull request merges` : `${who} set workers whose pull request merged to stay until they're sent home`);
+    ctx.toastAll(on ? `${who} set agents to go home by themselves once their pull request merges` : `${who} set agents whose pull request merged to stay until they're sent home`);
     // The ones already merged go now.
     if (on) for (const f of ctx.floors.values()) f.sendLandedHome();
   },
   'prompts.set'(ctx, c, msg) {
     const who = c.peer.name;
-    if (!ctx.meOf(c.accountId).admin) return ctx.warn(c, 'Only admins can change the office\'s prompts');
+    if (!ctx.meOf(c.accountId).admin) return ctx.warn(c, "Only admins can change this Kipdeck's prompts");
     if (!isPromptId(msg.id) || (msg.text !== null && typeof msg.text !== 'string')) return;
     const custom = !!ctx.prompts.state().custom[msg.id];
     const err = ctx.prompts.setPrompt(msg.id, msg.text === null ? null : str(msg.text, PROMPT_MAX + 1), who);
@@ -72,7 +72,7 @@ export const settingsHandlers = {
   },
   'prompts.agent'(ctx, c, msg) {
     const who = c.peer.name;
-    if (!ctx.meOf(c.accountId).admin) return ctx.warn(c, 'Only admins can pick the office\'s default worker');
+    if (!ctx.meOf(c.accountId).admin) return ctx.warn(c, "Only admins can pick this Kipdeck's default agent");
     const ch = msg.choice;
     if (ch !== null && (!ch || typeof ch !== 'object')) return;
     const choice = ch && {
@@ -82,6 +82,6 @@ export const settingsHandlers = {
     };
     const err = ctx.prompts.setAgent(choice, who);
     if (err) return ctx.warn(c, err);
-    ctx.toastAll(choice ? `${who} set the office's default worker` : `${who} put the office's default worker back to ${path.basename(ctx.cfg.agentCmd)}`);
+    ctx.toastAll(choice ? `${who} set this Kipdeck's default agent` : `${who} put this Kipdeck's default agent back to ${path.basename(ctx.cfg.agentCmd)}`);
   },
 } satisfies HandlerMap<SettingsClientMsg>;

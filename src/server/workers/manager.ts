@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { exitedLine, resumeFailed, signInNeeded } from './says.js';
+import { NOT_RUNNING, exitedLine, resumeFailed, signInNeeded } from './says.js';
 import path from 'node:path';
 import type { AgentChoice, AgentEffort, AgentProvider, TerminalHit, WorkerInfo, WorkerKind, WorkerRepo, WorkerStatus } from '../../shared/protocol.js';
 import { AGENT_PROVIDERS, takesEffort, takesModel } from '../../shared/providers.js';
@@ -525,7 +525,7 @@ export class WorkerManager {
       this.emitUpdate(w);
       return undefined;
     }
-    if (!w.pty) return 'That agent is not running';
+    if (!w.pty) return NOT_RUNNING;
     const clean = text.replace(/\r\n?/g, '\n').trim();
     if (!clean) return 'Empty prompt';
     // Bracketed paste keeps multi-line prompts in one message, then Enter submits.

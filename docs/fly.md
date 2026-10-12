@@ -27,7 +27,7 @@ What `up` does, in a few minutes the first time:
 4. Gives the app a **dedicated IPv4 address**, with SSH on a random port, something like `137.66.12.34:31337`. That's the only way in. The app has no HTTP service, so nothing answers on `<app>.fly.dev`, and the office itself is never on the internet. The address is dedicated because Fly's shared IPv4 addresses only carry HTTP and TLS.
 5. Builds this checkout with [`deploy/container/Dockerfile`](../deploy/container/Dockerfile) on Fly's remote builder: the same image as on [Railway](railway.md), with Node 22, git, the GitHub CLI, build tools and sshd. **Claude Code** is installed onto the volume the first time the office starts, so it keeps updating itself. It runs on one machine, a `shared-cpu-4x` with 8 GB (`--vm-size` and `--memory` change it). Fly never stops it for being idle, and its restart policy is *always*, so a crash brings it straight back.
 6. Signs the GitHub CLI in with your local `gh auth token` (kept on the volume), and gives git your name and email.
-7. Opens an SSH tunnel and your browser at `http://localhost:4600`. **The first page shows the office password once. Write it down.** The office then keeps only a hash of it.
+7. Opens an SSH tunnel and your browser at `http://localhost:4600`. **The first page shows the shared password once. Write it down.** The office then keeps only a hash of it.
 
 The office listens on `127.0.0.1:4600` in its machine, and everyone reaches it through the tunnel. `localhost` counts as a secure origin, so voice and screen sharing work, with no certificates to manage. Your key logs in as `agentoffice`, the user that runs the office (`deploy/fly.sh ssh` gives you its shell). If the office's sshd is ever down, `fly ssh console -a <app>` still gets you a root shell through Fly's own SSH, which keeps port 22 in the machine (the office's sshd listens on 2222 there, and the app's public port leads to it). The office starts with no floors: open Floors (it opens by itself) and pick one of the repositories your GitHub token can see.
 
@@ -68,7 +68,7 @@ deploy/fly.sh reset-password          # new password, shown once; signs everyone
 deploy/fly.sh ssh | logs              # a shell in the machine / follow the office's logs
 ```
 
-**Updating.** Pull the latest Kipdeck into your clone and run `deploy/fly.sh update`. **⬆️ Upgrade the office** in the **☰** menu is for servers set up with `deploy/provision.sh`: a Fly machine's code comes from its image.
+**Updating.** Pull the latest Kipdeck into your clone and run `deploy/fly.sh update`. **Update Kipdeck** in the **☰** menu is for servers set up with `deploy/provision.sh`: a Fly machine's code comes from its image.
 
 **Machine size.** A `shared-cpu-4x` with 8 GB is plenty for a few workers. Shared CPUs are made for bursts, though, and Fly slows one down that stays busy for long. If workers build and test all day, move to dedicated CPUs: `deploy/fly.sh resize performance-2x` (memory stays, unless you add it: `resize performance-4x 16gb`). `fly platform vm-sizes` lists the sizes. The volume can grow too, never shrink: `fly volumes extend -a <app> <volume-id> -s 100`.
 

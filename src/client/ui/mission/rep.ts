@@ -58,7 +58,7 @@ export function renderAgents(): HTMLElement | null {
     return h(
       'tr',
       {},
-      h('td', {}, h('span.mc-name', {}, a.label), h('span.mc-sub', {}, ` ${a.harness} · ${a.operator}${a.workers.length ? ` · at a desk now` : ''}`)),
+      h('td', {}, h('span.mc-name', {}, a.label), h('span.mc-sub', {}, ` ${a.harness} · ${a.operator}${a.workers.length ? ` · working now` : ''}`)),
       cell(s?.score === null || !s ? 'not enough data' : String(s.score), 'The ERC-8004 average: merged 100, closed 30, reverted 0 (others\' merges only)'),
       cell(s ? rateLabel(s.mergeRate) : 'not enough data'),
       cell(s ? `${s.merged}${s.selfMerged ? ` (+${s.selfMerged} self)` : ''}` : '0'),

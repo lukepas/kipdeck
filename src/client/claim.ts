@@ -20,7 +20,7 @@ async function claim() {
   try {
     const res = await fetch('/api/claim', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token }) });
     const body = await res.json().catch(() => ({}));
-    if (!res.ok) return fail(body.error ?? 'Could not unlock the office.');
+    if (!res.ok) return fail(body.error ?? 'Could not unlock Kipdeck.');
     $('sub').textContent = 'One last thing before you walk in:';
     $('pw').textContent = body.password;
     $('reveal').hidden = false;

@@ -16,8 +16,8 @@ export function openUpgrade(net: Net) {
   const go = h('button.btn.primary', { type: 'button', onclick: () => net.send({ t: 'upgrade.start' }) }, 'Upgrade now');
   const el = h(
     'div.modal',
-    { role: 'dialog', 'aria-label': 'Upgrade the office', style: 'width:min(620px,100%)' },
-    h('header', {}, h('h2', {}, 'Upgrade the office'), close),
+    { role: 'dialog', 'aria-label': 'Upgrade Kipdeck', style: 'width:min(620px,100%)' },
+    h('header', {}, h('h2', {}, 'Upgrade Kipdeck'), close),
     body,
     h('footer', {}, h('span.grow', {}), recheck, go),
   );
@@ -30,10 +30,10 @@ export function openUpgrade(net: Net) {
     recheck.disabled = !!u.checking || busy;
     // Only admins can upgrade (the office checks too).
     go.disabled = !u.latest || !!u.checking || busy || !store.me.admin;
-    go.title = store.me.admin ? '' : 'Only admins can upgrade the office';
+    go.title = store.me.admin ? '' : 'Only admins can upgrade Kipdeck';
 
     if (u.phase === 'building') {
-      body.append(h('p.upgrade-status.busy', {}, h('span.spinner'), `Building ${u.latest?.sha ?? 'the new version'}${u.by ? ` (started by ${u.by})` : ''}. The office keeps working until it restarts, usually in a minute or two.`));
+      body.append(h('p.upgrade-status.busy', {}, h('span.spinner'), `Building ${u.latest?.sha ?? 'the new version'}${u.by ? ` (started by ${u.by})` : ''}. Kipdeck keeps working until it restarts, usually in a minute or two.`));
     } else if (u.phase === 'failed' && u.error) {
       body.append(h('pre.upgrade-error', {}, u.error));
     }
@@ -55,8 +55,8 @@ export function openUpgrade(net: Net) {
           h(
             'p.note',
             {},
-            'Upgrading builds the new version while the office keeps running, then restarts it. Everyone reconnects on the new version automatically. ',
-            awake ? 'Workers keep working through the restart, and whatever they were in the middle of carries on.' : '',
+            'Upgrading builds the new version while Kipdeck keeps running, then restarts it. Everyone reconnects on the new version automatically. ',
+            awake ? 'Agents keep working through the restart, and whatever they were in the middle of carries on.' : '',
           ),
         );
       }
@@ -90,7 +90,7 @@ function restartDialog(title: string, ...content: (Node | string)[]) {
   if (!restartModal) {
     closeAllModals();
     restartBody = h('div.body');
-    const el = h('div.modal.restart', { role: 'alertdialog', 'aria-label': 'The office is upgrading' }, h('header', {}, h('h2', {})), restartBody);
+    const el = h('div.modal.restart', { role: 'alertdialog', 'aria-label': 'Kipdeck is upgrading' }, h('header', {}, h('h2', {})), restartBody);
     // Closing it only hides it: the reload still comes once the office is back.
     restartModal = openModal(el, {
       backdropCloses: false,
@@ -109,9 +109,9 @@ export function showRestarting(u: UpgradeState, net: Net) {
   net.expectRestart();
   restartPending = true;
   restartDialog(
-    'Upgrading the office',
+    'Upgrading Kipdeck',
     h('div.restart-art', {}, icon('upgrade', 40)),
-    h('p', {}, `${u.by ? `${u.by} is upgrading` : 'Upgrading'} the office${u.latest ? ` to ${u.latest.sha}: "${u.latest.subject}"` : ''}.`),
+    h('p', {}, `${u.by ? `${u.by} is upgrading` : 'Upgrading'} Kipdeck${u.latest ? ` to ${u.latest.sha}: "${u.latest.subject}"` : ''}.`),
     h('p.upgrade-status.busy', {}, h('span.spinner'), 'Restarting... you\'ll be back in a few seconds. No need to do anything.'),
   );
   clearTimeout(slowTimer);
@@ -129,7 +129,7 @@ export function showUpgraded(u: UpgradeState) {
   clearTimeout(slowTimer);
   const v = u.current;
   restartDialog(
-    'The office has been upgraded',
+    'Kipdeck has been upgraded',
     h('div.restart-art', {}, icon('check', 40)),
     v ? h('p', {}, 'Now running ', h('code', {}, v.sha), `: "${v.subject}"`) : h('p', {}, 'A new version is running.'),
     h('p.upgrade-status.ok', {}, h('span.spinner'), 'Loading the new version...'),

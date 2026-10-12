@@ -28,7 +28,7 @@ What `up` does, in about five minutes the first time:
 4. Publishes the container's SSH on **port 2222 of the server** (pick another with `--ssh-port`). That's the only way in: the application has no domain, so Traefik never routes to it, and the office itself is never on the internet.
 5. Zips this checkout and uploads it, and Dokploy builds it with [`deploy/container/Dockerfile`](../deploy/container/Dockerfile): Node 22, git, the GitHub CLI, build tools and sshd. The zip holds what `git add -A` would see: your uncommitted changes and new files included, anything `.gitignore` leaves out left out, and no `.env` files or keys. **Claude Code** is installed onto the volume the first time the office starts, so it keeps updating itself. Docker Swarm restarts the container if it crashes.
 6. Signs the GitHub CLI in with your local `gh auth token` (kept on the volume), and gives git your name and email.
-7. Opens an SSH tunnel and your browser at `http://localhost:4600`. **The first page shows the office password once. Write it down.** The office then keeps only a hash of it.
+7. Opens an SSH tunnel and your browser at `http://localhost:4600`. **The first page shows the shared password once. Write it down.** The office then keeps only a hash of it.
 
 The office listens on `127.0.0.1:4600` inside its container, and everyone reaches it through the tunnel. `localhost` counts as a secure origin, so voice and screen sharing work, with no certificates to manage. Your key logs in as `agentoffice`, the user that runs the office (`deploy/dokploy.sh ssh` gives you its shell). The office starts with no floors: open Floors (it opens by itself) and pick one of the repositories your GitHub token can see.
 
@@ -68,7 +68,7 @@ deploy/dokploy.sh reset-password       # new password, shown once; signs everyon
 deploy/dokploy.sh ssh | logs           # a shell in the container / follow the office's logs
 ```
 
-**Updating.** Pull the latest Kipdeck into your clone and run `deploy/dokploy.sh update`. **⬆️ Upgrade the office** in the **☰** menu is for servers set up with `deploy/provision.sh`: a container's code comes from its image. If a build fails, its log is on the application's **Deployments** tab in Dokploy (`status` prints the link).
+**Updating.** Pull the latest Kipdeck into your clone and run `deploy/dokploy.sh update`. **Update Kipdeck** in the **☰** menu is for servers set up with `deploy/provision.sh`: a container's code comes from its image. If a build fails, its log is on the application's **Deployments** tab in Dokploy (`status` prints the link).
 
 **Claude sign-in.** Pass `--claude-token "$(claude setup-token)"` (your Claude subscription) or `--anthropic-api-key <key>`; either becomes an environment variable of the application. Or pass neither, and run `/login` in the first worker's terminal: that sign-in is kept on the volume.
 

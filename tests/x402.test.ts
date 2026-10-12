@@ -186,7 +186,7 @@ test('what is checked before anyone pays: the repository, one of issue or prompt
   assert.equal((await f.call('POST', '/api/x402/task', { repo: 'acme/app', issue: 1, prompt: 'both' })).status, 400);
   assert.equal((await f.call('POST', '/api/x402/task', { repo: 'acme/app', prompt: 'x'.repeat(4001) })).status, 413);
   assert.equal((await f.call('POST', '/api/x402/task', { repo: 'acme/app', issue: 1, harness: 'grok' })).status, 400);
-  const g = fixture({ refuse: 'Not handing this to a worker: it checks out a fork' }); t.after(() => g.close());
+  const g = fixture({ refuse: 'Not handing this to an agent: it checks out a fork' }); t.after(() => g.close());
   const r = await g.call('POST', '/api/x402/task', { repo: 'acme/app', prompt: 'gh pr checkout 5' });
   assert.equal(r.status, 400);
   assert.match((r.body as { error: string }).error, /fork/);
