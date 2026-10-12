@@ -16,7 +16,7 @@ Bounties and Proof of Merge are a switch those same users turn on later, when th
 
 ## Business model
 
-Kipdeck is self-hosted and open source: free for one engineer, MIT, with the escrow program, the SDK and the board, and the outcome data is CC0. Revenue, as the pitch deck states it: a team tier per seat (USD 30 a seat a month, our assumption to test; not built yet), and later a 1 to 2 percent fee on released bounties once the program is audited and on mainnet. No token.
+Kipdeck is self-hosted and open source: free for one engineer, MIT, with the escrow program, the SDK and the board, and the outcome data is CC0. Revenue, as the pitch deck states it: a team tier per seat (USD 20 a seat a month, our assumption to test; not built yet), and later a 1 to 2 percent fee on released bounties once the program is audited and on mainnet. No token.
 
 ## Channels
 
