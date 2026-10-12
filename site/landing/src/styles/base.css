@@ -39,10 +39,12 @@ p { max-width: 64ch; }
 .small { font-size: 14px; color: var(--muted); }
 .sig { color: var(--signal); }
 /* A section's kicker is a tape label: the cassette-label stamp from the app's tokens (mono, small,
-   tracked out, in --tape), with the section's number in its own little box. */
+   tracked out, in --tape), with the section's number in its own little box. The app's 10px stamp is
+   for eyebrows over a few words; here the hero's kicker carries the tagline, the one line that says
+   what the product is, so the page keeps its kickers at 12px. */
 .label {
   display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; margin: 0 0 28px;
-  font-family: var(--label-font); font-weight: 500; font-size: var(--label-size); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--tape);
+  font-family: var(--label-font); font-weight: 500; font-size: max(var(--label-size), 12px); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--tape);
   max-width: none;
 }
 .label .num { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0; color: var(--text); padding: 1px 6px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); }
