@@ -206,6 +206,7 @@
   --hud-shadow: 0 6px 24px rgb(28 24 20 / .12);
   --scrim: rgb(28 24 20 / .35);
   --grain: none;
+  --sunset: none;
 }
 @media (prefers-color-scheme: light) {
   :root[data-theme='auto'] {
@@ -240,6 +241,7 @@
     --hud-shadow: 0 6px 24px rgb(28 24 20 / .12);
     --scrim: rgb(28 24 20 / .35);
     --grain: none;
+    --sunset: none;
   }
 }
 

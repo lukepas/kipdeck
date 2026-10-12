@@ -79,7 +79,7 @@ export function openNumbers() {
     const text = numbersMarkdown(numbers(), { project: projectName(), demo, now: Date.now() });
     void navigator.clipboard?.writeText(text).then(
       () => toast('Copied the numbers as Markdown'),
-      () => toast("Couldn't copy here", 'warn'),
+      () => toast("Couldn't copy here. Select the numbers and copy them by hand.", 'warn'),
     );
   });
   render();
