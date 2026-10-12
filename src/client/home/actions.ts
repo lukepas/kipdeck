@@ -51,8 +51,24 @@ export interface Actions {
 }
 
 export function createActions(net: Net): Actions {
-  /** The Deploy sheet, loaded the first time it's opened (home/lazy.ts). */
-  const openDeploy = (n: Net, opts: Parameters<typeof OpenDeploy>[1]) => void lazy.deploy().then((m) => m.openDeploy(n, opts));
+  /**
+   * The Deploy sheet, kept out of the first load (home/lazy.ts) but fetched once the page is idle, so
+   * N opens it at once: while it loads, the job you type straight after N would reach the inbox's own
+   * keys (D, J, K, Enter, another N) instead. Asked for again while it loads, it opens once.
+   */
+  let deployMod: Awaited<ReturnType<typeof lazy.deploy>> | undefined;
+  let deployAsked = false;
+  const loadDeploy = () => lazy.deploy().then((m) => (deployMod = m));
+  const idle = (window as { requestIdleCallback?: (fn: () => void) => void }).requestIdleCallback ?? ((fn: () => void) => setTimeout(fn, 500));
+  idle(() => void loadDeploy().catch(() => {}));
+  const openDeploy = (n: Net, opts: Parameters<typeof OpenDeploy>[1]) => {
+    if (deployMod) return deployMod.openDeploy(n, opts);
+    if (deployAsked) return;
+    deployAsked = true;
+    void loadDeploy()
+      .then((m) => m.openDeploy(n, opts))
+      .finally(() => (deployAsked = false));
+  };
   const merging = new Set<string>();
   /** Selects the agent, going to its project first when it's on another. */
   const show = (id: string, tab: 'terminal' | 'changes') => home.select(id, tab);

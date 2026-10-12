@@ -195,6 +195,19 @@ test('the inbox windows: modal, named, focus inside and kept there, Esc closes a
     if (has) await roundTrip(page, 'Pair a phone', fromMenu(page, 'Pair a phone'), '#btn-avatar');
   }
 
+  // The Deploy sheet loads after the page, once it's idle, so a job typed straight after N lands in
+  // its task box and not on the inbox's own keys (D, J, K, Enter, another N).
+  await page.waitForFunction(() => performance.getEntriesByType('resource').some((e) => /\/assets\/deploy-[^/]*\.js$/.test(e.name)), null, { timeout: 10_000 });
+  await page.locator('.sec-working .row, .sec-needs-you .row').first().focus();
+  await page.keyboard.press('n');
+  await page.keyboard.type('need a dark mode');
+  await page.locator(`${open} form.modal.deploy`).waitFor();
+  assert.equal(await page.locator(open).count(), 1, 'one Deploy sheet');
+  assert.equal(await page.locator(`${open} textarea`).inputValue(), 'need a dark mode', 'what was typed after N is in the task box');
+  await page.locator(`${open} textarea`).fill('');
+  await page.locator(`${open} .close`).first().click();
+  await page.locator(open).waitFor({ state: 'detached' });
+
   // The Deploy sheet, by N from the list.
   await page.locator('.sec-working .row, .sec-needs-you .row').first().focus();
   await roundTrip(page, 'Deploy', async () => {
