@@ -70,7 +70,7 @@ net.onMessage((msg) => {
     case 'upgrade':
       if (msg.state.phase === 'restarting') {
         net.expectRestart();
-        toast('The office is restarting on its new version. Back in a minute.');
+        toast('Kipdeck is restarting on its new version. Back in a minute.');
       }
       break;
   }

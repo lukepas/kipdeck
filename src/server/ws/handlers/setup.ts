@@ -62,11 +62,11 @@ export const setupHandlers = {
     // It opens a checkout on this machine and runs what's in it past the office's checks: admins do.
     if (!ctx.meOf(c.accountId).admin) return ctx.warn(c, 'Only admins can add a project');
     const dir = ctx.cfg.startedIn;
-    if (!dir) return ctx.warn(c, 'The office was not started inside a git repository');
+    if (!dir) return ctx.warn(c, 'Kipdeck was not started inside a git repository');
     const who = c.peer.name;
     const r = ctx.building.addFolder(dir, who);
     if (typeof r === 'string') return ctx.warn(c, r);
-    if (!ctx.floors.has(r.id) && !ctx.openFloor(r)) return ctx.warn(c, `Couldn't open ${r.name} - see the office's log`);
+    if (!ctx.floors.has(r.id) && !ctx.openFloor(r)) return ctx.warn(c, `Couldn't open ${r.name} - see Kipdeck's log`);
     ctx.floorsChanged();
     ctx.toastAll(`${who} added ${r.name} as a project`);
     void setupState(ctx, false, true).then((state) => ctx.sendTo(c, { t: 'setup', state }));

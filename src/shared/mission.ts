@@ -178,7 +178,7 @@ export function toLink(m: Mission, roster: readonly RosterEntry[]): RosterEntry[
  * a bar over no issues would only ever read 0%), and the workers on it.
  */
 export function progressLine(p: Pick<MilestoneProgress, 'closed' | 'issues' | 'workers'>): string {
-  return [p.issues ? `${p.closed}/${p.issues} issues` : 'no issues linked yet', p.workers ? `${p.workers} worker${p.workers === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ');
+  return [p.issues ? `${p.closed}/${p.issues} issues` : 'no issues linked yet', p.workers ? `${p.workers} agent${p.workers === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ');
 }
 
 /**

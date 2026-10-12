@@ -29,10 +29,10 @@ export function openSignIns(net: Net, why?: string) {
     h(
       'div.body.team',
       {},
-      h('p.note.lead', {}, 'Your workers run on your own Claude plan, and the office acts on GitHub as you: comments, merges and pull requests show up under your name. Only your workers use them.'),
+      h('p.note.lead', {}, 'Your agents run on your own Claude plan, and Kipdeck acts on GitHub as you: comments, merges and pull requests show up under your name. Only your agents use them.'),
       banner,
       cards,
-      h('p.note', {}, 'Or open a shell at any desk: it runs as you, so ', h('code', {}, 'claude auth login'), ' and ', h('code', {}, 'gh auth login'), ' typed there sign you in too.'),
+      h('p.note', {}, 'Or open a shell next to any agent: it runs as you, so ', h('code', {}, 'claude auth login'), ' and ', h('code', {}, 'gh auth login'), ' typed there sign you in too.'),
     ),
   );
 
@@ -71,7 +71,7 @@ export function openSignIns(net: Net, why?: string) {
   const card = (which: SignInKind, s: SignInState, office: boolean) => {
     const status =
       s.status === 'ok'
-        ? h('span.signin-who.ok', {}, icon('check', 14), ' ', s.how === 'office' ? `The office's own${s.who ? ` (${s.who})` : ''}` : (s.who ?? 'Signed in'))
+        ? h('span.signin-who.ok', {}, icon('check', 14), ' ', s.how === 'office' ? `This Kipdeck's own${s.who ? ` (${s.who})` : ''}` : (s.who ?? 'Signed in'))
         : s.status === 'busy'
           ? h('span.signin-who', {}, 'Signing in...')
           : h('span.signin-who.none', {}, 'Not signed in');
@@ -117,7 +117,7 @@ export function openSignIns(net: Net, why?: string) {
     if (s.status === 'ok') {
       const change = button(s.how === 'office' ? 'Use my own instead' : 'Sign out', () => {
         if (s.how === 'office') return net.send({ t: 'signins.signout', which });
-        confirmDialog(`Sign out of ${NAMES[which]}?`, which === 'claude' ? 'Workers you hire from now on need a new sign-in. The ones already running keep going.' : 'The office stops acting on GitHub as you until you sign in again.', 'Sign out', () => net.send({ t: 'signins.signout', which }));
+        confirmDialog(`Sign out of ${NAMES[which]}?`, which === 'claude' ? 'Agents you start from now on need a new sign-in. The ones already running keep going.' : 'Kipdeck stops acting on GitHub as you until you sign in again.', 'Sign out', () => net.send({ t: 'signins.signout', which }));
       });
       body.append(h('div.signin-actions', {}, change));
       return box;
@@ -126,7 +126,7 @@ export function openSignIns(net: Net, why?: string) {
     // Not signed in (or busy looking): the ways in.
     const start = button(`Sign in with ${NAMES[which]}`, () => net.send({ t: 'signins.start', which }), 'primary');
     const actions = h('div.signin-actions', {}, start);
-    if (office) actions.append(button('Use the office\'s own', () => net.send({ t: 'signins.office', which })));
+    if (office) actions.append(button('Use this Kipdeck\'s own', () => net.send({ t: 'signins.office', which })));
     body.append(
       actions,
       which === 'claude'
@@ -142,7 +142,7 @@ export function openSignIns(net: Net, why?: string) {
     const typing = document.activeElement;
     cards.replaceChildren();
     if (!s) {
-      cards.append(h('p.empty', {}, store.me.account ? 'Loading...' : 'On the shared office password, workers run on the office\'s own sign-ins.'));
+      cards.append(h('p.empty', {}, store.me.account ? 'Loading...' : 'On the shared password, agents run on this Kipdeck\'s own sign-ins.'));
       return;
     }
     cards.append(card('claude', s.claude, s.office), card('github', s.github, s.office));

@@ -50,7 +50,7 @@ $env:KIPDECK_INSTALL_ONLY = 1; irm https://raw.githubusercontent.com/zbagdzevici
 
 Until kipdeck is on npm, these print the from-source steps instead: clone [github.com/zbagdzevicius/kipdeck](https://github.com/zbagdzevicius/kipdeck), then `npm install && npm link` gives you the same `kipdeck` command. Without installing, `npx github:zbagdzevicius/kipdeck tunnel ...` runs it too.
 
-The office it talks to has to be new enough to list its workers' servers. If it isn't, the command says so: upgrade the office (**⬆️ Upgrade the office** in the **☰** menu, or the deploy script's `update`).
+The office it talks to has to be new enough to list its workers' servers. If it isn't, the command says so: upgrade the office (**Update Kipdeck** in the **☰** menu, or the deploy script's `update`).
 
 ## Signing in
 

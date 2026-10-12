@@ -53,7 +53,7 @@ The keys below are the Deck's (`/deck`). Its Settings has the same three panes a
 | H | These controls |
 | T / Enter | Chat |
 | / | Search the chat and every terminal on your floor |
-| Ctrl + K (⌘K on a Mac) | Command palette: find a worker, issue, PR, service, board, teammate or action; Enter opens it, Shift+Enter walks you there first |
+| Ctrl + K (⌘K on a Mac) | Command palette: find an agent, issue, PR, service, board, teammate or action; Enter opens it, Shift+Enter walks you there first |
 | V | Join voice; in voice, hold to talk (you're muted when you let go) |
 | M | Mute / unmute your mic in voice |
 | Shift + M | Turn all of the deck's sound off, or back on (Settings > Sound & voice has the main volume and the mixer; see [the design system](design.md#sound)) |

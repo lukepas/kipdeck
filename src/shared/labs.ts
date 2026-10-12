@@ -18,7 +18,7 @@ export type Labs = Record<LabId, boolean>;
 export const LAB_META: Readonly<Record<LabId, { name: string; what: string }>> = {
   boards: { name: 'GitHub boards and queue', what: "Issues, Pull requests, the Task queue and Mission control in the home page's menu and commands. The inbox already shows every agent's pull request and checks." },
   bridge: { name: 'Deck (3D)', what: 'Enter the Deck from the avatar menu: your agents at their stations on a 3D starship bridge (/deck), and the deck plan under the empty pane. The Deck works as a wall display for a team room.' },
-  ops: { name: 'Goals and timeline', what: 'Goals and milestones, the Timeline and Crew tabs in Mission control, and the Services board.' },
+  ops: { name: 'Goals and timeline', what: 'Goals and milestones, the Timeline and Records tabs in Mission control, and the Services board.' },
   meetings: { name: 'Meetings', what: 'The Review bay, where agents work through a question together, and the planning whiteboard.' },
   voice: { name: 'Voice', what: 'Voice chat, screen sharing, and the dictation mic in prompt boxes and terminals. The browser asks for the microphone or screen only when you click to use them.' },
   ambience: { name: 'Deck ambience', what: 'The Deck in full: the mascot, ship voice, gloved hands, the lounge, rituals, celebrations, ship motion and soundscape. Sound starts with your first click or key.' },

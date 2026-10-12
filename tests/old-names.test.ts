@@ -13,6 +13,7 @@ import { build } from 'vite';
 // @ts-expect-error a plain .mjs script with no types
 import { buildSite } from '../site/build.mjs';
 import { MARK } from '../src/shared/logo.ts';
+import { pageText } from './support/pagetext.ts';
 
 const root = path.join(import.meta.dirname, '..');
 const OLD = /mergeline|ugc ?-?army/i;
@@ -32,21 +33,6 @@ function walk(dir: string): string[] {
     const p = path.join(dir, f);
     return statSync(p).isDirectory() ? walk(p) : [p];
   });
-}
-
-/** What a person reads on a page: no scripts, styles or comments, no tags, the common entities decoded. */
-function pageText(html: string): string {
-  return html
-    .replace(/<script\b[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style\b[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<!--[\s\S]*?-->/g, ' ')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
 }
 
 test('stripping the tags joins a split wordmark, so MERGE<span>LINE</span> cannot slip past', () => {
