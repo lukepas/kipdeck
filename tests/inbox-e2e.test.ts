@@ -23,6 +23,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BUNDLE = path.join(ROOT, 'dist', 'public');
 const stale = bundleWhy(path.join(BUNDLE, 'index.html'), [path.join(ROOT, 'src', 'client'), path.join(ROOT, 'src', 'shared')]);
 const PASSWORD = 'inbox-e2e';
+/** Set INBOX_SHOTS to a folder to keep the answer-advance screenshots. */
+const SHOTS = process.env.INBOX_SHOTS;
 
 const root = mkdtempSync(path.join(tmpdir(), 'office-inbox-'));
 const project = path.join(root, 'project');
@@ -42,6 +44,19 @@ async function launch(): Promise<Browser | undefined> {
     }
   }
   return undefined;
+}
+
+/** A free port among the ones kept for test servers (5400-5499). */
+async function freePort(): Promise<number> {
+  for (let p = 5400 + Math.floor(Math.random() * 100), i = 0; i < 100; i++, p = 5400 + ((p - 5400 + 1) % 100)) {
+    const s = net.createServer();
+    const ok = await new Promise<boolean>((r) => s.once('error', () => r(false)).listen(p, '127.0.0.1', () => r(true)));
+    if (ok) {
+      await new Promise((r) => s.close(r));
+      return p;
+    }
+  }
+  throw new Error('no free port in 5400-5499');
 }
 
 before(async () => {
@@ -64,10 +79,7 @@ before(async () => {
   writeFileSync(path.join(claudeDir, '.credentials.json'), '{}');
   process.env.CLAUDE_CONFIG_DIR = claudeDir;
   for (const k of ['ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN', 'CLAUDE_CODE_OAUTH_TOKEN']) delete process.env[k];
-  const s = net.createServer();
-  await new Promise<void>((r) => s.listen(0, '127.0.0.1', r));
-  const port = (s.address() as net.AddressInfo).port;
-  await new Promise((r) => s.close(r));
+  const port = await freePort();
   for (const k of Object.keys(process.env)) if (k.startsWith('AGENT_OFFICE_')) delete process.env[k];
   const { loadConfig } = await import('../src/server/config.js');
   const { startServer } = await import('../src/server/server.js');
@@ -114,6 +126,9 @@ async function signedIn(viewport: { width: number; height: number }) {
 const row = (page: Page, section: string, text: string) => page.locator(`.sec-${section} .row`, { hasText: text });
 
 async function deploy(page: Page, task: string) {
+  // N is heard once the inbox has drawn the office (its keys and the projects are in by then); pressed
+  // straight after the page loads, it would go nowhere.
+  await page.locator('.row, .first-run:not(.loading)').first().waitFor({ timeout: 30_000 });
   await page.keyboard.press('n');
   const sheet = page.locator('.modal.deploy');
   await sheet.waitFor();
@@ -181,6 +196,9 @@ test('deploy, needs you, answer, review, merge: the loop on the home page', asyn
   assert.equal(await page.locator('.pane .term-say input').isVisible(), false);
   await page.keyboard.type('fix the selector');
   await page.keyboard.press('Enter');
+  // Answered with nothing else asking: the pane moves on to the one to review, on its Changes tab.
+  await page.locator('.pane-title h2', { hasText: 'Write the README quickstart' }).waitFor({ timeout: 15_000 });
+  await page.locator('.pane-tab.on', { hasText: 'Changes' }).waitFor();
   await row(page, 'review', 'Fix the flaky checkout test').waitFor({ timeout: 30_000 });
   // The settled toast names it by its task, as its row does.
   await page.locator('#toasts .toast', { hasText: /^Fix the flaky checkout test.* is back at work\./ }).waitFor({ timeout: 10_000 });
@@ -320,5 +338,66 @@ test('sign-in: Kip waves over the card, and steps out (in place) once it says th
   // The error line's own height may nudge the centred card a pixel or two, never by Kip's 112px.
   const moved = Math.abs((await fieldAt()) - before);
   assert.ok(moved < 4, `the field stays where it was (moved ${moved}px)`);
+  assert.deepEqual(errors, []);
+});
+
+test('after an answer the pane moves on: the next that asks, then the next to review', async (t) => {
+  if (why) return t.skip(why);
+  const { page, errors, context } = await signedIn({ width: 1440, height: 900 });
+  t.after(() => context.close());
+  // Its own one to review, so it stands without the loop test before it.
+  await deploy(page, '[done] Sort the release notes (demo)');
+  await row(page, 'review', 'Sort the release notes').waitFor({ timeout: 30_000 });
+  const asks = ['Rename the checkout button', 'Tidy the footer links'];
+  await deploy(page, `[ask] ${asks[0]} (demo)`);
+  await deploy(page, `[ask] ${asks[1]} (demo)`);
+  await deploy(page, '[approve] Clear the old build (demo)');
+  for (const a of asks) await row(page, 'needs-you', a).locator('.row-act', { hasText: 'Answer' }).waitFor({ timeout: 30_000 });
+  await row(page, 'needs-you', 'Clear the old build').locator('.row-act', { hasText: 'Approve' }).waitFor({ timeout: 30_000 });
+
+  const title = page.locator('.pane-title h2');
+  const question = page.locator('.pane .q-card:not(.hidden)');
+  const approval = page.locator('.pane .ap-card:not(.hidden)');
+  /** Answers whatever the pane shows now, from its card, and says which it was. */
+  const answerShown = async (): Promise<string> => {
+    const name = (await title.innerText()).trim();
+    if (name.includes('Clear the old build')) {
+      await approval.locator('.ap-once').click();
+    } else {
+      await question.locator('.q-text', { hasText: 'update the snapshot or fix the selector?' }).waitFor({ timeout: 15_000 });
+      await question.locator('.q-reply input').fill('fix the selector');
+      await question.locator('.q-reply input').press('Enter');
+    }
+    return name;
+  };
+  const movesOn = async (from: string) => page.waitForFunction((was) => !!document.querySelector('.pane-title h2') && document.querySelector('.pane-title h2')!.textContent!.trim() !== was, from, { timeout: 15_000 });
+
+  // The first that asks, from its row: answered, the pane opens another that asks without a click.
+  await row(page, 'needs-you', asks[0]).locator('.row-act').click();
+  await title.filter({ hasText: asks[0] }).waitFor({ timeout: 15_000 });
+  if (SHOTS) {
+    mkdirSync(SHOTS, { recursive: true });
+    await page.screenshot({ path: path.join(SHOTS, 'now-answer-advance-1-asking.png') });
+  }
+  const first = await answerShown();
+  await movesOn(first);
+  const second = (await title.innerText()).trim();
+  assert.ok(second.includes(asks[1]) || second.includes('Clear the old build'), `the next one that asks opens, not ${second}`);
+  await question.or(approval).waitFor({ timeout: 15_000 });
+  // The keyboard came along to the next card, so a keyboard or screen reader goes on from there.
+  await page.waitForFunction(() => !!document.activeElement?.closest('.pane .q-card, .pane .ap-card'), null, { timeout: 5_000 });
+  if (SHOTS) await page.screenshot({ path: path.join(SHOTS, 'now-answer-advance-2-next.png') });
+
+  // The second (a question or the Approval card): answered, on to the third.
+  await answerShown();
+  await movesOn(second);
+  const third = (await title.innerText()).trim();
+  assert.ok([asks[1], 'Clear the old build'].some((x) => third.includes(x)) && third !== second, `the last one that asks opens, not ${third}`);
+  // The third: nothing else asks, so the pane falls through to a review on its Changes tab.
+  await answerShown();
+  await movesOn(third);
+  await page.locator('.pane-tab.on', { hasText: 'Changes' }).waitFor({ timeout: 15_000 });
+  assert.equal(await page.locator('.sec-needs-you .row').count(), 0, 'nothing needs you');
+  if (SHOTS) await page.screenshot({ path: path.join(SHOTS, 'now-answer-advance-3-review.png') });
   assert.deepEqual(errors, []);
 });
