@@ -28,7 +28,7 @@ From a fresh worktree on `origin/main` (never the shared checkout), after the la
 git fetch origin && git switch -c launch/submit-stamp origin/main
 npm ci --ignore-scripts
 
-# 1. Stamp the submitted commit into the disclosure (it reads 226452e4..6c315a1c today)
+# 1. Stamp the submitted commit into the disclosure (it reads 226452e4..4aff1cce today)
 sha=$(git rev-parse --short=8 origin/main)
 sed -i '' -E "s/226452e4\.\.[0-9a-f]{8}/226452e4..$sha/g" \
   launch/chain/colosseum-worlds-fair.md launch/chain/disclosure.md launch/chain/SUBMIT.md
@@ -204,7 +204,7 @@ Counted from chain data on the submission day, not estimated. Merged agent PRs a
 The full answer, at most 1,500 characters. The commit after `226452e4..` is the stamp: re-stamp it on submit day.
 
 ```field name="Prior work disclosure" max-chars=1500
-Kipdeck is built on agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs and community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D office, desks where coding agent CLIs run in live terminals, voice, the GitHub boards and the deploy scripts. Our history starts from two snapshot imports of upstream (commits 01d85bbb = upstream 665aeec, and 226452e4 = upstream 1bc3028, both 2026-09-30); all of that is theirs, and so are 11 upstream pull requests we re-committed under our name (listed with their authors in launch/chain/disclosure.md). Ours, all written during the contest (our first commit is 2026-09-30): the inbox and mission control (attention ranking, review inbox, goals, timeline), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and Proof of Merge, the payout layer: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, a GitHub Action attester, x402 paid tasks, EAS attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are every commit in 226452e4..6c315a1c except those 11, the import 01d85bbb and 2 Dependabot bumps. Testnets only. Diff: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
+Kipdeck is built on agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs and community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D office, desks where coding agent CLIs run in live terminals, voice, the GitHub boards and the deploy scripts. Our history starts from two snapshot imports of upstream (commits 01d85bbb = upstream 665aeec, and 226452e4 = upstream 1bc3028, both 2026-09-30); all of that is theirs, and so are 11 upstream pull requests we re-committed under our name (listed with their authors in launch/chain/disclosure.md). Ours, all written during the contest (our first commit is 2026-09-30): the inbox and mission control (attention ranking, review inbox, goals, timeline), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and Proof of Merge, the payout layer: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, a GitHub Action attester, x402 paid tasks, EAS attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are every commit in 226452e4..4aff1cce except those 11, the import 01d85bbb and 2 Dependabot bumps. Testnets only. Diff: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 ```
 
 ### Prior work, short
@@ -222,6 +222,7 @@ For "anything else" or a links field. The showcase only after it opens (section 
 ```field name="Other links" max-chars=800
 Landing: https://kipdeck.com
 Pitch deck: https://kipdeck-deck.vercel.app
+Live demo, a recorded round in the browser with nothing to install: https://kipdeck-demo.vercel.app
 What we added since our import of upstream: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 Public showcase (Proof of Merge board, rebuilt from chain data): https://zbagdzevicius.github.io/kipdeck/
 Escrow program on Solana devnet: https://explorer.solana.com/address/JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6?cluster=devnet
@@ -237,6 +238,6 @@ Upstream, agent-office (MIT): https://github.com/AgentSystemLabs/agent-office
 - [ ] Counts refreshed; the demand validation field matches `data/counts.json`.
 - [ ] Showcase opens at https://zbagdzevicius.github.io/kipdeck/ in a private window.
 - [ ] Both videos uploaded unlisted, opened in a private window, under 3:00, with sound.
-- [ ] Every link in the form opened once: https://github.com/zbagdzevicius/kipdeck, https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main, https://kipdeck.com, https://kipdeck-deck.vercel.app.
+- [ ] Every link in the form opened once: https://github.com/zbagdzevicius/kipdeck, https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main, https://kipdeck.com, https://kipdeck-deck.vercel.app, https://kipdeck-demo.vercel.app.
 - [ ] The team leader clicks submit before 2026-10-12 23:59 PT; save the confirmation (a screenshot and the email).
 - [ ] After submitting: post day 10 ([posts/2026-10-11.md](posts/2026-10-11.md)) and send upstream the courtesy note in [disclosure.md](disclosure.md).
