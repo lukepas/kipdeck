@@ -87,6 +87,17 @@ function ownerLabel(e: RosterEntry): string {
 }
 
 /**
+ * How many wait on you across every project and filter, so a search or a project pick never hides a
+ * question from the warm gate (warm.ts, empty.ts, kip-moments.ts). `except` is left out: the agent
+ * you just answered, which may not have left Needs you yet.
+ */
+export function needsYouNow(except?: string): number {
+  const all = buildInbox(store.ranked());
+  const n = waitingNow(all).needYou.length;
+  return except && all.sections['needs-you'].some((r) => r.entry.id === except) ? n - 1 : n;
+}
+
+/**
  * When each row in Needs you (its loose reminders too) and in To review started waiting: the same
  * buckets the list draws, so the pulse never counts differently from the sections under it. A change
  * whose merge is held or under way waits on the merge now, not on you, so it isn't counted.

@@ -1,5 +1,5 @@
 // The inbox's warm lines (src/shared/warm.ts, docs/voice.md): fact first, the warm clause apart, the
-// greeting by local time, the thank-you at most once a minute, and only the first merge ever gets an
+// all-clear line and Kip's pose by local time, the thank-you at most once a minute, and only the first merge ever gets an
 // exclamation mark.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -8,6 +8,7 @@ import {
   CLEAR_LINES,
   NIGHT_LINE,
   answeredLine,
+  calmPose,
   firstJobLine,
   firstMergeLine,
   greeting,
@@ -23,8 +24,8 @@ const H = 3_600_000;
 
 test('the shift goes by local hour: morning 05-12, afternoon 12-18, evening 18-22, night shift 22-05', () => {
   assert.deepEqual([4, 5, 11, 12, 17, 18, 21, 22, 0].map(shiftAt), ['night', 'morning', 'morning', 'afternoon', 'afternoon', 'evening', 'evening', 'night', 'night']);
-  assert.equal(greeting(9, 0).label, 'Morning');
-  assert.equal(greeting(23, 0).label, 'Night shift');
+  assert.equal(greeting(9, 0).shift, 'morning');
+  assert.equal(greeting(23, 0).shift, 'night');
 });
 
 test('the night shift has its own line; by day one line rotates by the hour and stays put within it', () => {
@@ -49,9 +50,11 @@ test('the merge toast: what merged and how long it waited, then the tape count a
   assert.equal(mergedLine('x', undefined, 0).warm, undefined);
 });
 
-test('the first merge is the one exclamation mark, and plain while someone needs you', () => {
-  assert.equal(firstMergeLine(4 * 60_000), 'First merge! 4m after you started. Track one, in Shipped today.');
-  assert.equal(firstMergeLine(4 * 60_000, false), "Your first merge, 4m after you started. It's in Shipped today.");
+test('the first merge is one short sentence, the one exclamation mark, and plain while someone needs you', () => {
+  assert.equal(firstMergeLine('Fix the flaky checkout test'), 'First merge: Fix the flaky checkout test!');
+  assert.equal(firstMergeLine('Fix the flaky checkout test', false), 'First merge: Fix the flaky checkout test.');
+  // A celebration never adds up a wait or a clock.
+  assert.doesNotMatch(firstMergeLine('t'), /wait|after you started|\d+[smhd]\b/i);
 });
 
 test('the first job and the answer name the agent by its task, fact first', () => {
@@ -91,7 +94,7 @@ test('the warm lines keep to the voice: no banned words, no emoji, one exclamati
     welcomeBack(1, 1, 1).lead,
     welcomeBack(1, 0, 0).tail,
     welcomeBack(0, 0, 0).tail,
-    firstMergeLine(1, false),
+    firstMergeLine('t', false),
   ];
   for (const l of lines) {
     assert.doesNotMatch(l, /\b(crewmate|worker|desk|unit|troops|conn|captain's log|stand down)\b/i, l);
@@ -100,13 +103,20 @@ test('the warm lines keep to the voice: no banned words, no emoji, one exclamati
   }
 });
 
-test('the landed merge toast: the tape count and the Kip sticker only while nothing needs you', () => {
+test('the landed merge toast: the tape count only while nothing needs you, and the first merge says its one sentence alone', () => {
   const line = mergedLine('Fix the flaky checkout test', 32_000, 3);
-  assert.deepEqual(landedNote(line, undefined, true), { after: "3 on today's tape.", sticker: false, ms: 4500 });
-  assert.deepEqual(landedNote(line, undefined, false), { sticker: false, ms: 4500 });
-  const first = firstMergeLine(4 * 60_000, true);
-  assert.deepEqual(landedNote(line, first, true), { after: first, sticker: true, ms: 6500 });
-  // Someone is waiting: the plain first-merge line, and no sticker next to them.
-  const plain = firstMergeLine(4 * 60_000, false);
-  assert.deepEqual(landedNote(line, plain, false), { after: plain, sticker: false, ms: 6500 });
+  assert.deepEqual(landedNote(line, undefined, true), { fact: line.fact, after: "3 on today's tape.", where: true, ms: 4500 });
+  assert.deepEqual(landedNote(line, undefined, false), { fact: line.fact, where: true, ms: 4500 });
+  // No "Waited on you 41m." beside the celebration, no tape count and no line under it.
+  const first = firstMergeLine('Fix the flaky checkout test', true);
+  assert.deepEqual(landedNote(line, first, true), { fact: first, where: false, ms: 6500 });
+  const plain = firstMergeLine('Fix the flaky checkout test', false);
+  assert.deepEqual(landedNote(line, plain, false), { fact: plain, where: false, ms: 6500 });
+});
+
+test("Kip's pose in the all-clear pane: his lantern on the night shift, watching while agents work, napping when none do", () => {
+  assert.equal(calmPose(2, 23), 'lantern');
+  assert.equal(calmPose(0, 3), 'lantern');
+  assert.equal(calmPose(3, 10), 'watching');
+  assert.equal(calmPose(0, 15), 'napping');
 });

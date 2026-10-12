@@ -1,7 +1,5 @@
-/* The inbox's warm moments (warm.ts): the greeting's tape label, the all-clear's warm line, welcome back
-   and the zero-wait line. Tape ink and the celebrate type only; never a state hue. */
-.warm-greet { margin: 0; font: 500 var(--label-size)/1 var(--label-font); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--tape); }
-.pe.calm h2.warm-clear { font-stretch: var(--stretch-celebrate); font-weight: var(--weight-celebrate); }
+/* The inbox's warm words (warm.ts): the all-clear's heading and warm line, welcome back and the
+   zero-wait line. The celebrate type only; never a state hue. Kip's own sheet is kip-moments.css. */
 .warm-line { font: 400 14px/1.45 var(--font-ui); color: var(--muted); }
 .warm-welcome { margin: 0 0 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--surface-1); color: var(--text); font-size: 13px; }
 .warm-link { padding: 0; border: 0; background: none; color: var(--text); font: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }

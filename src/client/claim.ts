@@ -8,6 +8,8 @@ const token = new URLSearchParams(location.search).get('t') ?? '';
 history.replaceState(null, '', '/claim');
 
 function fail(msg: string) {
+  // A failure gets a plain heading, not the welcome (docs/voice.md#where-fun-is-forbidden).
+  $('title').textContent = "This link didn't work";
   $('sub').textContent = '';
   $('error').textContent = msg;
   $('login').hidden = false;

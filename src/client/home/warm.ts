@@ -1,35 +1,28 @@
-// The inbox's warm moments, put on the page (the words are shared/warm.ts, the rules docs/voice.md):
-// the greeting and the rotating line in the all-clear pane, the thank-you after an answer, the first
-// job's toast, welcome back and the zero-wait day. The fact is always said; the warm clause sits in its own
-// span after it, and only while nothing needs you (`quiet`): a queued beat is dropped, not held.
+// The inbox's warm words, put on the page (the words are shared/warm.ts, the rules docs/voice.md):
+// the all-clear pane's warm line, the thank-you after an answer, the first job's toast, welcome back
+// and the zero-wait day. Only words, so they load with the page; Kip and his beats are kip-moments.ts,
+// loaded through lazy.ts the first time one is wanted. The fact is always said; the warm clause sits
+// in its own span after it, and only while nothing needs you (`quiet`): a queued beat is dropped, not held.
 
 import { answeredLine, firstJobLine, greeting, welcomeBack, WELCOME_BACK_MS, type Said } from '../../shared/warm';
 import { h } from '../ui/dom';
 import { storageKey } from '../shared/storage-key';
 import { settledToast } from './beat';
-import { currentView, waitingNow } from './list';
+import * as lazy from './lazy';
+import { needsYouNow, waitingNow } from './list';
 import { home } from './state';
 import './warm.css';
 
 /**
- * Nothing needs you: no question, no reminder due, no agent request. Warm lines only play then.
- * `except` is the agent you just answered, which may not have left Needs you yet.
+ * Nothing needs you, on any project or filter: no question, no reminder due, no agent request. Warm
+ * lines and Kip only show then. `except` is the agent you just answered, which may not have left
+ * Needs you yet.
  */
-export function quiet(except?: string): boolean {
-  const view = currentView();
-  const asking = view.sections['needs-you'];
-  const others = waitingNow(view).needYou.length - asking.length;
-  return others + asking.filter((r) => r.entry.id !== except).length === 0;
-}
+export const quiet = (except?: string) => needsYouNow(except) === 0;
 
 /** The fact, then the warm clause in its own span (left off while someone needs you). */
 export function said(s: Said, isQuiet = quiet()): (string | HTMLElement)[] {
   return isQuiet && s.warm ? [s.fact, ' ', h('span.warm-said', {}, s.warm)] : [s.fact];
-}
-
-/** The all-clear pane's greeting by local time: a tape label over the heading. */
-export function greetingLabel(now = Date.now()): HTMLElement {
-  return h('p.warm-greet', {}, greeting(new Date(now).getHours(), now).label);
 }
 
 /** The all-clear pane's one warm line under the facts: the night shift's, else one of the rotating lines. */
@@ -72,7 +65,9 @@ export function sayFirstJob(task: string) {
     // storage blocked: once for this page
   }
   const line = firstJobLine(task);
-  settledToast(line.fact, undefined, line.warm);
+  const el = settledToast(line.fact, undefined, line.warm);
+  // Kip waves in its icon slot once his art has loaded, if nobody needs you by then.
+  void lazy.kipMoments().then((k) => k.kipInToast(el, 'wave'));
 }
 
 /**

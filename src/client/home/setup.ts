@@ -12,6 +12,7 @@ import { store } from '../state';
 import { h, toast } from '../ui/dom';
 import { icon } from '../ui/icons';
 import { agentMark } from './list';
+import * as lazy from './lazy';
 import './setup.css';
 
 let state: SetupState | undefined;
@@ -174,9 +175,13 @@ export function setupCard(net: Net, deploy: (prompt: string, provider?: AgentPro
   // Everything found: one line says what, and the rows fold under Details. Anonymous usage numbers
   // are asked about in Settings, never before the first agent.
   const summary = canDeploy && agent ? foundLine(s, agent) : null;
+  // Kip waves from the card's corner (kip-moments.ts), as he does on the sign-in card.
+  const kip = h('span.kip.su-kip', { 'data-pose': 'wave' });
+  void lazy.kipMoments().then((k) => k.fillKip(kip));
   return h(
     'div.first-run.setup-card',
     { class: canDeploy ? 'ready' : '' },
+    kip,
     h('h2', {}, 'Give your first agent a job'),
     h('p', {}, 'It works on its own branch and comes back here when it needs you or has something to show.'),
     summary,

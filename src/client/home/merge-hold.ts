@@ -8,7 +8,7 @@
 import { agentBadge } from '../../shared/agentname';
 import { mergeWords } from '../../shared/inbox';
 import type { RosterEntry, ShipRecord } from '../../shared/protocol';
-import { landedNote, mergedLine } from '../../shared/warm';
+import { firstMergeLine, landedNote, mergedLine } from '../../shared/warm';
 import { h } from '../ui/dom';
 import { icon } from '../ui/icons';
 import { settle } from './beat';
@@ -109,17 +109,17 @@ export function undoMerge(id: string, changed: () => void) {
   changed();
 }
 
-/** What the landed toast says after the fact: the first merge's line, or how many are on today's tape, and whether nothing needs you (else the warm clause is left off). */
+/** What the landed toast says after the fact: whether it is this browser's first merge, how many are on today's tape, and whether nothing needs you (else the warm clause is left off). */
 export interface LandedSay {
-  first?: string;
+  first: boolean;
   onTape: number;
   quiet: boolean;
 }
 
-/** The office answered a merge this page sent: its toast says how it went. False when this page has no toast for it. */
-export function mergeLanded(workerId: string, result: { error?: string; record?: ShipRecord }, say: LandedSay = { onTape: 0, quiet: false }): boolean {
+/** The office answered a merge this page sent: its toast says how it went, and is handed back. Undefined when this page has no toast for it. */
+export function mergeLanded(workerId: string, result: { error?: string; record?: ShipRecord }, say: LandedSay = { first: false, onTape: 0, quiet: false }): HTMLElement | undefined {
   const s = sent.get(workerId);
-  if (!s) return false;
+  if (!s) return undefined;
   sent.delete(workerId);
   const text = s.toast.querySelector('.toast-text');
   s.toast.classList.remove('hold');
@@ -127,16 +127,14 @@ export function mergeLanded(workerId: string, result: { error?: string; record?:
     s.toast.classList.add('warn');
     text?.replaceChildren(result.error);
     fade(s.toast, 6000);
-    return true;
+    return s.toast;
   }
-  // "Merged: <task>. Waited on you 32s." first, then the first merge's line or the day's tape count
-  // (only while nothing needs you), and where it went under it.
+  // "Merged: <task>. Waited on you 32s.", the day's tape count while nothing needs you, and where it
+  // went under it; the first merge says its one sentence alone.
   const line = mergedLine(s.entry.title, result.record?.waitedMs, say.onTape);
-  const note = landedNote(line, say.first, say.quiet);
-  text?.replaceChildren(line.fact, ...(note.after ? [' ', h('span.warm-said', {}, note.after)] : []), h('small', {}, `${mergeWords(s.entry, true)}.`));
+  const note = landedNote(line, say.first ? firstMergeLine(s.entry.title, say.quiet) : undefined, say.quiet);
+  text?.replaceChildren(note.fact, ...(note.after ? [' ', h('span.warm-said', {}, note.after)] : []), ...(note.where ? [h('small', {}, `${mergeWords(s.entry, true)}.`)] : []));
   settle(s.toast);
-  // The Kip sticker hangs on this class (docs/voice.md: Kip gives way while someone needs you).
-  if (note.sticker) s.toast.classList.add('first-merge');
   fade(s.toast, note.ms);
-  return true;
+  return s.toast;
 }

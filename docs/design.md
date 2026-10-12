@@ -10,7 +10,7 @@ The deck is calm by default. Floors, consoles and units are slate and steel, and
 
 ## Warmth: the crew look
 
-Kipdeck is a scrappy crew's cockpit with a tape deck playing, not a cold console. The warmth comes from the ground (warm graphite and paper in place of blue slate), softer corners on the things that talk to you, Kip in the quiet moments, and the words ([docs/voice.md](voice.md)). The layout, density, scan order, status hues and glyphs do not change, so a grayscale screenshot reads exactly as before. Fun stops the moment something needs you.
+Kipdeck is a scrappy crew's cockpit with a tape deck playing, not a cold console. The warmth comes from the ground (warm graphite and paper in place of blue slate), softer corners on the things that talk to you, Kip in the quiet moments, and the words ([docs/voice.md](voice.md)). The layout, density, scan order, status hues and glyphs do not change, so a grayscale screenshot reads exactly as before. Fun stops the moment something needs you. There is one Kip: the landing page, the sign-in card, the inbox and the investor deck draw the same character as the Deck's 3D one, from `src/shared/kip-art.ts` with his colours in `src/client/styles/kip.css`.
 
 The tokens are in `src/client/styles/tokens.css`, mirrored as hex for canvases in `src/shared/tones.ts`. `tests/tones.test.ts` keeps the two equal, holds every text token at 4.5:1 and every field edge at 3:1 on each surface, and keeps the neutrals at OKLCH chroma under 0.03 with a warm hue.
 
@@ -40,7 +40,7 @@ The state hues keep their values and glyphs: dark Signal `#FF6A1A` (6.51 / 6.16 
 The extras, each with one home:
 
 - **Tape stripe** (`--tape-stripe`, 5px tall): three 1px lines in ship, tape and plum under the inbox's top bar, the Deck HUD's top bar and the landing nav. It is the one ornament in the chrome.
-- **Sunset** (`--sunset`, from `--sunset-1` apricot `#F2B48C` through `--sunset-2` dusty rose `#C47F93` and `--sunset-3` plum `#4A3560` to the void): a glow behind Kip on the sign-in page and the landing hero only. Never in the app's chrome, never in a row, never next to a state mark, never under text or a focusable control. These are the two places with no state on screen, so its apricot cannot be read as Signal.
+- **Sunset** (`--sunset`, from `--sunset-1` apricot `#F2B48C` through `--sunset-2` dusty rose `#C47F93` and `--sunset-3` plum `#4A3560` to the void): a glow behind Kip on the sign-in page and the landing hero only. Never in the app's chrome, never in a row, never next to a state mark, never under text or a focusable control. These are the two places with no state on screen, so its apricot cannot be read as Signal. Like the grain it is `none` in the light sets and in print, where Kip stands on the plain paper.
 - **Grain** (`--grain`, 3% noise as an inline SVG data URI, allowed by `img-src data:`): the sign-in page's ground and the landing hero only. Never on panes, the terminal, a diff or under focusable text. It is `none` in the light sets and in print.
 
 No new accent hue goes into the inbox: a warm accent would collide with Signal or review. Brass and conn gold stay on the Deck.
@@ -52,7 +52,7 @@ The CSP is `font-src 'self'` (`src/server/csp.ts`, `site/landing/index.html`), s
 - **Hero** (`--stretch-hero` 125%, `--weight-hero` 700): the landing headline and the sign-in heading (Welcome back). Wide letters give a 70s mission-patch feel.
 - **Celebrate** (`--stretch-celebrate` 110%, `--weight-celebrate` 650, sentence case): All clear, Shipped today.
 - **Display** (`--stretch-display` 118%): the wordmark and modal headers, as today.
-- **Tape label** (`--label-font` mono, `--label-size` 10px, uppercase, `--label-track` .12em, in `--tape`): warm eyebrows only: the greeting (MORNING, NIGHT SHIFT), SHIPPED TODAY, the demo coach strip, the landing's section kickers ("Side A: the loop", "B-sides" for Labs) and the Deck's board headers. "It asks" is a decision surface and keeps its Signal treatment, not a tape label.
+- **Tape label** (`--label-font` mono, `--label-size` 10px, uppercase, `--label-track` .12em, in `--tape`): warm eyebrows only: SHIPPED TODAY, the demo coach strip, the landing's section kickers ("Side A: the loop", "B-sides" for Labs) and the Deck's board headers. "It asks" is a decision surface and keeps its Signal treatment, not a tape label.
 - In-app section labels go sentence case at weight 600 with no letter-spacing. UI and data type stay as they are.
 
 ### Shape
@@ -70,7 +70,7 @@ State glyphs never take a radius. Hairlines stay 1px and dense panels get no sha
 ### Motion
 
 - The state cadences are untouched: the 120ms open, the 1.2s needs-you pulse, the 1 Hz stuck blink.
-- A warm beat (`--t-beat` 600ms) plays once per event and never loops: the tuft bounce on merge, Kip's cheer in the toast, the all-clear check drawing, the Shipped count rolling like a tape counter (the existing odometer).
+- A warm beat (`--t-beat` 600ms) plays once per event and never loops: the tuft bounce on merge, Kip's cheer in the toast, All clear settling in, the Shipped count rolling like a tape counter (the existing odometer).
 - Only Kip may use `--ease-soft`, which overshoots by 4% at most. Chrome keeps `--ease` and never overshoots, presses down or bounces.
 - No confetti, particles or staggered lists. Kip's idle loops are slow (a breath of 4s or longer) and pause in a hidden tab.
 - Nothing warm plays while Needs you is above zero; a queued beat is dropped if a question arrives. Nothing moves near a row that needs you except the existing pulse.
@@ -82,10 +82,10 @@ The inbox gets a **Crew sounds** switch in Settings, off by default. Three synth
 
 ### Per surface
 
-- **Inbox** (`src/client/home`): warm neutrals, the tape stripe under the top bar, 6px panels. Personality lives only in the empty pane (greeting, Kip pose, All clear), empty sections, Shipped today, toasts after a done action and the setup card. Rows, scan order, pulse, counts and the pane's decision cards stay literal. Inputs move to `--line-input`.
+- **Inbox** (`src/client/home`): warm neutrals, the tape stripe under the top bar, 6px panels. Personality lives only in the empty pane (Kip, All clear, one warm line), empty sections, Shipped today, toasts after a done action and the setup card. Rows, scan order, pulse, counts and the pane's decision cards stay literal. Inputs move to `--line-input`.
 - **Deck** (`src/client/world`, `ui`): already the warmest surface; Kip's 3D behaviours stay. The HUD takes the warm neutrals (the boards' `PANEL` and `INK` read `src/shared/tones.ts`), board headers take the tape-label style, the Attention board stays strict. Visible "unit" becomes the task name or "agent". No new animation.
-- **Sign-in and demo** (`login`, `join`, `claim`, the demo banner and coach): the card at 6px with the hero heading "Welcome back" (first claim "Welcome aboard"), Kip's wave pose on a sunset glow with grain behind the card, never under it. No Signal. The long sign-in command already wraps inside the card on `/`; keep it that way. The demo coach ends on "That's the loop. Now run it on your repo."
-- **Landing** (`site/landing`, [docs/landing.md](landing.md)): the hero gets the sunset behind Kip and the 125% headline; the headline copy stays. Section kickers become tape labels. The wait chart keeps Signal on neutral, in its own section, away from the gradient. Claims, pricing and security copy stay plain. Kip is inline SVG only, for the perf budget. The light set already uses the warm paper.
+- **Sign-in and demo** (`login`, `join`, `claim`, the demo banner and coach): the card at 6px with the hero heading "Welcome back" (first claim "Welcome aboard"), Kip's wave pose on a sunset glow with grain behind the card, never under it. While the card shows an error, Kip and the glow step out (hidden in place, so the card doesn't move), and a failed claim is headed "This link didn't work", not the welcome. No Signal. The long sign-in command already wraps inside the card on `/`; keep it that way. The demo coach ends on "That's the loop. Now run it on your repo."
+- **Landing** (`site/landing`, [docs/landing.md](landing.md)): the hero gets the sunset behind Kip and the 125% headline; the headline copy stays. Section kickers become tape labels. The wait chart keeps Signal on neutral, in its own section, away from the gradient. Claims, pricing and security copy stay plain. Kip is inline SVG only, for the perf budget, and he is the same Kip the app draws (`src/shared/kip-art.ts`). The light set already uses the warm paper.
 - **CLI** (`bin/`, `src/server/startup.ts`, `src/server/cli.ts`): "Starting Kipdeck..." prints instantly and unchanged. At most one warm line at ready ("Kip's on watch.") and one at exit (the session tally). Errors, help, `--json` and account output stay plain. No ANSI colour beyond what exists, no ASCII art.
 
 ## The logo

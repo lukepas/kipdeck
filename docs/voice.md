@@ -62,18 +62,18 @@ Rejected on purpose: "Bring on your first crewmate" (an agent is not a crewmate)
 
 ## Kip
 
-Kip is the lookout, not a narrator. In the inbox he is line art in `currentColor` (1.5 to 1.75px strokes on a 96 grid, under 1.5 kB of inline SVG per pose, `aria-hidden`, loaded lazily from a pose registry in `src/client/home/kip/` so the up-front budget is untouched). On the Deck he is the existing 3D Kip.
+Kip is the lookout, not a narrator, and there is one of him. Every flat surface (the inbox, the sign-in card, the setup card and the landing page) draws the same Kip as the investor deck and the Deck's 3D one: cream fur, tall leaf ears, the slate vest, the knitted scarf and his wand. The drawing is `src/shared/kip-art.ts` and his colours `src/client/styles/kip.css`; the landing page moves him, the app holds him still in one pose (`kipStill`), always `aria-hidden`. In the inbox he loads with `src/client/home/kip-moments.ts`, through `lazy.ts`, so the up-front budget is untouched. On the Deck he is the existing 3D Kip.
 
 | State | Inbox and top bar | Deck |
 | --- | --- | --- |
 | Watching: agents at work, nothing waits | Sitting-up pose in the empty pane | As today |
-| Napping: all clear, nobody working | Leaning-back pose, tuft light dim | Napping in his nest (exists) |
+| Napping: all clear, nobody working | Curled-up sleeping pose | Napping in his nest (exists) |
 | Someone needs you | Tuft light in Signal on the mark (exists). No art, no motion anywhere | Sits quietly facing the pod (exists) |
 | Merge | Tuft bounces once, 600ms; Cheer pose in the toast's icon slot | Pinwheel hop (exists) |
 | Stuck | Nothing in the inbox | Tucks in and goes still (exists) |
-| Late night, 22:00 to 05:00 local | Lantern pose (a small mug beside him) | Nightlight Sprig (exists) |
+| Late night, 22:00 to 05:00 local | Sleepy sitting pose, his wand lit low as a nightlight | Nightlight Sprig (exists) |
 | First run and the demo coach | Wave pose on the sign-in card and setup card | Bow (exists) |
-| First merge ever | A one-time Kip sticker in the toast | Bow (exists) |
+| First merge ever | The same Cheer pose in the toast's icon slot, nothing more | Bow (exists) |
 
 Kip gives way: while anything is in Needs you, nothing about him moves on any surface, and his line disappears from the empty pane. He never sits above or beside the first item that needs you.
 
@@ -83,9 +83,9 @@ Each plays once, never loops, never while Needs you is above zero (a queued beat
 
 1. **First agent given a job.** Toast: "Fix the flaky checkout test is aboard. It'll come back here when it needs you." Kip waves on the setup card. Once per install.
 2. **Merge.** Toast: "Merged: Fix the flaky checkout test. Waited on you 32s. 3 on today's tape." The tuft bounces once; the merge chime plays if Crew sounds is on. The 7s undo stays in plain words.
-3. **First merge ever.** "First merge! 4m after you started. Track one, in Shipped today." plus the Kip sticker. The only exclamation mark in the product.
-4. **All clear.** Heading "All clear. Nobody's waiting on you." in the celebrate type, then the facts: "4 shipped today, median wait 41s." One rotating second line: "Go stretch. Kip has the watch." or "Good time for a coffee." The check draws once.
-5. **Greeting by time of day** (empty pane eyebrow, tape label, never next to a waiting item): MORNING (05 to 12), AFTERNOON (12 to 18), EVENING (18 to 22), NIGHT SHIFT (22 to 05) with "Still up? Nothing needs you. Kip's keeping watch."
+3. **First merge ever.** One short sentence: "First merge: Fix the flaky checkout test!" with the one Kip cheering in the icon slot. No wait, no clock and no tape count in it: a celebration never adds up how long anyone waited. The only exclamation mark in the product.
+4. **All clear.** Four things and no more: Kip, the heading "All clear. Nobody's waiting on you." in the celebrate type (it settles in once), one rotating warm line ("Go stretch. Kip has the watch." or "Good time for a coffee.") and the facts on one compact line: "0 working · 4 merged today · median wait 41s". What shipped is in Shipped today under the list, not repeated here.
+5. **The night shift** (22:00 to 05:00 local, never next to a waiting item): the warm line becomes "Still up? Nothing needs you. Kip's keeping watch." and Kip sits with his wand lit low.
 6. **Back after 8 hours.** "Welcome back. While you were out: 4 merged, 1 waiting 2h." Facts first, and the waiting item is a link.
 7. **Zero-wait day.** One line in Shipped today: "Nobody waited over 5 minutes today. Tight crew." No badge, never a ranking of people.
 8. **Demo end.** The coach strip's last step: "That's the loop. Now run it on your repo." with Kip waving and the copy command.

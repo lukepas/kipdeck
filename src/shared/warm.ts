@@ -1,13 +1,16 @@
-// The inbox's warm lines in the crew voice (docs/voice.md): the greeting by time of day, the all-clear
-// line, the merge and first-merge toasts, the first job, the thank-you after an answer, welcome back
-// and the zero-wait day. Each one says its fact first and keeps the warm clause apart (`warm`), so a
-// page can put the flourish in its own span and drop it while someone needs you (`quiet` false).
-// Pure, so the tests read it.
+// The inbox's warm lines in the crew voice (docs/voice.md), and when Kip may show: the all-clear line
+// by time of day, Kip's pose in the all-clear pane, the merge and first-merge toasts, the first job,
+// the thank-you after an answer, welcome back and the zero-wait day. Each line says its fact first and
+// keeps the warm clause apart (`warm`), so a page can put the flourish in its own span and drop it
+// while someone needs you (`quiet` false). The one module for the inbox's warmth: the client's words
+// are client/home/warm.ts (loaded up front, they are only words) and Kip's art and beats
+// client/home/kip-moments.ts (loaded the first time one is wanted). Pure, so the tests read it.
 
+import type { KipStill } from './kip-art.js';
 import type { ShipRecord } from './protocol.js';
 import { WAIT_AMBER_MS, waitWords } from './wait.js';
 
-/** The part of the day a greeting goes by, local time. */
+/** The part of the day the all-clear line goes by, local time. */
 export type Shift = 'morning' | 'afternoon' | 'evening' | 'night';
 
 /** Morning 05-12, afternoon 12-18, evening 18-22, the night shift 22-05. */
@@ -18,9 +21,6 @@ export function shiftAt(hour: number): Shift {
   return 'night';
 }
 
-/** The greeting's tape label (the page sets it in capitals). */
-export const SHIFT_LABEL: Record<Shift, string> = { morning: 'Morning', afternoon: 'Afternoon', evening: 'Evening', night: 'Night shift' };
-
 /** The night shift's own line, in place of the rotating one. */
 export const NIGHT_LINE = "Still up? Nothing needs you. Kip's keeping watch.";
 
@@ -30,11 +30,17 @@ export const CLEAR_LINES: readonly string[] = ['Go stretch. Kip has the watch.',
 /** The all-clear heading: the fact, then who it is for. */
 export const ALL_CLEAR = { fact: 'All clear.', warm: "Nobody's waiting on you." } as const;
 
-/** The greeting for the all-clear pane at local `hour`: its label and the one warm line under the facts (rotating by the hour of `now`). */
-export function greeting(hour: number, now: number): { shift: Shift; label: string; line: string } {
+/** The all-clear pane's one warm line at local `hour`: the night shift's, else one of the rotating lines (by the hour of `now`). */
+export function greeting(hour: number, now: number): { shift: Shift; line: string } {
   const shift = shiftAt(hour);
   const line = shift === 'night' ? NIGHT_LINE : CLEAR_LINES[Math.floor(now / 3_600_000) % CLEAR_LINES.length];
-  return { shift, label: SHIFT_LABEL[shift], line };
+  return { shift, line };
+}
+
+/** Kip in the all-clear pane: his lantern on the night shift, watching while agents work, else napping. */
+export function calmPose(working: number, hour: number): KipStill {
+  if (shiftAt(hour) === 'night') return 'lantern';
+  return working > 0 ? 'watching' : 'napping';
 }
 
 /** A line split into the fact (always said) and the warm clause (only while nothing waits). */
@@ -55,22 +61,22 @@ export function mergedLine(task: string, waitedMs: number | undefined, onTape: n
 }
 
 /**
- * The first merge ever, in place of the tape count: the product's one exclamation mark
- * (EXCLAMATION_BUDGET). While someone needs you it is said plainly instead.
+ * The first merge ever, one short sentence and nothing else: the product's one exclamation mark
+ * (EXCLAMATION_BUDGET), said plainly while someone needs you. No wait and no clock: a celebration
+ * doesn't add up how long anyone waited.
  */
-export function firstMergeLine(sinceStartMs: number, quiet = true): string {
-  const after = waitWords(sinceStartMs);
-  return quiet ? `First merge! ${after} after you started. Track one, in Shipped today.` : `Your first merge, ${after} after you started. It's in Shipped today.`;
+export function firstMergeLine(task: string, quiet = true): string {
+  return quiet ? `First merge: ${task}!` : `First merge: ${task}.`;
 }
 
 /**
- * What the landed merge toast adds after its fact: the first merge's line, else the tape count while
- * nothing needs you. The Kip sticker (`sticker`, the toast's first-merge class) only shows while
- * nothing needs you, since Kip gives way to a waiting person. The first merge stays up a little longer.
+ * What the landed merge toast says. The first merge says its one sentence alone; any other says
+ * the merge, the tape count while nothing needs you, and where it went (`where`). The first merge
+ * stays up a little longer.
  */
-export function landedNote(merged: Said, first: string | undefined, quiet: boolean): { after?: string; sticker: boolean; ms: number } {
-  const after = first ?? (quiet ? merged.warm : undefined);
-  return { ...(after ? { after } : {}), sticker: !!first && quiet, ms: first ? 6500 : 4500 };
+export function landedNote(merged: Said, first: string | undefined, quiet: boolean): { fact: string; after?: string; where: boolean; ms: number } {
+  if (first) return { fact: first, where: false, ms: 6500 };
+  return { fact: merged.fact, ...(quiet && merged.warm ? { after: merged.warm } : {}), where: true, ms: 4500 };
 }
 
 /** The first job this browser gave out: "Fix the flaky checkout test is aboard." then where it comes back. */

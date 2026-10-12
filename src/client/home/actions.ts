@@ -218,14 +218,17 @@ export function createActions(net: Net): Actions {
         return home.change();
       }
       // The office tells everyone who merged what; this page's hold toast says it landed and moves on
-      // to the next thing. The first merge in this browser is worth saying once, with how long the loop
-      // took; any other says how many are on today's tape, and only while nothing needs you.
+      // to the next thing. The first merge in this browser says so once, in one short sentence; any
+      // other says how many are on today's tape, and only while nothing needs you.
       const isQuiet = quiet();
-      const started = Math.min(...store.roster.map((e) => e.createdAt), Date.now());
-      const first = home.firstMerge() ? firstMergeLine(Date.now() - started, isQuiet) : undefined;
+      const first = home.firstMerge();
       const today = shippedToday(home.records, Date.now());
       const onTape = today.length + (msg.record && !today.some((r) => r.id === msg.record?.id) ? 1 : 0);
-      if (!mergeLanded(msg.workerId, msg, { first, onTape, quiet: isQuiet }) && first) toast(first);
+      const entry = store.rosterEntry(msg.workerId);
+      const task = msg.record?.task ?? (entry ? entryTitle(entry) : 'Agent work');
+      const landed = mergeLanded(msg.workerId, msg, { first, onTape, quiet: isQuiet }) ?? (first ? toast(firstMergeLine(task, isQuiet)) : undefined);
+      // Kip cheers in its icon slot and the tuft hops, only while nobody waits on you (kip-moments.ts).
+      void lazy.kipMoments().then((k) => k.celebrate(landed));
       home.check('merge');
       // On to the next thing that needs you.
       const next = nextUp(currentView(), msg.workerId);
