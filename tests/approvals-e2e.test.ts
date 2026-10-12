@@ -172,6 +172,15 @@ test('an approval from the hook: its own card with risk tags, answered by id', a
   await page.keyboard.type('not on this branch');
   await page.keyboard.press('Enter');
   await page.locator('.sec-needs-you .row', { hasText: 'Wipe the cache' }).waitFor({ state: 'detached', timeout: 30_000 });
+  // Answered, the pane moves on to the next thing waiting (advance.ts): the first one, to review.
+  await page.locator('.pane-title h2', { hasText: 'Clean the build' }).waitFor({ timeout: 15_000 });
+  // Back to the one denied, from the palette, to read its terminal.
+  await page.locator('body').click({ position: { x: 200, y: 880 } });
+  await page.keyboard.press('Control+k');
+  await page.locator('.modal.palette').waitFor();
+  await page.keyboard.type('Wipe the cache');
+  await page.keyboard.press('Enter');
+  await page.locator('.pane-title h2', { hasText: 'Wipe the cache' }).waitFor({ timeout: 10_000 });
   await page.locator('.pane-tab', { hasText: 'Terminal' }).click();
   await page.waitForFunction(() => /denied: not on this branch/.test(document.querySelector('.pane .xterm-rows')?.textContent ?? ''), null, { timeout: 15_000 }).catch(async () => {
     assert.fail(`the agent never printed the reason; its terminal shows:\n${await terminalText(page)}`);

@@ -40,6 +40,9 @@ function readChecklist(): ChecklistState & { hidden?: boolean } {
   }
 }
 
+/** Wide enough for the list and the pane side by side (lite.css); narrower, the pane covers the list. */
+export const wide = () => typeof matchMedia === 'function' && matchMedia('(min-width: 900px)').matches;
+
 const listeners = new Set<() => void>();
 
 export const home = {

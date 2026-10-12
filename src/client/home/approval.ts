@@ -14,6 +14,7 @@ import type { Net } from '../net';
 import { store } from '../state';
 import { h } from '../ui/dom';
 import type { CardState } from './approval-card';
+import { answered } from './advance';
 import * as lazy from './lazy';
 import { home } from './state';
 
@@ -67,6 +68,9 @@ export function approvalCard(net: Net): ApprovalCard {
     if (state.sent) return;
     state.sent = true;
     net.send({ t: 'approval.answer', id: a.id, decision, ...(reason ? { reason } : {}) });
+    // Answered here, with nothing more from this agent behind it: the pane moves on (advance.ts).
+    // Answer in the terminal hands the request to the terminal instead, so the pane stays.
+    if (decision !== 'release' && !approvalsBehind(a.workerId)) answered(a.workerId);
     paint();
   };
 
