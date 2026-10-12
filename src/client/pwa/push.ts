@@ -49,7 +49,7 @@ export async function enablePush(name: string): Promise<string | undefined> {
   if (perm !== 'granted') return 'Notifications are blocked for this page. Allow them in the site settings, then try again.';
   const r = await registration();
   const state = await pushState(name);
-  if (!r || !state) return 'Could not reach the office to turn push on';
+  if (!r || !state) return 'Could not reach Kipdeck to turn push on';
   try {
     let sub = await r.pushManager.getSubscription();
     // Subscribed with another office's key (the office's keys were made again): start over.
@@ -60,7 +60,7 @@ export async function enablePush(name: string): Promise<string | undefined> {
     }
     sub ??= await r.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: fromB64u(state.key) });
     const res = await post('/api/push/subscribe', { subscription: sub.toJSON(), name });
-    if (!res.ok) return ((await res.json().catch(() => ({}))) as { error?: string }).error ?? `The office said no (${res.status})`;
+    if (!res.ok) return ((await res.json().catch(() => ({}))) as { error?: string }).error ?? `Kipdeck said no (${res.status})`;
     return undefined;
   } catch (err) {
     return `The browser would not subscribe: ${(err as Error).message}`;

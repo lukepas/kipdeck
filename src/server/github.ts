@@ -14,7 +14,7 @@ const LABELS_MS = 60_000;
 function friendly(raw: string): string {
   if (/no git remotes found|none of the git remotes/i.test(raw)) return 'This project has no GitHub remote yet. Push it to GitHub (git remote add origin <url>) to fill the boards.';
   if (/not a git repository/i.test(raw)) return "This folder isn't a git repository";
-  if (/auth login|not logged in|authentication/i.test(raw)) return "gh isn't signed in to GitHub on the office's machine - run `gh auth login` there";
+  if (/auth login|not logged in|authentication/i.test(raw)) return "gh isn't signed in to GitHub on the machine Kipdeck runs on - run `gh auth login` there";
   if (/could not resolve to a repository|not found/i.test(raw)) return "gh can't find this repository on GitHub (check the remote and access)";
   return raw;
 }
@@ -281,7 +281,7 @@ export class GitHub {
       const p = JSON.parse(await gh(['pr', 'view', String(n), '--json', 'number,isCrossRepository,author'], this.dir));
       return { ...(await this.trustOf(p)), number: Number(p.number) || undefined };
     } catch (err) {
-      return { trusted: false, fork: false, reason: `The office couldn't look up pull request ${name} on GitHub: ${(err as Error).message}` };
+      return { trusted: false, fork: false, reason: `Kipdeck couldn't look up pull request ${name} on GitHub: ${(err as Error).message}` };
     }
   }
 
@@ -302,14 +302,14 @@ export class GitHub {
    */
   async checkoutProblem(prompt: string): Promise<string | undefined> {
     const refs = checkedOutPulls(prompt);
-    if (refs.length > 5) return `Not handing this to a worker: it checks out ${refs.length} pull requests. Name at most five, by number.`;
+    if (refs.length > 5) return `Not handing this to an agent: it checks out ${refs.length} pull requests. Name at most five, by number.`;
     for (const ref of refs) {
       if (typeof ref === 'string' && (ref.startsWith('-') || !/^[\w./:-]+$/.test(ref))) {
-        return 'Not handing this to a worker: it checks out a pull request the office can\'t check (another repository, or not a PR number). Name the PR by number.';
+        return "Not handing this to an agent: it checks out a pull request Kipdeck can't check (another repository, or not a PR number). Name the PR by number.";
       }
       const t = await this.pullTrust(ref);
       const name = typeof ref === 'number' ? `PR #${ref}` : t.number ? `PR #${t.number} (${ref})` : `"${ref}"`;
-      if (!t.trusted) return `Not handing ${name} to a worker to check out: ${t.reason ?? 'its code is not the repository\'s'} Review it with gh pr diff instead, or push its commits to a branch of the repository first. Name the PR by number.`;
+      if (!t.trusted) return `Not handing ${name} to an agent to check out: ${t.reason ?? 'its code is not the repository\'s'} Review it with gh pr diff instead, or push its commits to a branch of the repository first. Name the PR by number.`;
     }
     return undefined;
   }

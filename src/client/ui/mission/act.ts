@@ -179,7 +179,7 @@ export function openEvent(deps: MissionDeps, ev: TimelineEvent) {
       closeAllModals();
       return deps.openQueue();
     }
-    if (ev.worker) toast(`${ev.name ?? 'That worker'} has gone home`, 'warn');
+    if (ev.worker) toast(`${ev.name ?? 'That agent'} has gone home`, 'warn');
   });
 }
 

@@ -7,6 +7,7 @@ import type { Floor } from '../../floor.js';
 import type { Ctx } from '../../office/context.js';
 import { throttle, type Client } from '../../office/client.js';
 import { issueNumber, str } from '../../office/input.js';
+import { NOT_RUNNING } from '../../workers/says.js';
 import { here, workerOf } from './common.js';
 import type { HandlerMap, ViewPieces } from './types.js';
 
@@ -98,10 +99,10 @@ export const missionHandlers = {
         const w = floor.workers.get(id);
         if (!w || w.kind !== 'agent' || w.lost) continue;
         let err = floor.workers.prompt(id, text, who);
-        if (err === 'Worker is not running') err = floor.workers.resume(id, text);
+        if (err === NOT_RUNNING) err = floor.workers.resume(id, text);
         if (!err) told++;
       }
-      if (told) ctx.toastFloor(floor, `${who} told ${told} worker${told === 1 ? '' : 's'} what the mission is now`);
+      if (told) ctx.toastFloor(floor, `${who} told ${told} agent${told === 1 ? '' : 's'} what the mission is now`);
     });
   },
   'worker.snooze'(ctx, c, msg) {

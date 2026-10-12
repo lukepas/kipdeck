@@ -10,6 +10,7 @@ import { nextFreeSeat } from '../../shared/layout.js';
 import type { WorkerInfo, WorktreeCleanup } from '../../shared/protocol.js';
 import { attention } from '../../shared/attention.js';
 import type { Ctx } from '../office/context.js';
+import { NOT_RUNNING } from '../workers/says.js';
 
 /** The agent an action is done for: its id, its name, and the account it runs as. */
 export interface Actor {
@@ -83,7 +84,7 @@ export async function runTell(ctx: Ctx, floor: Floor, actor: Actor, key: string,
   if (untrusted) return { status: 403, body: { error: untrusted } };
   let err = floor.workers.prompt(w.id, text, actor.name);
   // Stopped or asleep: it wakes up with this as its next message.
-  if (err === 'Worker is not running') err = floor.workers.resume(w.id, text);
+  if (err === NOT_RUNNING) err = floor.workers.resume(w.id, text);
   if (err) return { status: 400, body: { error: err } };
   return { status: 200, body: { ok: true, worker: rowOf(ctx, floor, actor.id, w.id) } };
 }

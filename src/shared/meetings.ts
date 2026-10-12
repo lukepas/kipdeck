@@ -26,7 +26,7 @@ export interface PatternDef {
 export const MEETING_PATTERNS: Record<MeetingPattern, PatternDef> = {
   debate: {
     label: 'Debate',
-    blurb: 'Each worker proposes, then critiques the others; in the last round the head of the table writes the decision.',
+    blurb: 'Each agent proposes, then critiques the others; in the last round the head of the table writes the decision.',
     roles: ['Chair', 'Pragmatist', 'Skeptic', 'Simplifier', 'User advocate'],
     seats: { min: 2, max: 5, default: 3 },
     rounds: { min: 2, max: 4, default: 3 },

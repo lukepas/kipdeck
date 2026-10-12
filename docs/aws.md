@@ -29,7 +29,7 @@ What `up` does, in about 2 minutes:
 3. Gives the machine a fixed Elastic IP and launches a **t3.xlarge** (4 vCPU, 16 GiB) Ubuntu 24.04 instance with a 50 GiB disk.
 4. Runs the same [`deploy/provision.sh`](../deploy/provision.sh) as [any server](self-hosting.md): it installs Node 22, git, the GitHub CLI and **Claude Code**, clones the latest agent-office from GitHub and runs `npm i`. The office keeps its data in `~/agent-office` on the machine and clones projects into `~/workspace/<owner>/<repo>`.
 5. Runs the office under systemd with `Restart=always`, so it comes back after a crash or a reboot, and `KillMode=process`, so restarting it leaves the workers running. It listens on `127.0.0.1:4600` on the machine, so the only way in is an SSH tunnel.
-6. Opens an SSH tunnel and your browser at `http://localhost:4600`. **The first page shows the office password once. Write it down.** The server then keeps only a hash, so nobody can display the password again.
+6. Opens an SSH tunnel and your browser at `http://localhost:4600`. **The first page shows the shared password once. Write it down.** The server then keeps only a hash, so nobody can display the password again.
 7. The office opens on its elevator with no floors yet. It lists every repository your GitHub token can see: pick one and it becomes the first floor.
 
 Everything goes through SSH, so there are no certificate warnings, and `localhost` counts as a secure origin: voice and screen sharing just work. Keep the terminal open while you use the office; Ctrl-C closes the tunnel. Next time, run `deploy/aws.sh open`. If port 4600 is taken on your machine, it picks the next free one.
@@ -47,7 +47,7 @@ deploy/aws.sh invite octocat        # uses the SSH keys on github.com/octocat
 deploy/aws.sh allow 203.0.113.7     # their IP (SSH answers only allowed IPs)
 ```
 
-They leave that command running and sign in with the office password. Their keys log in as a separate `office` user that can **only** forward to the office port. It has no shell, no other ports, no `-R`, and no agent forwarding. So a leaked teammate key still doesn't get past the office password.
+They leave that command running and sign in with the shared password. Their keys log in as a separate `office` user that can **only** forward to the office port. It has no shell, no other ports, no `-R`, and no agent forwarding. So a leaked teammate key still doesn't get past the office password.
 
 **Reviewing what workers build.** Every web server a worker runs is listed on the **🌐 Services** board. Clicking a row copies a command like this one:
 
@@ -84,7 +84,7 @@ deploy/aws.sh reset-password       # new password, shown once; signs everyone ou
 deploy/aws.sh ssh | logs           # get on the box / follow the office logs
 ```
 
-**Upgrading from the office.** **⬆️ Upgrade the office** in the **☰** menu checks GitHub for new commits on the branch the office was installed from. When there are any, an orange **⬆️ Update** button shows up on the top bar, and it lists them. **Upgrade now** builds the new version next to the running one. Meanwhile the office keeps working and everyone sees a banner. A failed build changes nothing. Once the build succeeds, the office swaps it in and restarts, and everyone gets a *"🛠️ Upgrading the office"* dialog. A few seconds later their page reloads on the new version. Workers keep working through it: their terminals run in a process of their own, which the new version picks back up. (An office set up before this lets them keep running from its next upgrade on; the first one resumes them with *continue*.)
+**Upgrading from the office.** **Update Kipdeck** in the **☰** menu checks GitHub for new commits on the branch the office was installed from. When there are any, an orange **⬆️ Update** button shows up on the top bar, and it lists them. **Upgrade now** builds the new version next to the running one. Meanwhile the office keeps working and everyone sees a banner. A failed build changes nothing. Once the build succeeds, the office swaps it in and restarts, and everyone gets a *"🛠️ Upgrading the office"* dialog. A few seconds later their page reloads on the new version. Workers keep working through it: their terminals run in a process of their own, which the new version picks back up. (An office set up before this lets them keep running from its next upgrade on; the first one resumes them with *continue*.)
 
 An office created before the SSH tunnel served HTTPS on port 443 with a self-signed certificate. Run `deploy/aws.sh up` once to move it over: 443 closes and the office moves behind the tunnel. Offices created before **👥 Invite teammates** and **⬆️ Upgrade the office** also need one `deploy/aws.sh up` before those show up in the **☰** menu. `update` alone isn't enough, because `up` installs the key helper and turns on self-upgrade in the systemd unit.
 

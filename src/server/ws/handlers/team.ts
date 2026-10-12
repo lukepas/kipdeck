@@ -17,7 +17,7 @@ export const teamHandlers = {
     void ctx.team.invite(user).then(async (r) => {
       ctx.sendTo(c, { t: 'team.invited', github: user, ...r });
       if ('error' in r) return;
-      ctx.toastAll(`${who} invited ${r.name} to the office`);
+      ctx.toastAll(`${who} invited ${r.name} to this Kipdeck`);
       await teamChanged(ctx);
     });
   },

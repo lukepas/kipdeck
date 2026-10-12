@@ -128,7 +128,7 @@ export function openLabels(kind: 'issue' | 'pull', it: GhIssue | GhPull, net: Ne
     // The office drops messages while it's disconnected, and then no answer comes.
     timer = window.setTimeout(() => {
       settle();
-      fail('No answer from the office. Look at the board to see whether the labels changed before saving again.');
+      fail('No answer from Kipdeck. Look at the board to see whether the labels changed before saving again.');
     }, 45_000);
     net.send({ t: 'gh.labels', kind, number: it.number, add, remove });
   };

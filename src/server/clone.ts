@@ -53,10 +53,10 @@ export function whyCloneFailed(output: string): string {
     .map((l) => l.trim())
     .filter((l) => l && !PROGRESS.test(l) && !/^Cloning into /.test(l));
   const all = said.join('\n');
-  if (/Host key verification failed/i.test(all)) return "ssh on the office's machine hasn't accepted github.com's host key yet. Run `ssh -T git@github.com` there once, or clone over https with `gh config set git_protocol https`";
-  if (/passphrase/i.test(all)) return "the office's ssh key needs its passphrase. Add it to the ssh agent (`ssh-add`), or clone over https with `gh config set git_protocol https`";
-  if (/Permission denied \(publickey/i.test(all)) return "GitHub didn't take the office's ssh key. Add it with `gh ssh-key add`, or clone over https with `gh config set git_protocol https`";
-  if (/terminal prompts disabled|could not read (Username|Password)|Authentication failed/i.test(all)) return "git wanted a GitHub password. Run `gh auth setup-git` on the office's machine so git uses gh's login";
+  if (/Host key verification failed/i.test(all)) return "ssh on the machine Kipdeck runs on hasn't accepted github.com's host key yet. Run `ssh -T git@github.com` there once, or clone over https with `gh config set git_protocol https`";
+  if (/passphrase/i.test(all)) return "Kipdeck's ssh key needs its passphrase. Add it to the ssh agent (`ssh-add`), or clone over https with `gh config set git_protocol https`";
+  if (/Permission denied \(publickey/i.test(all)) return "GitHub didn't take Kipdeck's ssh key. Add it with `gh ssh-key add`, or clone over https with `gh config set git_protocol https`";
+  if (/terminal prompts disabled|could not read (Username|Password)|Authentication failed/i.test(all)) return "git wanted a GitHub password. Run `gh auth setup-git` on the machine Kipdeck runs on so git uses gh's login";
   return said.slice(-2).join(' ') || 'gh failed';
 }
 
@@ -121,7 +121,7 @@ export class CloneRun {
       } finally {
         closeSync(fd);
       }
-      child.once('error', (err: NodeJS.ErrnoException) => resolve(err.code === 'ENOENT' ? "The GitHub CLI (gh) isn't installed on the office's machine" : `Couldn't run gh: ${err.message}`));
+      child.once('error', (err: NodeJS.ErrnoException) => resolve(err.code === 'ENOENT' ? "The GitHub CLI (gh) isn't installed on the machine Kipdeck runs on" : `Couldn't run gh: ${err.message}`));
       child.once('spawn', () => {
         const run = new CloneRun(child.pid!, log, child, opts);
         child.once('exit', (code) => run.end(code));
@@ -184,7 +184,7 @@ export class CloneRun {
       }
     } else if (Date.now() - this.grewAt > stallMs) {
       const mins = Math.max(1, Math.round(stallMs / 60_000));
-      this.stop(`Cloning stalled: nothing new from GitHub in ${mins} minute${mins === 1 ? '' : 's'}. Try again, or check the office machine's connection`);
+      this.stop(`Cloning stalled: nothing new from GitHub in ${mins} minute${mins === 1 ? '' : 's'}. Try again, or check the connection of the machine Kipdeck runs on`);
     }
   }
 

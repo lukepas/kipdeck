@@ -4,7 +4,8 @@
 // of the 3D Deck; Numbers counts a merge the moment it lands; Help (?) has the loop and the six keys
 // and D; and every one of these windows closes with its top-right ✕ and with Esc. Enter the Deck in the
 // top bar (a row over the list on a phone): never Signal orange, D and Go to Deck take you to /deck,
-// and it hides when an admin switches the Deck lab off.
+// and it hides when an admin switches the Deck lab off. Settings' panes, Labs, the palette and the sign-in
+// page say none of the old words docs/voice.md's glossary (Words we use) retires.
 // Skipped (not failed) when there's no build (npm run build), the build is older than the client's
 // sources, or there's no browser playwright-core can start.
 import { after, before, test } from 'node:test';
@@ -354,5 +355,63 @@ test('Enter the Deck: a row in the avatar menu with the lab on, D and Go to Deck
   await page.waitForTimeout(300);
   // Still the inbox: at / or at the agent the pane opened by itself (/a/<project>/<agent>), never the Deck.
   assert.match(new URL(page.url()).pathname, /^\/(a\/[^/]+\/[^/]+)?$/);
+  assert.deepEqual(errors, []);
+});
+
+/** The words docs/voice.md's glossary (Words we use) keeps off every window the inbox opens. */
+const OLD_WORDS = /\b(workers?|floors?|desks?|offices?|units?|elevators?)\b/gi;
+
+/** A window's visible text and its title, aria-label and placeholder text, without paths, --flags or AGENT_OFFICE_* names. */
+async function copyIn(el: import('playwright-core').Locator): Promise<string> {
+  const said = await el.evaluate((root) => {
+    const attrs = [...root.querySelectorAll('[title], [aria-label], [placeholder]')].flatMap((n) => ['title', 'aria-label', 'placeholder'].map((a) => n.getAttribute(a) ?? ''));
+    return [(root as HTMLElement).innerText, root.getAttribute('aria-label') ?? '', ...attrs].join('\n');
+  });
+  return said.replace(/\S*[/\\]\S*/g, ' ').replace(/(^|\s)--[\w-]+/g, ' ').replace(/\bAGENT_OFFICE_\w+/g, ' ');
+}
+
+test("the windows the inbox opens speak the glossary: Settings' panes, Labs and the palette say no worker, floor, desk, unit or office", { timeout: 90_000 }, async (t) => {
+  if (why) return t.skip(why);
+  const context = await browser!.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'light' });
+  t.after(() => context.close());
+  const page = await context.newPage();
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto(`${base}/login`);
+  assert.deepEqual((await copyIn(page.locator('body'))).match(OLD_WORDS), null, 'the sign-in page');
+  assert.equal(await page.evaluate(async (password) => (await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) })).status, PASSWORD), 200);
+  await page.goto(`${base}/`);
+  await page.locator('.sec-working .row, .sec-needs-you .row, .sec-review .row').first().waitFor({ timeout: 30_000 });
+  const modals = () => page.locator('#modal-root .modal').count();
+
+  // Settings, pane by pane.
+  await page.locator('#btn-avatar').click();
+  await page.locator('.menu-pop .menu-item', { hasText: 'Settings' }).first().click();
+  const settings = page.locator('.modal.settings');
+  await settings.waitFor();
+  for (const pane of await settings.locator('.settings-tab').allInnerTexts()) {
+    await settings.locator('.settings-tab', { hasText: pane }).click();
+    await page.waitForTimeout(200);
+    const said = await copyIn(settings);
+    assert.deepEqual(said.match(OLD_WORDS), null, `Settings > ${pane}: ${said.match(OLD_WORDS)?.join(', ')}`);
+  }
+
+  // Labs, opened from the foot of Account.
+  await settings.locator('.settings-tab', { hasText: 'Account' }).click();
+  await settings.locator('button', { hasText: 'Open Labs...' }).click();
+  const labs = page.locator('#modal-root .modal', { hasText: 'Everything here is off' }).last();
+  await labs.waitFor();
+  assert.deepEqual((await copyIn(labs)).match(OLD_WORDS), null, 'Labs');
+  while (await modals()) await page.keyboard.press('Escape');
+
+  // The palette, every command it lists.
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.keyboard.press('Control+k');
+  const palette = page.locator('.modal.palette');
+  await palette.waitFor();
+  const said = await copyIn(palette);
+  assert.deepEqual(said.match(OLD_WORDS), null, `the palette: ${said.match(OLD_WORDS)?.join(', ')}`);
+  await page.keyboard.press('Escape');
+  assert.equal(await palette.count(), 0);
   assert.deepEqual(errors, []);
 });

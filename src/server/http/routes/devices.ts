@@ -30,7 +30,7 @@ async function body(req: http.IncomingMessage, res: http.ServerResponse): Promis
 /** Who paired a device: the account's name, else the owner's on their own computer, else '' for the shared office password. */
 const whoOf = (ctx: Ctx, s: Session) => s.account?.name ?? (passwordless(ctx.cfg) ? ownerName() || 'You' : '');
 /** "paired by Ada", or "paired with the office password". */
-const pairedBy = (d: Device) => (d.by ? `paired by ${d.by}` : 'paired with the office password');
+const pairedBy = (d: Device) => (d.by ? `paired by ${d.by}` : 'paired with the shared password');
 
 /** A session may see and change a device: its own, or any as an admin. */
 const mayManage = (ctx: Ctx, s: Session, d: Device) => d.account === s.account?.id || ctx.meOf(s.account?.id).admin;

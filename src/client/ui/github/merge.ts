@@ -66,15 +66,15 @@ export function openUntrusted(it: GhPull, reason: string, untrusted: boolean) {
   const close = h('button.btn.close', { 'aria-label': 'Close' }, icon('close', 16));
   const el = h(
     'div.modal.gh-merge',
-    { role: 'alertdialog', 'aria-label': `PR #${it.number} isn't handed to a worker` },
-    h('header', {}, h('h2', {}, untrusted ? `Not handing PR #${it.number} to a worker` : `PR #${it.number} is still loading`), close),
+    { role: 'alertdialog', 'aria-label': `PR #${it.number} isn't handed to an agent` },
+    h('header', {}, h('h2', {}, untrusted ? `Not handing PR #${it.number} to an agent` : `PR #${it.number} is still loading`), close),
     h(
       'div.body',
       {},
       h('p.gh-merge-title', {}, it.title, h('small', {}, `${it.headRefName} → ${it.baseRefName}`)),
       h('div.gh-status', { class: untrusted ? 'warn' : 'muted' }, h('span', {}, icon(untrusted ? 'warning' : 'info', 16)), reason),
       untrusted
-        ? h('p', {}, "Fixing it up or resolving its conflicts means a worker checks its branch out, installs it and runs it, with the office's sign-ins. Read the Files tab here first; to go ahead, check it out yourself, or push its commits to a branch of the repository and open a pull request from that.")
+        ? h('p', {}, "Fixing it up or resolving its conflicts means an agent checks its branch out, installs it and runs it, with this Kipdeck's sign-ins. Read the Files tab here first; to go ahead, check it out yourself, or push its commits to a branch of the repository and open a pull request from that.")
         : null,
     ),
     h('footer', {}, h('span.grow'), ok),
@@ -114,8 +114,8 @@ export function openMerge(it: GhPull, d: GhPullDetail, net: Net, handToWorker: (
   const cancel = h('button.btn', { type: 'button' }, 'Cancel');
   // Conflicts can't be merged from here, so fixing them is the main button.
   const worker = conflicted(d)
-    ? h('button.btn.primary', { type: 'button', title: 'A new worker merges the base in, resolves the conflicts, then merges it the way picked above' }, 'New worker: fix conflicts & merge')
-    : h('button.btn', { type: 'button', title: 'A worker fixes whatever is in the way, then merges' }, 'Hand to a worker');
+    ? h('button.btn.primary', { type: 'button', title: 'A new agent merges the base in, resolves the conflicts, then merges it the way picked above' }, 'New agent: fix conflicts & merge')
+    : h('button.btn', { type: 'button', title: 'An agent fixes whatever is in the way, then merges' }, 'Hand to an agent');
 
   const el = h(
     'div.modal.gh-merge',

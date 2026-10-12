@@ -29,7 +29,7 @@ What `up` does, in a few minutes:
 5. Gives the machine a static public IP, so its address survives pauses and resizes.
 6. Launches a **Standard_D4as_v5** VM (4 vCPU, 16 GiB) with Ubuntu 24.04 LTS, a 64 GiB Premium SSD and Trusted Launch (secure boot and a virtual TPM). You log in to it as `azureuser`.
 7. Runs the same [`deploy/provision.sh`](../deploy/provision.sh) as [any server](self-hosting.md): Node 22, git, the GitHub CLI, **Claude Code** and the office, under systemd, listening on `127.0.0.1:4600` on the VM. The office keeps its data in `~/agent-office` on the VM and clones projects into `~/workspace/<owner>/<repo>`.
-8. Opens an SSH tunnel and your browser at `http://localhost:4600`. **The first page shows the office password once. Write it down.** The office opens on its elevator: pick a repository and it becomes the first floor.
+8. Opens an SSH tunnel and your browser at `http://localhost:4600`. **The first page shows the shared password once. Write it down.** The office opens on its elevator: pick a repository and it becomes the first floor.
 
 Keep the terminal open while you use the office; Ctrl-C closes the tunnel. Next time, run `deploy/azure.sh open`.
 
@@ -87,7 +87,7 @@ deploy/azure.sh reset-password           # new password, shown once; signs every
 deploy/azure.sh ssh | logs               # get on the VM / follow the office logs
 ```
 
-**⬆️ Upgrade the office** in the **☰** menu works too.
+**Update Kipdeck** in the **☰** menu works too.
 
 Useful options for `up`:
 
