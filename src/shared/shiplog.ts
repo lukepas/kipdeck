@@ -149,6 +149,8 @@ function stuckFor(ms: number): string {
 
 /** A celebration's card: a title in mono, plain lines under it. */
 export interface MomentCard {
+  /** A warm eyebrow over the title, as a tape label (the start of watch's greeting); quiet moments only. */
+  eyebrow?: string;
   title: string;
   lines: string[];
 }

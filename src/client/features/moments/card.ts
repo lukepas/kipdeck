@@ -10,6 +10,7 @@ import { h, modalOpen } from '../../ui/dom';
 import { icon } from '../../ui/icons';
 
 export class MomentCards {
+  private readonly eyebrow = h('p.moment-card-eyebrow', { hidden: true });
   private readonly title = h('p.moment-card-title');
   private readonly body = h('div');
   private readonly voice = h('p.moment-card-voice');
@@ -19,7 +20,7 @@ export class MomentCards {
 
   constructor(private readonly backToGame: () => void) {
     const close = h('button.btn.close', { type: 'button', 'aria-label': 'Close', title: 'Close (Esc)', onclick: () => this.close(true) }, icon('close', 16));
-    this.el = h('div.moment-card', { role: 'status', 'aria-live': 'polite', hidden: true }, this.title, this.body, this.voice, close);
+    this.el = h('div.moment-card', { role: 'status', 'aria-live': 'polite', hidden: true }, this.eyebrow, this.title, this.body, this.voice, close);
     (document.getElementById('hud') ?? document.body).append(this.el);
     window.addEventListener(
       'keydown',
@@ -37,6 +38,8 @@ export class MomentCards {
   show(card: MomentCard, ms: number, voice?: string | null) {
     clearTimeout(this.timer);
     this.shown = card;
+    this.eyebrow.textContent = card.eyebrow ?? '';
+    this.eyebrow.hidden = !card.eyebrow;
     this.title.textContent = card.title;
     this.body.replaceChildren(...card.lines.map((l) => h('p.moment-card-line', {}, l)));
     this.voice.textContent = voice ?? '';

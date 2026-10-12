@@ -146,7 +146,7 @@ export function debriefOf(i: DebriefInput, voice: 'on' | 'plain' | 'off', seed: 
   for (const t of i.reached) lines.push(`Waypoint reached: ${clip(t, 60)}.`);
   for (const m of i.moved) if (m.to !== m.from) lines.push(`${clip(m.title, 40)}: ${m.from} of ${m.of} issues closed, now ${m.to}.`);
   if (i.recovered) lines.push(`${plural(i.recovered, 'agent')} came back from stuck and landed ${i.recovered === 1 ? 'its' : 'their'} work.`);
-  if (i.hired) lines.push(`${plural(i.hired, 'unit')} came aboard.`);
+  if (i.hired) lines.push(`${plural(i.hired, 'agent')} came aboard.`);
   const quiet = !lines.length;
   if (quiet) lines.push('Nothing landed while you were away.');
   const book = voice === 'off' ? null : waiting.length ? CLOSING.waiting : voice === 'plain' ? CLOSING.plain : quiet ? CLOSING.quiet : CLOSING.good;

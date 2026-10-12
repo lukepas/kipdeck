@@ -184,7 +184,8 @@ export function installLaunch(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' |
     panel.close(false);
     if (kind === 'debrief') return openDebrief(false);
     // The crew's greeting over the log, worked out before this launch is noted: aboard the first time.
-    crawl.greet(welcomeLine({ first: launchedOn() === '', hour: new Date().getHours() }));
+    const hello = welcomeLine({ first: launchedOn() === '', hour: new Date().getHours() });
+    crawl.greet(hello);
     markLaunched(Date.now());
     ctx.net.send({ t: 'log.write', floor: store.floor ?? '' });
     // Under reduced motion, Ship motion Off or Silent running, or out of view: the still card.
@@ -195,8 +196,10 @@ export function installLaunch(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' |
       const show = () => {
         const text = log?.text ?? captainsLogFallback();
         const c = crawlOf(text);
-        cards.show({ title: c.head, lines: [c.body] }, STILL_CARD_MS);
-        openDebrief(parts.giveWay.attention());
+        // The greeting only while nobody waits: a call takes the card back to plain words.
+        const waiting = parts.giveWay.attention();
+        cards.show({ eyebrow: waiting ? undefined : hello, title: c.head, lines: [c.body] }, STILL_CARD_MS);
+        openDebrief(waiting);
       };
       if (log) show();
       else setTimeout(show, 800);

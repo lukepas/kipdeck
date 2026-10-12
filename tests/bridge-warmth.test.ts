@@ -82,12 +82,17 @@ test("Night's room is lit warm from inside and cool from the stars", () => {
 });
 
 test('the bridge sheets that went warm write no hex of their own', () => {
-  for (const sheet of ['../src/client/features/launch/watchlog.css']) {
+  for (const sheet of ['../src/client/features/launch/watchlog.css', '../src/client/features/moments/card.css']) {
     const css = readFileSync(path.join(import.meta.dirname, sheet), 'utf8');
     assert.doesNotMatch(css, /#[0-9a-f]{3,8}\b/i, sheet);
   }
   const hud = readFileSync(path.join(import.meta.dirname, '../src/client/styles/hud.css'), 'utf8');
   assert.match(hud, /\.topbar::after \{[^}]*var\(--tape-stripe\)/, 'the Deck top bar carries the tape stripe');
+  // The still card (reduced motion, Ship motion Off, Silent running) carries the same greeting as a tape label.
+  const card = readFileSync(path.join(import.meta.dirname, '../src/client/features/moments/card.css'), 'utf8');
+  assert.match(card, /\.moment-card-eyebrow \{[^}]*var\(--label-font\)[^}]*var\(--label-track\)[^}]*uppercase[^}]*var\(--tape\)/, 'the still card greets in the tape label');
+  const launch = readFileSync(path.join(import.meta.dirname, '../src/client/features/launch/index.ts'), 'utf8');
+  assert.match(launch, /eyebrow: waiting \? undefined : hello/, 'no greeting on the still card while someone waits');
 });
 
 test('the start of watch greets the crew: aboard the first time, the night shift late, else back', () => {
