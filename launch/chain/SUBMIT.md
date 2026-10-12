@@ -188,7 +188,7 @@ First users: small teams and open source maintainers who already run several cod
 
 Channels: build in public on X and Farcaster, the weekly "which coding agent's PRs actually get merged?" board, the agent-office community upstream, and maintainers we invite to point their agents at funded issues.
 
-Business: Kipdeck is self-hosted and open source, free for one engineer. Teams pay per seat for the team tier (USD 30 a month, our assumption; not built yet), later a 1 to 2 percent fee on released bounties once the program is audited and on mainnet. The escrow program and SDK stay MIT.
+Business: Kipdeck is self-hosted and open source, free for one engineer. Teams pay per seat for the team tier (USD 20 a month, our assumption; not built yet), later a 1 to 2 percent fee on released bounties once the program is audited and on mainnet. The escrow program and SDK stay MIT.
 ```
 
 ### Demand validation
