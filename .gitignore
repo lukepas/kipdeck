@@ -18,3 +18,10 @@ launch/video/out/
 
 # The demo video, its raw recordings and its GIF (design/record-demo.mjs makes them again).
 design/shots/fundable/*/video/
+
+# Local tooling: the project map, graft's graph cache, agent worktrees and browser-tool output.
+.project-map/
+/graft/
+/.claude/worktrees/
+/.claude/settings.local.json
+/.playwright-mcp/
