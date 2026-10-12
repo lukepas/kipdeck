@@ -36,6 +36,9 @@
 .brand-mark.tuft-hop .signal { transform-box: fill-box; transform-origin: center; animation: tuft-hop var(--t-beat) var(--ease-soft) 1; }
 @keyframes tuft-hop { 0%, 100% { transform: none; } 40% { transform: translateY(-3px); } 70% { transform: translateY(.5px); } }
 
-/* The setup card's wave, in its corner; on a narrow phone the words get the room. */
+/* The setup card's wave, in its corner, only where the card is wide enough that he sits clear of the
+   heading and the line under it (46ch, about 322px of its 400px or more inside the padding). In a narrow
+   list column or on a phone the words get the room. */
+.setup-card { container-type: inline-size; }
 .su-kip { position: absolute; top: 18px; right: 20px; width: 64px; height: 64px; }
-@media (max-width: 420px) { .su-kip { display: none; } }
+@container (max-width: 399px) { .su-kip { display: none; } }

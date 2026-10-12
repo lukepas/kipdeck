@@ -86,6 +86,11 @@ function ownerLabel(e: RosterEntry): string {
   return e.createdBy === store.profile.name ? 'you' : e.createdBy;
 }
 
+/** How many wait on you across every project and filter: a search or a project pick never hides a question from Kip's gate (warm.ts, empty.ts). */
+export function needsYouNow(): number {
+  return waitingNow(buildInbox(store.ranked())).needYou.length;
+}
+
 /**
  * When each row in Needs you (its loose reminders too) and in To review started waiting: the same
  * buckets the list draws, so the pulse never counts differently from the sections under it. A change

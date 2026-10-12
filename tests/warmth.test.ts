@@ -82,6 +82,25 @@ test("Kip and the warm words stay out of the plain modules' sheets and code", ()
   }
 });
 
+test('Kip leaves the all-clear pane the moment a question lands, even one outside the filtered view', () => {
+  // The pane is drawn again only when its markup changes (pane.ts), so the gate is in the markup.
+  assert.match(read('src/client/home/empty.ts'), /h\('div\.pe-warm', \{ 'data-quiet': needsYouNow\(\) === 0/);
+  // One count of who waits on you, across every project and filter, for the pane and for warm.ts.
+  assert.match(read('src/client/home/list.ts'), /export function needsYouNow\(\): number \{\n\s+return waitingNow\(buildInbox\(store\.ranked\(\)\)\)\.needYou\.length;/);
+  assert.match(read('src/client/home/warm.ts'), /import \{ needsYouNow \} from '\.\/list';/);
+});
+
+test('no Kip and no welcome over a failure on the sign-in pages', () => {
+  assert.match(read('src/client/login.css'), /body:has\(\.error:not\(:empty\)\) \.signin-kip, body:has\(#local:not\(\[hidden\]\)\) \.signin-kip \{ visibility: hidden; \}/);
+  assert.match(read('src/client/claim.ts'), /function fail\(msg: string\) \{[^}]*\$\('title'\)\.textContent = "This link didn't work";/);
+});
+
+test("the setup card's Kip shows only where the card is wide enough to keep him off its words", () => {
+  const css = read('src/client/home/warm.css');
+  assert.match(css, /\.setup-card \{ container-type: inline-size; \}/);
+  assert.match(css, /@container \(max-width: 399px\) \{ \.su-kip \{ display: none; \} \}/);
+});
+
 test('the sunset and the grain are off in the light sets and in print', () => {
   const css = read('src/client/styles/tokens.css');
   const print = css.slice(css.indexOf(":root[data-theme='print']"), css.indexOf('@media (prefers-color-scheme: light)'));

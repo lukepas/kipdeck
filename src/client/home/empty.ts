@@ -14,7 +14,7 @@ import { h } from '../ui/dom';
 import { icon } from '../ui/icons';
 import { proofReady } from '../proof-ready';
 import type { Actions } from './actions';
-import { agentMark, currentView, entryTitle, waitingNow } from './list';
+import { agentMark, currentView, entryTitle, needsYouNow, waitingNow } from './list';
 import { preview } from './preview';
 import * as lazy from './lazy';
 import { home } from './state';
@@ -56,7 +56,9 @@ export function emptyState(actions: Actions): HTMLElement {
     clearedAt = 0;
     const day = todayPulse(records, waitingNow(view), now);
     // The greeting and Kip, and the night shift's line, filled by warm.ts once it's loaded (never while anyone needs you).
-    const warm = h('div.pe-warm');
+    // The gate is in the markup, so the pane is drawn again (and Kip leaves) the moment a question
+    // lands outside the filtered view, where this pane would otherwise say the same as before.
+    const warm = h('div.pe-warm', { 'data-quiet': needsYouNow() === 0 ? 'yes' : 'no' });
     const warmLine = h('p.pe-warm-line');
     void lazy.warm().then((w) => w.fillCalm(warm, warmLine, pane.working));
     return h(

@@ -63,5 +63,9 @@ button.link:hover { background: none; color: var(--text); }
 .signin-kip .kip-fill { fill: var(--surface-1); }
 .signin-kip .kip-ground { display: none; }
 .signin-kip .kip-swish { opacity: .6; }
+/* No Kip over a failure (docs/voice.md#where-fun-is-forbidden): while the card shows an error, or the
+   signed-out card says why a link didn't work, he and the glow step out. Hidden, not removed, so the
+   card and the field you were typing in stay where they were. */
+body:has(.error:not(:empty)) .signin-kip, body:has(#local:not([hidden])) .signin-kip { visibility: hidden; }
 /* A short window (a phone held sideways): the card alone. */
 @media (max-height: 560px) { .signin-kip { display: none; } }

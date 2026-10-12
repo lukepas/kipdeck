@@ -7,20 +7,14 @@
 // styles/tokens.css).
 
 import { aboardWords, calmPose, greeting, quiet } from '../../shared/warmth';
-import { buildInbox } from '../../shared/inbox';
 import { storageKey } from '../shared/storage-key';
 import { store } from '../state';
 import { h, toast } from '../ui/dom';
 import { fillKip } from './kip';
-import { waitingNow } from './list';
+import { needsYouNow } from './list';
 import './warm.css';
 
 const FIRST_JOB_KEY = storageKey('first-job');
-
-/** How many wait on you across every project and filter: the search box never hides a question from the gate. */
-export function needsYouNow(): number {
-  return waitingNow(buildInbox(store.ranked())).needYou.length;
-}
 
 /** Whether a warm moment may show or play now. */
 export const calm = () => quiet(needsYouNow());

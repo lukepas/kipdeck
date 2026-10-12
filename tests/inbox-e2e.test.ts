@@ -285,3 +285,27 @@ test('a phone: the list alone, an agent over it with large buttons, Back to the 
   await page.locator('.sec-review .row').first().waitFor();
   assert.deepEqual(errors, []);
 });
+
+test('sign-in: Kip waves over the card, and steps out (in place) once it says the password was wrong', async (t) => {
+  if (why) return t.skip(why);
+  const context = await browser!.newContext({ viewport: { width: 1280, height: 800 }, colorScheme: 'dark' });
+  t.after(() => context.close());
+  const page = await context.newPage();
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto(`${base}/login`);
+  const kip = page.locator('.signin-kip');
+  await kip.waitFor();
+  assert.equal(await kip.getAttribute('aria-hidden'), 'true', 'Kip is decoration');
+  assert.equal(await page.locator('h1').innerText(), 'Welcome back');
+  const fieldAt = async () => (await page.locator('#password').boundingBox())!.y;
+  const before = await fieldAt();
+  await page.locator('#password').fill('not the password');
+  await page.locator('#password').press('Enter');
+  await page.locator('#error', { hasText: 'Wrong password' }).waitFor();
+  assert.equal(await kip.evaluate((e) => getComputedStyle(e).visibility), 'hidden', 'no Kip over an error');
+  // The error line's own height may nudge the centred card a pixel or two, never by Kip's 112px.
+  const moved = Math.abs((await fieldAt()) - before);
+  assert.ok(moved < 4, `the field stays where it was (moved ${moved}px)`);
+  assert.deepEqual(errors, []);
+});
