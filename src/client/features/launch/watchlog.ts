@@ -1,16 +1,18 @@
 // The day's log at the start of a watch: a flat panel high over the view, as if projected on the
-// forward glass. A scanline wipes down it, the heading comes up in ship-cyan mono, then the log is
-// typed a line at a time in white, held, and faded. A DOM panel rather than anything in the scene, so
+// forward glass. A scanline wipes down it, the crew's greeting sits over it as a tape label (Welcome
+// aboard, Welcome back, Night shift), the heading comes up in ship-cyan mono, then the log is typed a
+// line at a time, held, and faded. A DOM panel rather than anything in the scene, so
 // no rib or frame ever cuts its words, its width is capped to the view, and it costs the GPU nothing.
 import './watchlog.css';
 import { h } from '../../ui/dom';
 import { logLines, typedAt } from './logic';
 
 export class WatchLog {
+  private readonly eyebrow = h('div.watch-eyebrow', { hidden: true, 'aria-hidden': 'true' });
   private readonly head = h('div.watch-head');
   private readonly body = h('div.watch-body');
   private readonly scan = h('div.watch-scan');
-  private readonly el = h('div.watch-log', { role: 'status', 'aria-live': 'polite' }, this.head, h('div.watch-rule'), this.body, this.scan);
+  private readonly el = h('div.watch-log', { role: 'status', 'aria-live': 'polite' }, this.eyebrow, this.head, h('div.watch-rule'), this.body, this.scan);
   private lines: string[] = [];
   private rows: HTMLElement[] = [];
   private shown = '';
@@ -20,6 +22,12 @@ export class WatchLog {
     this.el.hidden = true;
   }
 
+  /** Sets the greeting over the log (logic.ts welcomeLine), or none. Kept until the next greeting. */
+  greet(line: string | null) {
+    this.eyebrow.textContent = line ?? '';
+    this.eyebrow.hidden = !line;
+  }
+
   /** Sets the log: its heading and the body, typed a sentence a line. */
   write(head: string, body: string) {
     this.head.textContent = head;
@@ -27,7 +35,9 @@ export class WatchLog {
     this.rows = this.lines.map(() => h('p.watch-line'));
     this.body.replaceChildren(...this.rows);
     // Screen readers get the whole log at once, not a letter at a time.
-    this.el.setAttribute('aria-label', `${head}. ${body}`);
+    // The facts first, the greeting after them (docs/voice.md, fact first).
+    const hello = this.eyebrow.hidden ? '' : ` ${this.eyebrow.textContent}.`;
+    this.el.setAttribute('aria-label', `${head}. ${body}${hello}`);
     this.shown = '';
   }
 

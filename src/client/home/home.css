@@ -7,7 +7,7 @@
 
 /* ---- Sections ---------------------------------------------------------------------------------- */
 .inbox { display: flex; flex-direction: column; gap: 20px; }
-.sec-h { display: flex; align-items: center; gap: 8px; width: 100%; margin: 0 0 8px; padding: 0 2px; border: 0; background: none; color: var(--muted); font: 600 12px/20px var(--font-ui); letter-spacing: .02em; text-align: left; }
+.sec-h { display: flex; align-items: center; gap: 8px; width: 100%; margin: 0 0 8px; padding: 0 2px; border: 0; background: none; color: var(--muted); font: 600 12px/20px var(--font-ui); text-align: left; }
 button.sec-h { cursor: pointer; }
 button.sec-h:hover { color: var(--text); }
 .sec-glyph { display: inline-grid; place-items: center; width: 16px; height: 16px; color: var(--faint); }
@@ -17,18 +17,18 @@ button.sec-h:hover { color: var(--text); }
 .sec-glyph.g-review { color: var(--review); }
 .sec-glyph.g-working { color: var(--working); }
 .sec-glyph.g-shipped { color: var(--settled); }
-.sec-n { min-width: 20px; padding: 0 6px; border-radius: 10px; background: var(--surface-3); color: var(--text); font: 600 11px/18px var(--font-mono); text-align: center; }
+.sec-n { min-width: 20px; padding: 0 6px; border-radius: var(--radius-pill); background: var(--surface-3); color: var(--text); font: 600 11px/18px var(--font-mono); text-align: center; }
 .sec-needs-you .sec-n { background: var(--signal); color: var(--on-signal); }
 .sec-review .sec-n { background: var(--review-tint); color: var(--review); box-shadow: inset 0 0 0 1px var(--review); }
 .sec-fold, .sec-total { margin-left: auto; font: 500 12px var(--font-ui); color: var(--muted); }
 .sec-total { font-family: var(--font-mono); font-size: 11px; }
-.sec-empty { display: flex; align-items: center; gap: 8px; margin: 0; padding: 12px 14px; border: 1px dashed var(--line); border-radius: var(--radius); color: var(--muted); font-size: 13px; }
+.sec-empty { display: flex; align-items: center; gap: 8px; margin: 0; padding: 12px 14px; border: 1px dashed var(--line); border-radius: var(--radius-panel); color: var(--muted); font-size: 13px; }
 .sec-empty.e-needs-you .ico, .sec-empty.e-nobody .ico { color: var(--settled); }
 .sec-empty.e-nobody { border-style: solid; background: var(--surface-1); color: var(--muted); }
 .sec-empty.e-nobody b { color: var(--text); font-weight: 600; }
 
 /* ---- Rows -------------------------------------------------------------------------------------- */
-.rows { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-1); overflow: hidden; }
+.rows { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--surface-1); overflow: hidden; }
 .row { position: relative; display: flex; align-items: center; gap: 8px; padding-right: 10px; }
 .row + .row { border-top: 1px solid var(--line); }
 .row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent; }
@@ -79,12 +79,12 @@ button.sec-h:hover { color: var(--text); }
 @media (pointer: coarse) { .row-act { height: 40px; padding: 0 16px; font-size: 14px; } }
 
 /* ---- First run, the checklist, the digest ------------------------------------------------------ */
-.first-run { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 28px 24px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-1); }
+.first-run { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 28px 24px; border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--surface-1); position: relative; }
 .first-run h2 { margin: 0; font: 600 20px/1.2 var(--font-ui); letter-spacing: -.01em; }
 .first-run p { margin: 0; max-width: 46ch; color: var(--muted); font-size: 14px; line-height: 1.5; }
 .first-run .big { height: 42px; padding: 0 18px; gap: 8px; font-size: 15px; }
 .inbox + .checklist { margin-top: 24px; }
-.checklist { margin-bottom: 20px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-1); }
+.checklist { margin-bottom: 20px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--surface-1); }
 .cl-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .cl-head h2 { margin: 0; font: 600 14px var(--font-ui); }
 .cl-n { font: 500 11px var(--font-mono); color: var(--muted); }
@@ -99,14 +99,17 @@ button.sec-h:hover { color: var(--text); }
 .btn.quiet { background: none; border-color: transparent; color: var(--muted); }
 .btn.quiet:hover { color: var(--text); border-color: var(--line); }
 .digest { list-style: none; margin: 0 0 20px; padding: 0; }
-.lite-digest { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface-1); }
+.lite-digest { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border: 1px solid var(--line-strong); border-radius: var(--radius-panel); background: var(--surface-1); }
 .lite-digest .dg-head { display: flex; justify-content: space-between; align-items: center; }
 .lite-digest .dg-summary { margin: 0; font-size: 14px; }
 .lite-digest > .btn { align-self: flex-start; }
 
 /* ---- Shipped today ----------------------------------------------------------------------------- */
 .shipped { margin-top: 28px; }
-.ships { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-1); }
+/* Shipped today's head is a tape label: the one warm eyebrow in the list (docs/design.md#type). */
+.shipped > .sec-h { font: 500 var(--label-size)/20px var(--label-font); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--tape); }
+.shipped > .sec-h .sec-total { text-transform: none; letter-spacing: 0; color: var(--muted); }
+.ships { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--surface-1); }
 .ship { display: flex; align-items: center; gap: 12px; padding: 10px 14px; }
 .ship + .ship { border-top: 1px solid var(--line); }
 .ship .agent-mark { width: 24px; height: 24px; font-size: 10px; }
@@ -131,12 +134,13 @@ button.sec-h:hover { color: var(--text); }
 .pane-back { display: none; }
 .pe { display: flex; flex-direction: column; align-items: center; gap: 12px; max-width: 420px; color: var(--muted); }
 .pe h2 { margin: 0; font: 600 18px/1.3 var(--font-ui); color: var(--text); }
+/* All clear is a celebration: a little wide, sentence case. */
+.pe.calm h2 { font-stretch: var(--stretch-celebrate); font-weight: var(--weight-celebrate); }
+.pe.calm h2 { font-size: 20px; }
 .pe p { margin: 0; }
 .pe .btn { height: 38px; padding: 0 16px; gap: 6px; margin-top: 4px; }
-.pe-ok { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--surface-2); color: var(--settled); }
-/* The queue just cleared: the check settles in once. */
-.pe.earned .pe-ok { animation: pe-earned 420ms var(--ease); }
-.pe.earned .pe-ok svg path { stroke-dasharray: 24; animation: beat-draw 420ms var(--ease); }
+/* The queue just cleared: All clear settles in once. */
+.pe.earned h2 { animation: pe-earned 420ms var(--ease); }
 @keyframes pe-earned { from { transform: scale(.7); opacity: 0; } }
 .pe-how { list-style: none; margin: 4px 0 8px; padding: 0; display: flex; flex-direction: column; gap: 14px; text-align: left; }
 .pe-how li { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; line-height: 1.45; }
@@ -156,7 +160,7 @@ button.sec-h:hover { color: var(--text); }
 .pane-tab { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted); font: 500 13px var(--font-ui); cursor: pointer; }
 .pane-tab:hover { color: var(--text); }
 .pane-tab.on { color: var(--text); border-bottom-color: var(--text); }
-.tab-n { padding: 0 5px; border-radius: 8px; background: var(--surface-3); font: 500 10px/16px var(--font-mono); }
+.tab-n { padding: 0 5px; border-radius: var(--radius-pill); background: var(--surface-3); font: 500 10px/16px var(--font-mono); }
 .pane-review { display: flex; align-items: center; gap: 12px; padding: 10px 20px; border-bottom: 1px solid var(--line); background: var(--surface-1); }
 .rv-facts { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font: 12px var(--font-mono); color: var(--muted); }
 .rv-facts .rv-into { color: var(--text); }
@@ -245,9 +249,9 @@ button.sec-h:hover { color: var(--text); }
 .pal-list li small { margin-left: auto; flex: none; font-size: 12px; }
 .pal-list li.on { background: var(--surface-3); }
 .pal-list .pal-none { cursor: default; }
-.menu-pop { position: fixed; top: 52px; right: 12px; z-index: 45; min-width: 240px; padding: 6px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface-1); box-shadow: 0 10px 30px rgb(13 19 26 / .14); }
+.menu-pop { position: fixed; top: 52px; right: 12px; z-index: 45; min-width: 240px; padding: 6px; border: 1px solid var(--line-strong); border-radius: var(--radius-panel); background: var(--surface-1); box-shadow: 0 10px 30px rgb(13 19 26 / .14); }
 .menu-who { padding: 8px 10px; font-weight: 600; font-size: 14px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
-.menu-group { padding: 8px 10px 4px; font: 600 11px var(--font-ui); color: var(--muted); letter-spacing: .02em; }
+.menu-group { padding: 8px 10px 4px; font: 600 11px var(--font-ui); color: var(--muted); }
 .menu-item { display: flex; align-items: center; gap: 10px; width: 100%; height: 34px; padding: 0 10px; border: 0; border-radius: var(--radius); background: none; color: var(--text); font: 400 14px var(--font-ui); text-align: left; cursor: pointer; }
 .menu-item .ico { color: var(--muted); }
 .menu-item small { margin-left: auto; font: 500 11px var(--font-mono); color: var(--muted); }

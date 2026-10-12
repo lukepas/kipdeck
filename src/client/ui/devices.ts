@@ -15,7 +15,7 @@ async function post(path: string, body: unknown): Promise<string | undefined> {
     if (res.ok) return undefined;
     return ((await res.json().catch(() => ({}))) as { error?: string }).error ?? `The office answered ${res.status}`;
   } catch {
-    return 'Server unreachable';
+    return "Can't reach Kipdeck. Is it still running in your terminal?";
   }
 }
 

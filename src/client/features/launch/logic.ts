@@ -46,3 +46,15 @@ export function typedAt(ms: number, lens: readonly number[]): { wipe: number; ty
 
 /** Today, as the browser names it, for "the first visit of the day". */
 export const dayKey = (at: number) => new Date(at).toDateString();
+
+/**
+ * The tape-label greeting over the day's log on the forward glass (docs/voice.md, the crew): "Welcome
+ * aboard" on this browser's first start of watch ever, "Night shift" from 22:00 to 05:00 local time,
+ * else "Welcome back". It only ever rides the full launch, which never plays while someone needs you
+ * (the yield has no log, so no greeting), and it is words only: no motion of its own.
+ */
+export function welcomeLine(o: { first: boolean; hour: number }): string {
+  if (o.first) return 'Welcome aboard';
+  if (o.hour >= 22 || o.hour < 5) return 'Night shift';
+  return 'Welcome back';
+}

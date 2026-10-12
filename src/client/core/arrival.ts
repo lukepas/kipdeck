@@ -121,7 +121,7 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
     // Someone who just joined starts here: their workers need their own Claude sign-in first.
     if (!signInsGreeted) {
       signInsGreeted = true;
-      if (needsSigningIn()) openSignIns(net, 'Welcome! Sign in to Claude so the workers you hire run on your own plan, and to GitHub so what you do on the boards is yours.');
+      if (needsSigningIn()) openSignIns(net, 'Welcome. Sign in to Claude so the workers you hire run on your own plan, and to GitHub so what you do on the boards is yours.');
     }
   });
   ctx.messages.on('signins.needed', (msg) => openSignIns(net, msg.why));

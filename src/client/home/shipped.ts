@@ -1,12 +1,14 @@
 // Under the inbox: Shipped today (what merged, its PR or commit, the agent, and how long it waited on
-// you) with the day's count and agent-hours, and the merge rate per agent and model from the shipped
+// you) with the day's count and agent-hours, a line on a day nobody waited over 5 minutes, and the merge rate per agent and model from the shipped
 // log. Above it, until it's done, the three-step first-run checklist.
 
 import { CHECKLIST, mergeRates, shippedLine, shippedToday, waitedLabel } from '../../shared/inbox';
+import { zeroWaitLine } from '../../shared/warm';
 import { rateWords } from '../../shared/wait';
 import type { ShipRecord } from '../../shared/protocol';
 import { h } from '../ui/dom';
 import { icon } from '../ui/icons';
+import { said } from './warm';
 import { agentMark } from './list';
 import { home } from './state';
 
@@ -30,9 +32,12 @@ export function renderShipped(root: HTMLElement) {
   const scoped = home.project ? home.records.filter((r) => r.floor === home.project) : home.records;
   const today = shippedToday(scoped, now);
   const rates = mergeRates(scoped);
+  // A day nobody waited long: one quiet line, never a badge or a ranking (warm.ts).
+  const zero = zeroWaitLine(today);
   const parts: (HTMLElement | null)[] = [
     h('h2.sec-h', {}, h('span.sec-glyph.g-shipped', {}, icon('check', 14)), 'Shipped today', h('span.sec-total', {}, shippedLine(today))),
-    today.length ? h('ol.ships', { 'aria-label': 'Shipped today' }, ...today.map(shippedRow)) : h('p.sec-empty', {}, 'Merged work shows up here, with the agent and how long it waited on you.'),
+    today.length ? h('ol.ships', { 'aria-label': 'Shipped today' }, ...today.map(shippedRow)) : h('p.sec-empty', {}, "Nothing on today's tape yet. Merged work lands here, with how long it waited on you."),
+    zero ? h('p.warm-zero', {}, ...said(zero)) : null,
     rates.length
       ? h(
           'details.rates',

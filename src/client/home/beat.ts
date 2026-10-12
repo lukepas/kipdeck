@@ -2,7 +2,7 @@
 // answer sent, a change merged). One line that says what happened, never confetti. Under reduced
 // motion the check just appears (tokens.css turns the animation into a cut).
 
-import { toast } from '../ui/dom';
+import { h, toast } from '../ui/dom';
 import { icon } from '../ui/icons';
 import './beat.css';
 
@@ -15,9 +15,10 @@ export function settle(el: HTMLElement) {
   el.querySelector('.toast-at')?.remove();
 }
 
-/** "Merged PR #12 into main", with "waited on you 32s" under it. */
-export function settledToast(text: string, sub?: string): HTMLElement {
+/** "Fix the flaky checkout test is back at work.", a warm clause after it in its own span when given, and "It waited on you 12m." under it. */
+export function settledToast(text: string, sub?: string, warm?: string): HTMLElement {
   const el = toast(text, 'info', undefined, { ...(sub ? { sub } : {}), ms: 4500 });
+  if (warm) el.querySelector('.toast-text')?.firstChild?.after(' ', h('span.warm-said', {}, warm));
   settle(el);
   return el;
 }
