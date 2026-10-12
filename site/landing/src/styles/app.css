@@ -4,7 +4,7 @@
 
 .app {
   position: relative; isolation: isolate;
-  background: var(--surface-1); border: 1px solid var(--line-strong); border-radius: 8px;
+  background: var(--surface-1); border: 1px solid var(--line-strong); border-radius: var(--radius-panel);
   box-shadow: var(--shadow-lift); font-size: 14px; line-height: 1.35; overflow: hidden;
   contain: layout paint;
 }
@@ -99,7 +99,7 @@ button.row.review:not(:disabled):hover .row-btn { background: var(--settled); co
 /* The question card, with the raw terminal line it came from above it. */
 .qcard { width: min(440px, 100%); }
 .qcard .term { margin: 0 0 10px; padding: 9px 12px; background: var(--code-bg); color: var(--term-text); border-radius: var(--radius); font-size: 12.5px; border: 1px solid var(--line); }
-.qcard .term .dim { color: #8a97a5; }
+.qcard .term .dim { color: var(--term-dim); }
 .qcard-in { position: relative; padding: 16px 16px 16px 19px; background: var(--surface-1); border: 1px solid var(--line-strong); border-radius: var(--radius); box-shadow: var(--shadow-lift); }
 .qcard-in::before { content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px; background: var(--signal); border-radius: var(--radius) 0 0 var(--radius); }
 .qcard-k { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--signal); }
@@ -114,8 +114,8 @@ button.row.review:not(:disabled):hover .row-btn { background: var(--settled); co
 .reply .btn { height: 34px; }
 
 /* The phone, drawn in CSS: no bitmap. */
-.phone { position: relative; width: min(330px, 100%); margin: 0 auto; padding: 12px; border-radius: 46px; background: linear-gradient(145deg, #2a3440, #0f151c 60%); box-shadow: var(--shadow-lift), inset 0 0 0 1px rgb(255 255 255 / .08); }
-.phone::before { content: ''; position: absolute; top: 22px; left: 50%; width: 92px; height: 26px; margin-left: -46px; border-radius: 13px; background: #05080b; z-index: 2; }
+.phone { position: relative; width: min(330px, 100%); margin: 0 auto; padding: 12px; border-radius: 46px; background: linear-gradient(145deg, var(--shell-1), var(--shell-2) 60%); box-shadow: var(--shadow-lift), inset 0 0 0 1px rgb(255 255 255 / .08); }
+.phone::before { content: ''; position: absolute; top: 22px; left: 50%; width: 92px; height: 26px; margin-left: -46px; border-radius: 13px; background: var(--code-bg); z-index: 2; }
 .phone-screen { position: relative; aspect-ratio: 390 / 800; padding: 60px 12px 16px; border-radius: 36px; background: var(--void); overflow: hidden; font-size: 13px; }
 .phone .row { min-height: 52px; padding: 8px 10px; gap: 10px; }
 .phone .row-title { font-size: 13.5px; }

@@ -18,14 +18,12 @@ export interface Brand {
   wordmark: { lead: string; muted: string };
   /** The npm package and the command it will be, once it is published. */
   pkg: string;
-  /** The source repository: every Source and Docs link, the clone command and the structured data.
+  /** The source repository: every Source and Docs link, the start commands (npx github:owner/repo) and the structured data.
    *  KIPDECK_REPO_URL overrides it at build. */
   repo: string;
   /** Where people reach the team: the design-partner application (a mailto: link) and the footer.
    *  It has to work for someone outside the repository, which may be private. */
   contact: string;
-  /** The folder a clone lands in (the repository's last path segment). */
-  folder: string;
   /** The mark: 'kip', Kip's face with his light (src/shared/logo.ts), is the only one drawn today. */
   markVariant: 'kip';
   ogTitle: string;
@@ -46,7 +44,6 @@ export const BRANDS = {
     repo: 'https://github.com/zbagdzevicius/kipdeck',
     // Founder TODO: confirm this mailbox receives mail; it is the default until a real address is chosen.
     contact: 'hello@kipdeck.com',
-    folder: 'kipdeck',
     markVariant: 'kip',
     ogTitle: 'Kipdeck: your agents are waiting on you',
     ogDescription: DESCRIPTION,

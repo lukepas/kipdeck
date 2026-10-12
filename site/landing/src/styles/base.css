@@ -18,7 +18,7 @@ p { margin: 0 0 1em; }
 h1, h2, h3 { margin: 0; font-weight: 700; }
 ul, ol { margin: 0; padding: 0; list-style: none; }
 figure { margin: 0; }
-::selection { background: rgb(138 151 165 / .34); color: var(--text); }
+::selection { background: rgb(166 156 143 / .34); color: var(--text); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
 [hidden] { display: none !important; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -38,9 +38,12 @@ h3 { font-family: var(--font-display); font-stretch: 112%; font-size: 20px; lett
 p { max-width: 64ch; }
 .small { font-size: 14px; color: var(--muted); }
 .sig { color: var(--signal); }
+/* A section's kicker is a tape label: the cassette-label stamp from the app's tokens (mono, small,
+   tracked out, in --tape), with the section's number in its own little box. */
 .label {
   display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; margin: 0 0 28px;
-  font-family: var(--font-display); font-stretch: 118%; font-weight: 600; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+  font-family: var(--label-font); font-weight: 500; font-size: var(--label-size); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--tape);
+  max-width: none;
 }
 .label .num { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0; color: var(--text); padding: 1px 6px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); }
 .label .label-sep { color: var(--line-strong); }
@@ -92,6 +95,9 @@ p { max-width: 64ch; }
 
 /* The top bar. */
 header.top { position: fixed; inset: 0 0 auto 0; z-index: 50; transition: background-color 200ms var(--ease), border-color 200ms var(--ease); border-bottom: 1px solid transparent; }
+/* The tape stripe under the nav (ship, tape and plum hairlines), as under the inbox's top bar: the
+   one ornament in the page's chrome. */
+header.top::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: var(--tape-stripe-height); background: var(--tape-stripe); pointer-events: none; }
 header.top.scrolled { background: color-mix(in srgb, var(--void) 82%, transparent); -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2); border-bottom-color: var(--line); }
 .tier-lite header.top.scrolled, .tier-min header.top.scrolled { -webkit-backdrop-filter: none; backdrop-filter: none; background: color-mix(in srgb, var(--void) 95%, transparent); }
 .top-in { display: flex; align-items: center; gap: 22px; height: 64px; max-width: calc(var(--wrap) + 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); }

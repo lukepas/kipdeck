@@ -85,16 +85,16 @@
       <div class="try" id="try-demo">
         <div class="cmd" data-unpublished>
           <span class="cmd-prompt" aria-hidden="true">$</span>
-          <code class="cmd-text">git clone {{repo}} {{folder}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm start -- --demo</code>
-          <button class="copy" type="button" data-copy="git clone {{repo}} {{folder}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm start -- --demo" aria-label="Copy the command that runs the {{name}} demo from source">Copy</button>
+          <code class="cmd-text">npx {{npx}} --demo</code>
+          <button class="copy" type="button" data-copy="npx {{npx}} --demo" aria-label="Copy npx {{npx}} --demo">Copy</button>
         </div>
         <div class="cmd" data-published hidden>
           <span class="cmd-prompt" aria-hidden="true">$</span>
           <code class="cmd-text">npx {{pkg}} --demo</code>
           <button class="copy" type="button" data-copy="npx {{pkg}} --demo" aria-label="Copy npx {{pkg}} --demo">Copy</button>
         </div>
-        <p class="small demo-note">The demo: five scripted agents on a throwaway repository. No agent CLI, sign-in or model needed.</p>
-        <p class="small mono unpublished" data-unpublished>Not on npm yet: <a data-link="repo-run" href="{{repo}}#from-source" rel="noopener noreferrer">run it from source</a>. <code>npx {{pkg}}</code> comes with the release.</p>
+        <p class="small demo-note">The demo: five scripted agents on a throwaway repository. No agent CLI, sign-in or model needed. <span class="warm">Kip shows you around.</span></p>
+        <p class="small mono unpublished" data-unpublished>Not on npm yet: npx runs it straight from <a data-link="repo-run" href="{{repo}}#from-source" rel="noopener noreferrer">the source</a>, and the first run builds it (a few minutes). <code>npx {{pkg}}</code> comes with the release.</p>
       </div>
       <!-- /runnable -->
 
@@ -105,6 +105,7 @@
       </ul>
     </div>
 
+    <div class="hero-sunset" aria-hidden="true"></div>
     <figure class="app mini" id="mini-inbox" aria-label="The {{name}} inbox, with demo data">
       <div class="app-bar">
         <span class="app-brand"><svg class="mark" data-logo="small" viewBox="0 0 32 32" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M6 21A10 9 0 1 1 26 21A10 9 0 1 1 6 21ZM11 17C5.5 13 4 6.5 6 2C9.5 4.5 12 10.5 11 17ZM21 17C20 10.5 22.5 4.5 26 2C28 6.5 26.5 13 21 17ZM8 21A3 3 0 1 0 14 21A3 3 0 1 0 8 21ZM18 21A3 3 0 1 0 24 21A3 3 0 1 0 18 21ZM16 9h2v4h-2Z"/><path class="signal" d="M15.5 4h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3a1.5 1.5 0 0 1-1.5-1.5v-3a1.5 1.5 0 0 1 1.5-1.5Z"/></svg>{{name}}</span>
@@ -219,7 +220,7 @@
 <!-- 04 The loop -->
 <section class="loop" id="loop" aria-labelledby="loop-h" data-scene="loop">
   <div class="wrap">
-    <p class="label"><span class="num">04</span> The loop</p>
+    <p class="label"><span class="num">04</span> Side A: the loop</p>
     <h2 id="loop-h" class="display">Ask. Answer. Review. Merge.</h2>
     <p class="lede">The oldest agent waiting opens by itself. Its question is in plain words, with one reply box and a button per numbered choice, for every CLI. The finished diff sits beside the list. Merge on your machine without GitHub, or open a pull request.</p>
   </div>
@@ -352,15 +353,15 @@
   <div class="wrap yours-grid">
     <!-- runnable -->
     <div class="term-win" id="from-source" role="group" aria-label="Running {{name}} on your own project">
-      <div class="term-bar mono"><span class="term-tab on" data-unpublished>your project, from source</span><span class="term-tab on" data-published hidden>your project</span></div>
-<pre class="term-body mono" data-unpublished><span class="tl"><span class="p">$</span> git clone {{repo}} {{folder}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm link</span>
-<span class="tl dim">added 412 packages, built client and server</span>
-<span class="tl"><span class="p">$</span> cd ~/code/your-project</span>
-<span class="tl"><span class="p">$</span> {{pkg}}</span>
+      <div class="term-bar mono"><span class="term-tab on" data-unpublished>your project, from GitHub</span><span class="term-tab on" data-published hidden>your project</span></div>
+<pre class="term-body mono" data-unpublished><span class="tl"><span class="p">$</span> cd ~/code/your-project</span>
+<span class="tl"><span class="p">$</span> npx {{npx}}</span>
+<span class="tl dim">Starting {{name}}...</span>
 <span class="tl"><span class="ok">{{name}} is running at</span> http://localhost:4600</span>
 <span class="tl dim">Opened in your browser, signed in.</span></pre>
 <pre class="term-body mono" data-published hidden><span class="tl"><span class="p">$</span> cd ~/code/your-project</span>
 <span class="tl"><span class="p">$</span> npx {{pkg}}</span>
+<span class="tl dim">Starting {{name}}...</span>
 <span class="tl"><span class="ok">{{name}} is running at</span> http://localhost:4600</span>
 <span class="tl dim">Opened in your browser, signed in.</span></pre>
     </div>
@@ -453,11 +454,11 @@
 <section class="labs" id="labs" aria-labelledby="labs-h" data-scene="labs">
   <div class="wrap">
     <p class="label"><span class="num">09</span> Labs</p>
-    <h2 id="labs-h" class="display">What else is in the box.</h2>
+    <h2 id="labs-h" class="display">B-sides: off by default.</h2>
     <p class="lede">Off by default, compiled and tested. The inbox comes first; each lab adds a view. An admin switches any of them on in Labs, or holds them on or off from the command line.</p>
     <div class="cmd labs-cmd" role="group" aria-label="Labs on the command line. Every lab is off by default; this command holds these on. Press a flag to hold its lab off, and again to hold it on.">
       <span class="cmd-prompt" aria-hidden="true">$</span>
-      <code class="cmd-text"><span data-unpublished>npm start -- --labs</span><span data-published hidden>npx {{pkg}} --labs</span> <span class="flags"><button class="flag" type="button" data-lab="bridge" aria-pressed="true">bridge</button>,<button class="flag" type="button" data-lab="ops" aria-pressed="true">ops</button>,<button class="flag" type="button" data-lab="boards" aria-pressed="true">boards</button>,<button class="flag" type="button" data-lab="voice" aria-pressed="true">voice</button>,<button class="flag" type="button" data-lab="meetings" aria-pressed="true">meetings</button></span></code>
+      <code class="cmd-text"><span data-unpublished>npx {{npx}} --labs</span><span data-published hidden>npx {{pkg}} --labs</span> <span class="flags"><button class="flag" type="button" data-lab="bridge" aria-pressed="true">bridge</button>,<button class="flag" type="button" data-lab="ops" aria-pressed="true">ops</button>,<button class="flag" type="button" data-lab="boards" aria-pressed="true">boards</button>,<button class="flag" type="button" data-lab="voice" aria-pressed="true">voice</button>,<button class="flag" type="button" data-lab="meetings" aria-pressed="true">meetings</button></span></code>
     </div>
     <ul class="bento">
       <li class="tile tile-bridge on power" data-lab="bridge">
@@ -535,7 +536,7 @@
     <div class="calm-inbox">
       <svg class="mark end-mark" data-logo="mark" viewBox="0 0 32 32" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M4.7 21.6A11.3 9.4 0 1 1 27.3 21.6A11.3 9.4 0 1 1 4.7 21.6ZM10.5 16.9C5.3 12.3 3.4 5.4 4.7 1C8.5 3.6 11.5 10.1 10.5 16.9ZM21.5 16.9C20.5 10.1 23.5 3.6 27.3 1C28.6 5.4 26.7 12.3 21.5 16.9ZM8.4 21.1A3 3 0 1 0 14.4 21.1A3 3 0 1 0 8.4 21.1ZM11.5 20.1A0.8 0.8 0 1 1 13.1 20.1A0.8 0.8 0 1 1 11.5 20.1ZM17.6 21.1A3 3 0 1 0 23.6 21.1A3 3 0 1 0 17.6 21.1ZM20.7 20.1A0.8 0.8 0 1 1 22.3 20.1A0.8 0.8 0 1 1 20.7 20.1ZM15.4 14.1C13.8 11.5 14.8 8.1 16.9 6.6A0.5 0.5 0 0 1 17.5 7.4C15.5 9 15 10.8 16.6 13.4Z"/><path class="signal" d="M15.6 6A2.1 2.1 0 1 1 19.8 6A2.1 2.1 0 1 1 15.6 6Z"/></svg>
       <i class="glyph g-check calm-g" aria-hidden="true"></i>
-      <p id="end-h" aria-live="polite">Nothing waits on you.</p>
+      <p id="end-h" aria-live="polite">Nothing waits on you. <span class="warm">Kip has the watch.</span></p>
       <button class="btn sm calm-answer" type="button" tabindex="-1">Answer</button>
       <span class="mono calm-clock">0:00</span>
     </div>
