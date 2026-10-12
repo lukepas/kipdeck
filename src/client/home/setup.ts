@@ -162,7 +162,7 @@ export function usageSwitch(net: Net, s: SetupState): HTMLElement {
 export function setupCard(net: Net, deploy: (prompt: string, provider?: AgentProvider) => void): HTMLElement {
   const s = state;
   const admin = store.me.admin;
-  if (!s) return h('div.first-run.setup-card.loading', {}, h('h2', {}, 'Deploy your first agent'), h('p', {}, 'Looking for your agents and projects...'));
+  if (!s) return h('div.first-run.setup-card.loading', {}, h('h2', {}, 'Give your first agent a job'), h('p', {}, "Checking who's aboard: agents and projects..."));
   const project = store.floors.some((f) => !f.cloning);
   const agent = firstReadyAgent();
   const canDeploy = project && !!agent;
@@ -177,8 +177,8 @@ export function setupCard(net: Net, deploy: (prompt: string, provider?: AgentPro
   return h(
     'div.first-run.setup-card',
     { class: canDeploy ? 'ready' : '' },
-    h('h2', {}, 'Deploy your first agent'),
-    h('p', {}, 'It works on a branch of its own. When it needs an answer or has something to review, it shows up here.'),
+    h('h2', {}, 'Give your first agent a job'),
+    h('p', {}, 'It works on its own branch and comes back here when it needs you or has something to show.'),
     summary,
     canDeploy ? null : rows,
     starter?.sessionsBox(s, net) ?? null,

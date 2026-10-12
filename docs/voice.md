@@ -40,7 +40,7 @@ Real strings from `origin/ux/integration`. "Keep" rows are as important as the r
 | `src/client/home/deploy.ts:90` | What should it do? For example: add rate limiting to /api/login | What's the job? For example: add rate limiting to /api/login |
 | `src/client/home/empty.ts:60` | All clear | All clear. Nobody's waiting on you. |
 | `src/client/home/list.ts:187` | Nothing needs you. | Keep. It is a section line people scan. |
-| `src/client/home/list.ts:189` | No agent is working right now. | Nobody's working right now. Give one a job when you're ready. |
+| `src/client/home/list.ts:189` | No agent is working right now. | Nobody's working right now. Give an agent a job when you're ready. |
 | `src/client/home/list.ts:202` | Nobody waiting. Every agent has what it needs from you. | Nobody waiting. The crew has what it needs from you. |
 | `src/client/home/shipped.ts:35` | Merged work shows up here, with the agent and how long it waited on you. | Nothing on today's tape yet. Merged work lands here, with how long it waited on you. |
 | `src/client/home/index.ts:243` | Answered Fix the flaky checkout test. Back at work. | Fix the flaky checkout test is back at work. Thanks. |

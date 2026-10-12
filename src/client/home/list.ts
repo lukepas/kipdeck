@@ -186,7 +186,7 @@ function ageEl(section: InboxSection, att: { since: number; snoozed?: boolean },
 const EMPTY: Record<InboxSection, string> = {
   'needs-you': 'Nothing needs you.',
   review: 'Nothing to review.',
-  working: 'No agent is working right now.',
+  working: "Nobody's working right now. Give an agent a job when you're ready.",
   idle: '',
 };
 
@@ -199,7 +199,7 @@ function section(s: InboxSection, view: InboxView, extra: HTMLElement[], deps: L
   const nobody = !view.counts['needs-you'] && !view.counts.review && !extra.length;
   if (s === 'review' && nobody) return null;
   if (s === 'needs-you' && nobody) {
-    return h('section.sec.sec-needs-you.empty.nobody', {}, h('p.sec-empty.e-nobody', {}, icon('check', 14), h('span', {}, h('b', {}, 'Nobody waiting.'), ' Every agent has what it needs from you.')));
+    return h('section.sec.sec-needs-you.empty.nobody', {}, h('p.sec-empty.e-nobody', {}, icon('check', 14), h('span', {}, h('b', {}, 'Nobody waiting.'), ' The crew has what it needs from you.')));
   }
   const open = !foldable || home.idleOpen;
   const head = foldable
@@ -222,7 +222,7 @@ export function renderList(root: HTMLElement, deps: ListDeps, firstRun: () => HT
     return;
   }
   const parts = INBOX_SECTIONS.map((s) => section(s, view, s === 'needs-you' ? loose : [], deps, now)).filter((x): x is HTMLElement => !!x);
-  if (home.query && !INBOX_SECTIONS.some((s) => view.sections[s].length)) parts.unshift(h('p.sec-empty.search-empty', {}, `No agent matches "${home.query}".`));
+  if (home.query && !INBOX_SECTIONS.some((s) => view.sections[s].length)) parts.unshift(h('p.sec-empty.search-empty', {}, `No agent matches "${home.query}". Try fewer words, or clear the search.`));
   root.replaceChildren(...parts);
 }
 

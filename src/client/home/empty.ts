@@ -1,6 +1,7 @@
 // The pane with nothing selected: the work, never a picture (shared/empty-pane.ts). The next agent
 // that needs you, with its task, what it wants and how long it has waited, and one button to open it;
-// with nobody waiting, "All clear" with the day so far and what shipped today. Before the first agent
+// with nobody waiting, "All clear. Nobody's waiting on you." under a greeting by time of day, the day
+// so far, one warm line (warm.ts) and what shipped today. Before the first agent
 // the setup card's preview has it. With the Deck lab switched on, the deck plan sits under the work as
 // a small extra (its Proof corner only once Proof of Merge is set up, client/proof-ready.ts).
 
@@ -13,6 +14,8 @@ import { h } from '../ui/dom';
 import { icon } from '../ui/icons';
 import { proofReady } from '../proof-ready';
 import type { Actions } from './actions';
+import { clearLine, greetingLabel, said } from './warm';
+import { ALL_CLEAR } from '../../shared/warm';
 import { agentMark, currentView, entryTitle, waitingNow } from './list';
 import { preview } from './preview';
 import { home } from './state';
@@ -52,13 +55,18 @@ export function emptyState(actions: Actions): HTMLElement {
     // Cleared just now: the check draws itself in, once (under reduced motion it is simply there).
     const earned = clearedAt > 0 && now - clearedAt < 1_500;
     clearedAt = 0;
-    const day = todayPulse(records, waitingNow(view), now);
+    const waiting = waitingNow(view);
+    const day = todayPulse(records, waiting, now);
+    // A reminder or an agent request can still wait on you here: then no greeting and no warm line.
+    const calm = waiting.needYou.length === 0;
     return h(
       'div.pe.calm',
       { class: earned ? 'earned' : '' },
       h('span.pe-ok', {}, icon('check', 20)),
-      h('h2', {}, 'All clear'),
+      calm ? greetingLabel(now) : null,
+      h('h2.warm-clear', {}, ...said(ALL_CLEAR, calm)),
       h('p', {}, daySoFar(pane.working, day.merged, day.medianWaitMs)),
+      calm ? clearLine(now) : null,
       pane.shipped.length
         ? h(
             'section.pe-shipped',
