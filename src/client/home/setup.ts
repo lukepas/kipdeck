@@ -183,7 +183,7 @@ export function setupCard(net: Net, deploy: (prompt: string, provider?: AgentPro
     { class: canDeploy ? 'ready' : '' },
     kip,
     h('h2', {}, 'Give your first agent a job'),
-    h('p', {}, 'It works on its own branch and comes back here when it needs you or has something to show.'),
+    h('p', {}, 'It works on its own branch and comes back here when it needs you or has something to review.'),
     summary,
     canDeploy ? null : rows,
     starter?.sessionsBox(s, net) ?? null,

@@ -42,9 +42,9 @@ In the repository you work in:
 npx github:zbagdzevicius/kipdeck
 ```
 
-1. It says `Starting Kipdeck...` at once and a line for each slow step, then starts on `http://localhost:4600` (or the next free port) and opens your browser, **already signed in**. On your own computer there is no password to type: the link it opens works once, and the terminal prints the command that makes a new one if you lose the tab (`open`, typed the way this copy runs: `kipdeck open` once it is on your PATH, otherwise `node <path>/bin/agent-office.js open`, with `--home` for an office outside `~/agent-office`). A used or stale link opens the same page with that command on it, never a password form. Only your computer can reach it.
+1. It says `Starting Kipdeck...` at once and a line for each slow step, then starts on `http://localhost:4600` (or the next free port) and opens your browser, **already signed in**. On your own computer there is no password to type: the link it opens works once, and the terminal prints the command that makes a new one if you lose the tab (`open`, typed the way this copy runs: `kipdeck open` once it is on your PATH, otherwise `node <path>/bin/agent-office.js open`, with `--home` for an office outside `~/agent-office`). A used or stale link opens the same page with that command on it, never a password form. Only your computer can reach it. Ctrl+C stops it and its agents, and says how many merged this session.
 2. The repository you started it in is your first project. Started somewhere else, the setup card offers to clone one from GitHub.
-3. The **setup card** says which agents it found and whether each is signed in, the project, and GitHub, with the one line to run for anything that isn't ready.
+3. The **setup card** (*Give your first agent a job*) says which agents it found and whether each is signed in, the project, and GitHub, with the one line to run for anything that isn't ready.
 4. **What were you about to ask Claude Code?** Type the task, or pick one of three suggestions drawn from the repository (its newest open issue, its failing tests, a TODO, a gap in its README), and **Deploy your first agent**. It shows up under **Working** within seconds, under **Needs you** when it has a question, and under **To review** when it's done. The pane beside the card shows those three steps.
 5. Already running Claude Code in a terminal here? The card offers **Bring in N sessions**: each carries on in the inbox with its conversation so far, and your terminal keeps running.
 
@@ -61,7 +61,7 @@ cd ~/code/your-project && node ~/kipdeck/bin/agent-office.js      # or: npm link
 node ~/kipdeck/bin/agent-office.js --demo                         # the demo, anywhere
 ```
 
-The demo's coach strip ends at *Run it on your repo* with the command you started the demo with, without `--demo`, to copy.
+The demo's coach strip ends at *Run it on your repo* (*That's the loop. Now run it on your repo.* once you've answered and merged) with the command you started the demo with, without `--demo`, to copy.
 
 From here on, `kipdeck` stands for the way you run it: `npx github:zbagdzevicius/kipdeck`, `node <clone>/bin/agent-office.js`, or `kipdeck` once it is on your PATH (`npm link` in the clone). `kipdeck --help` says which one you used, and every command Kipdeck prints is already in that form.
 

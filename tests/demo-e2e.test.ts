@@ -150,6 +150,8 @@ test('the demo on your computer: the coach strip, a question from Codex opening 
   await page.locator('.ship', { hasText: 'Add rate limiting' }).waitFor({ timeout: 20_000 });
   // Both steps the demo opened with are done: the strip checks them off.
   await coach.locator('.coach-step.done').nth(1).waitFor({ timeout: 10_000 });
+  // Only now, with the loop run and nothing waiting, does the last step say so.
+  await coach.locator('.coach-run', { hasText: "That's the loop. Now run it on your repo." }).waitFor({ timeout: 5_000 });
 
   await row('review', 'Write the README quickstart').waitFor({ timeout: 30_000 });
   assert.match(await row('review', 'Write the README quickstart').locator('.agent-mark').getAttribute('class') ?? '', /p-cursor/);
