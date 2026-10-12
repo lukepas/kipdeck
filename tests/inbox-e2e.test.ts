@@ -9,7 +9,7 @@
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import net from 'node:net';
 import { tmpdir } from 'node:os';
@@ -56,6 +56,14 @@ before(async () => {
   execFileSync('git', ['init', '-q', '-b', 'main'], { cwd: project });
   execFileSync('git', ['-c', 'user.email=t@example.invalid', '-c', 'user.name=t', 'commit', '-q', '--allow-empty', '-m', 'start'], { cwd: project });
   const agent = writeStandIn(bin);
+  // The stand-in runs as the office's --agent, off the PATH, and is signed in to a Claude config of
+  // its own: the setup card finds it ready on a machine with no agent CLI (CI) and never reads the
+  // real ~/.claude.
+  const claudeDir = path.join(root, 'claude-config');
+  mkdirSync(claudeDir, { recursive: true });
+  writeFileSync(path.join(claudeDir, '.credentials.json'), '{}');
+  process.env.CLAUDE_CONFIG_DIR = claudeDir;
+  for (const k of ['ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN', 'CLAUDE_CODE_OAUTH_TOKEN']) delete process.env[k];
   const s = net.createServer();
   await new Promise<void>((r) => s.listen(0, '127.0.0.1', r));
   const port = (s.address() as net.AddressInfo).port;
