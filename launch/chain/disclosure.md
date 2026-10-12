@@ -44,7 +44,7 @@ Every program in this folder asks what existed before and what we built. This pa
 The Colosseum form's prior work answer, at most 1,500 characters:
 
 ```field name="Disclosure (Colosseum)" max-chars=1500
-Kipdeck is built on agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs and community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D office, desks where coding agent CLIs run in live terminals, voice, the GitHub boards and the deploy scripts. Our history starts from two snapshot imports of upstream (commits 01d85bbb = upstream 665aeec, and 226452e4 = upstream 1bc3028, both 2026-09-30); all of that is theirs, and so are 11 upstream pull requests we re-committed under our name (listed with their authors in launch/chain/disclosure.md). Ours, all written during the contest (our first commit is 2026-09-30): the inbox and mission control (attention ranking, review inbox, goals, timeline), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and Proof of Merge, the payout layer: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, a GitHub Action attester, x402 paid tasks, EAS attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are every commit in 226452e4..7b0f7538 except those 11, the import 01d85bbb and 2 Dependabot bumps. Testnets only. Diff: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
+Kipdeck is built on agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs and community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D office, desks where coding agent CLIs run in live terminals, voice, the GitHub boards and the deploy scripts. Our history starts from two snapshot imports of upstream (commits 01d85bbb = upstream 665aeec, and 226452e4 = upstream 1bc3028, both 2026-09-30); all of that is theirs, and so are 11 upstream pull requests we re-committed under our name (listed with their authors in launch/chain/disclosure.md). Ours, all written during the contest (our first commit is 2026-09-30): the inbox and mission control (attention ranking, review inbox, goals, timeline), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and Proof of Merge, the payout layer: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, a GitHub Action attester, x402 paid tasks, EAS attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are every commit in 226452e4..bc4ea245 except those 11, the import 01d85bbb and 2 Dependabot bumps. Testnets only. Diff: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 ```
 
 A short form, where a field is tiny:
@@ -61,7 +61,7 @@ Generate the list from git right before submitting, so it is what the branch con
 npx tsx launch/chain/tools/whats-new.ts > /tmp/whats-new.md
 ```
 
-It prints the upstream credit and the two snapshot imports, our commits since `226452e4`, the 11 re-committed upstream pull requests (each with its upstream number and author), the Dependabot bumps apart, and every file that differs from upstream's snapshot, grouped into code, on-chain packages, tests, docs, deploy and kits. Commits are told apart by the lists in `deadlines.json`: `upstream.imports` and `upstream.carried` are upstream's, the rest by `fork.authors` are ours, anyone else's (a bot's) is neither. Paste the output at the end of this page on submission day, and re-stamp the commit after `226452e4..` above with the submitted one (the first 8 characters of `origin/main`'s SHA; stamped `7b0f7538` on 2026-10-10). [SUBMIT.md](SUBMIT.md) has the command.
+It prints the upstream credit and the two snapshot imports, our commits since `226452e4`, the 11 re-committed upstream pull requests (each with its upstream number and author), the Dependabot bumps apart, and every file that differs from upstream's snapshot, grouped into code, on-chain packages, tests, docs, deploy and kits. Commits are told apart by the lists in `deadlines.json`: `upstream.imports` and `upstream.carried` are upstream's, the rest by `fork.authors` are ours, anyone else's (a bot's) is neither. Paste the output at the end of this page on submission day, and re-stamp the commit after `226452e4..` above with the submitted one (the first 8 characters of `origin/main`'s SHA; stamped `bc4ea245` on 2026-10-12). [SUBMIT.md](SUBMIT.md) has the command.
 
 Where each part lives:
 
@@ -123,3 +123,3279 @@ name; the disclosure lists exactly which commits are ours, and credits the 11 up
 PRs we re-committed (#244 by Lohrey, the rest yours). If any of it is useful
 upstream I'm happy to open PRs. Thanks for building it.
 ```
+
+## The commit list, generated on 2026-10-12
+
+The output of `whats-new.ts` for the submitted commit, pasted as it came out.
+
+Kipdeck is built on agent-office (https://github.com/AgentSystemLabs/agent-office), MIT-licensed, Copyright (c) 2026 AgentSystemLabs, created by webdevcody (Web Dev Cody), AgentSystemLabs; its first commit is dated 2026-09-25.
+Our history starts from snapshot imports of upstream, not from upstream's own commits: 01d85bbb (upstream 665aeec) and 226452e4 (upstream 1bc3028). Everything in them is upstream work, not ours. This list counts from 226452e4 (upstream 1bc3028, 2026-09-30). The MIT license text and copyright notice are kept in LICENSE.
+
+In 226452e4..bc4ea245 (merges left out): 582 commits. 568 ours; 11 upstream pull requests re-committed under our name; 2 by bots or other authors; 1 snapshot imports. 2652 files differ from upstream's snapshot, upstream's re-committed pull requests included.
+
+Ours:
+
+- 2026-09-30 bab333ed Business playbook: employer clearance request and upstream partnership drafts
+- 2026-09-30 3a595571 Business playbook: agent team lab pilot offer, pricing and metrics
+- 2026-09-30 7986fedb Business playbook: statement of work template for the pilot
+- 2026-09-30 2649f4dd Business playbook: 1-day and 3-day workshop on running a team of coding agents
+- 2026-09-30 2aa0c335 Business playbook: candidate names and a static waitlist page
+- 2026-09-30 f4960da5 Business playbook: vendor credit programs and an index of the folder
+- 2026-09-30 3f370393 Test the business playbook: plain ASCII, consistent prices, self-contained landing page
+- 2026-09-30 6cf3a057 Business playbook: re-check deadlines, credits and code claims against live sources
+- 2026-09-30 9e20c3c9 Add launch kit tooling: calendar generator, kit linter and upstream diff
+- 2026-09-30 37b9e3b7 Add submission and application kits for the autumn 2026 launch
+- 2026-10-01 f8685f93 Launch kits: re-check every rule against the live pages and say what the branches really do
+- 2026-10-01 52041de1 Drop the office dog and the model lab pages
+- 2026-10-01 b532c9b2 Drop the castle, the map system, the herald and the dungeon
+- 2026-10-01 adfd5547 Drop the rooftop bar, its DJ, drinks, darts and axes
+- 2026-10-01 221b7ecc Drop everything outside the office: balcony, garage, street, sky and holidays
+- 2026-10-02 d2611362 Drop the basketball and the first-person hands
+- 2026-10-02 aab03d06 Drop the arcade cabinet and Minesweeper on the boss's monitor
+- 2026-10-02 e4ba8669 Drop the jukebox and its music
+- 2026-10-02 34f1908d Drop the ladder and the fire poles between floors
+- 2026-10-02 511a1ad3 Drop the coffee machine and the kitchen
+- 2026-10-02 c148dd8b Drop the pictures on the walls and the /api/image proxy
+- 2026-10-02 41f59594 Drop the boss's loft, its stairs and the telescope
+- 2026-10-02 e35be059 Drop the emotes and the emote wheel
+- 2026-10-02 5615cd98 Replace the merge gong, confetti and dance parties with milestones
+- 2026-10-02 33617ec0 Change floors in one blink instead of riding the elevator
+- 2026-10-02 72fca34a Clear what's left of the dropped features from help, comments and tests
+- 2026-10-02 91becef4 Read the docs without a book in your hands
+- 2026-10-02 ffa8a464 Show the Workers panel from the start
+- 2026-10-02 b6e751e6 Rewrite the docs around seeing, handing out and reviewing work
+- 2026-10-02 8a716b49 Tests: expect the warning when a worktree can't fetch origin
+- 2026-10-02 a2ef3265 Don't trust state files the repository ships or symlinks in .agent-office
+- 2026-10-02 67b897b5 Webhook: https only, public addresses only, and admins pick it
+- 2026-10-02 4c02a50c Auth: Host allowlist, Origin checks, server-side sign-out and a CSP
+- 2026-10-02 e52638f7 Terminal web tabs: https pages on other sites only
+- 2026-10-02 c4662f6b Pull requests: don't hand forks' or outsiders' code to a worker to run
+- 2026-10-02 8f90b0d3 Workers get an environment allowlist, not the office's whole environment
+- 2026-10-02 f7fb89b1 Docs: a security page, and the new flags and sessions
+- 2026-10-02 a0932c59 Queue: keep a running task running when its worker comes back from a restart
+- 2026-10-02 e31cb701 GitHub: a refresh asked for mid-look runs once more when it ends
+- 2026-10-02 35b3b3d6 Tests: run the loading gate on a plain fake clock
+- 2026-10-02 8e759182 Mission control on the server: one roster, one attention ranking, a mission per floor
+- 2026-10-02 7f07906c Mission control in the browser: the attention chip, I, the strip, the 2D view
+- 2026-10-02 8ace95e4 Docs: Mission control, and alerts that now include stuck workers
+- 2026-10-02 42cfbf0d Mission control: keep open menus and typing across redraws, phone layout
+- 2026-10-02 88fa1c37 Tests: stuck posts to the webhook, and what a new worker is told of the mission
+- 2026-10-02 c00e0b81 Mission control: the ranking catches up with the clock
+- 2026-10-02 f19c972d Workers: say what the time-on-task clock is for now that the map is gone
+- 2026-10-02 122c3399 Mission control on the server: review inbox, timeline and reminders
+- 2026-10-02 b8fe959a Mission control in the browser: Review inbox, Timeline, Reminders, the digest
+- 2026-10-02 f28979b8 Docs: the review inbox, the timeline, reminders and While you were away
+- 2026-10-02 7d43a4f9 Mission control: one count for the chip and the tab title, and steadier events
+- 2026-10-02 ad7a7825 Fork-PR guard: catch quoted numbers, branch names and --repo checkouts
+- 2026-10-02 4551cebd Service tunnels: a relay sign-in can't reach the office, and the relay mark can't be forged
+- 2026-10-02 69acf4f0 Mission: check the statement and milestone titles for fork checkouts
+- 2026-10-02 ed80a8dc Never take a fork's PR for the office's own by its branch name
+- 2026-10-02 027e0e4a Settings: only admins send a test message to team notifications
+- 2026-10-02 3eaf1de8 Timeline: no permission input on disk, and one event per finish instead of per turn
+- 2026-10-02 70c978a5 Reminders: keep a dismissal through a restart's first sweeps
+- 2026-10-02 db2f2c60 Away digest: stamp connected people every minute and on shutdown
+- 2026-10-02 c11d76db Drop the unused world/texture.ts and comments naming the gong and the pumpkin
+- 2026-10-02 94a64949 Mission rows: a shell is never called unlinked, matching the unlinked count
+- 2026-10-02 074ab71c Protocol: toys.ts becomes whiteboard.ts, and the merge celebration is 'landed'
+- 2026-10-02 f11112d8 Mission control: one review count everywhere, and the chip always on the top bar
+- 2026-10-02 b8768473 Goals and the strip: no unlinked nag without a milestone, no bar without issues
+- 2026-10-02 c36d318f First run: straight into the office, with only a name asked
+- 2026-10-02 97f4b09d A worker that needs you is hard to miss: a beacon over its desk and a banner
+- 2026-10-02 279a86e2 agent-office tunnel: no session for other websites' requests, no escape sequences in the terminal
+- 2026-10-02 3393d1ac A fork's pull request is never a worker's own, however it was named
+- 2026-10-02 a541b39f Cursor workers never get the office's paths into a tracked hooks.json commit
+- 2026-10-02 4f644434 Needs you: one calm signal, and a snooze quiets every one of them
+- 2026-10-02 2c92587d A Cursor worker silent in the middle of a tool is stuck after 2 minutes, not 10
+- 2026-10-02 55bc06fd Cursor's hire hint: no literal backticks, and the effort syntax survives a failed model list
+- 2026-10-02 de79a608 Docs: which harnesses take an effort, Pi in the agent list, the Agents page's scope
+- 2026-10-02 ab7396f5 Solana bounty escrow: per-funder contributions, attester claim, dual-signed release
+- 2026-10-02 5ba30742 Solana escrow SDK: builders, mock, attester checks, Actions payloads, litesvm tests
+- 2026-10-02 b8fda1b9 Office bounties: claim on the office's own PR, pay only after a person's merge and an admin
+- 2026-10-02 0cb336fd Bounty chips on issue cards, Fund through a browser wallet, payouts in the review inbox
+- 2026-10-03 7f3d7b71 Docs for Proof of Merge bounties, and a fresh local validator run
+- 2026-10-03 b7f9cbf1 onchain/x402: pay for one office task on testnets with viem and @x402
+- 2026-10-03 a97128c5 onchain/attest: proof-of-merge attestations on Base Sepolia, with a fallback contract
+- 2026-10-03 4dd39ef9 Held, paid queue tasks: only an admin approves, turns down or records a refund
+- 2026-10-03 98a8b6c8 Proof of merge: attest every office PR a person merges, through a persistent outbox
+- 2026-10-03 a0395696 Paid tasks over x402: a public route that takes test USDC and queues a held task
+- 2026-10-03 4919c436 onchain/attest: the office's attestation service end to end on a local EAS
+- 2026-10-03 5aa6fe2b Docs: paid tasks over x402 and proof of merge on Base Sepolia
+- 2026-10-03 403c8dcb onchain/x402 README: the TestUSDC deploy script and the end-to-end office test
+- 2026-10-03 a6f3fd32 Solana SDK: retry a busy RPC's 429 with back-off instead of failing a sent transaction
+- 2026-10-03 9b3c426a Solana devnet: escrow deployed, one bounty opened, funded, claimed and released
+- 2026-10-03 56d63cda Proof of merge schema: when the PR opened, so time to merge comes from the chain alone
+- 2026-10-03 d118f27d Merge-based reputation: the metrics as pure functions, shared by the office and the indexer
+- 2026-10-03 42d740f3 onchain/reputation: ERC-8004 identities and merge feedback on Base Sepolia, with a fallback
+- 2026-10-03 e4b6fd0f onchain/attest: read attestation logs in block ranges, as public RPCs want
+- 2026-10-03 404f9c36 onchain/indexer: rebuild the Proof of Merge board from chain data alone, and serve it over MCP
+- 2026-10-03 296716fe Proof of merge live on Base Sepolia: schema registered, MergeAttestor deployed, smoke test passes
+- 2026-10-03 bc329df4 Reputation in the office: ERC-8004 identities, and feedback only for what a person did
+- 2026-10-03 617791db Public reputation routes, the agent cards, and reputation.get for Mission control
+- 2026-10-03 c26dfabb Mission control shows each agent's merge record: on its row, in the review inbox, and an Agents table
+- 2026-10-03 6b59485b End to end on a local chain: the office's attestations and feedback, rebuilt by the indexer
+- 2026-10-03 236f03ed Docs: agent reputation from merges
+- 2026-10-03 f09a5da5 Docs: what is live on Base Sepolia now, and the one wallet left to fund
+- 2026-10-03 8c4936a0 Read logs 1,000 blocks at a time: sepolia.base.org refuses a wider eth_getLogs
+- 2026-10-03 fd02e14b Showcase serializer: what a public page may show, built field by field from a whitelist
+- 2026-10-03 f84bdbdb Public showcase at /pom/: off until an admin turns it on, GET only, its own strict CSP
+- 2026-10-03 f4857937 The showcase page: hero counters, live floor, leaderboard, merged work, bounties, verify panel
+- 2026-10-03 1027763c onchain/indexer: export the showcase as static files for GitHub Pages
+- 2026-10-03 9dec2659 Docs: the public showcase
+- 2026-10-03 abc8f69d Launch tools for the chain kit: calendar, counts, lint and whats-new
+- 2026-10-03 d89b343c Proof of Merge launch kit: submissions, disclosure, videos, posts, calendar
+- 2026-10-03 91823c5d README: what this fork adds, with the upstream credit, a quickstart and security notes
+- 2026-10-04 e125ec1a bounty-escrow: the attester and approver in a bounty's seeds, and a cancel only its creator or the approver signs
+- 2026-10-04 7f81c6a6 Solana SDK: keyed bounty refs, only the office's own live bounty takes funds, and a release a wallet co-signs
+- 2026-10-04 94505ae3 onchain/attest and reputation: keyed merger pseudonym, and a sent transaction looked up instead of sent twice
+- 2026-10-04 8c07f232 onchain/indexer: only the trusted attester's payouts count, joined on the attestation's own payout
+- 2026-10-04 6d24d8b9 Proof of merge: attest only opted-in public repositories, keyed pseudonyms, and no double sends
+- 2026-10-04 b86d8d73 Public reputation routes follow the showcase's repository rules and never name an operator
+- 2026-10-04 54f7ee28 Bounties: only the office's own, payouts that recover, and an approver wallet
+- 2026-10-04 1e172601 Paid tasks: a retry goes back to an admin, and a settlement nobody heard about is never lost
+- 2026-10-04 5a19a231 Showcase workflow: Pages and OIDC permissions on the deploy job only, no npm install scripts
+- 2026-10-04 ffe6a306 Solana devnet: the escrow upgraded in place to the keyed seeds, a bounty run after it, and one paid through the approver-wallet path
+- 2026-10-04 86adfc22 Docs and kits: what the fixes changed, and claims cut to what is built
+- 2026-10-04 44faee83 Colosseum kit: name the latest devnet release, the approver-wallet run
+- 2026-10-04 e5d26a5a video: code-only synth for the soundtrack
+- 2026-10-04 f5ec9721 video: score the 30 s film and master it to -14 LUFS
+- 2026-10-04 a446c5f5 video: rendered soundtrack and beatmap
+- 2026-10-04 f5ae83a0 onchain/reputation: the fork check reads logs from the fork block only
+- 2026-10-04 155a7ad4 video: OFL variable fonts for the film (Archivo, Inter Tight, JetBrains Mono)
+- 2026-10-04 939a8390 video: deterministic render engine
+- 2026-10-04 d2046c9d video: placeholder scenes for the three acts
+- 2026-10-04 d8a9a59a video: render.mjs pipeline, scripts and README
+- 2026-10-04 0c71faa5 Devnet: a fourth demo bounty after the review fixes, and the README's attest line names the opt-in
+- 2026-10-04 96298f56 Launch kit: counts refreshed for the fourth devnet release
+- 2026-10-04 0979316f Colosseum kit: name the 2026-10-04 devnet release too
+- 2026-10-04 d9dd505e video: pixel-sort column coverage, keep colour outside streaks
+- 2026-10-04 56b2e739 video: act 1 final, one agent to mission control
+- 2026-10-04 3af6182e video: act 2 final, from the review inbox to the devnet release
+- 2026-10-04 421c495c video: share the display-type helpers between acts 2 and 3
+- 2026-10-04 807a66ee video: act 3 final, from the EAS ledger to the end card
+- 2026-10-04 2302df79 video: README status for act 3
+- 2026-10-04 9fe43767 video: let the end-card wordmark slam run to the frame edge
+- 2026-10-04 e9b60aca Design tokens, vendored fonts, the icon set and the Formation mark
+- 2026-10-04 f1243106 Chrome on the tokens: top bar with counters, alert row, modals, toasts
+- 2026-10-04 e55d904e 2D view and sign-in pages in the deck's look
+- 2026-10-04 89582dee Emoji out of the chrome: glyphs from ui/icons.ts and plain words
+- 2026-10-04 d958b6ad Docs: UGC Army name, the top bar's counters and the design system
+- 2026-10-04 d19015b9 Design shots: a headless script and the chrome stage's before and after
+- 2026-10-04 011de14d video: review tools for contact sheets, hit stills, sync and loudness
+- 2026-10-04 596f7c29 Deck layout: four pods of consoles round a mission table
+- 2026-10-04 65384c58 The deck: matte slate in a void, a mission table, consoles and boards
+- 2026-10-04 35fe666c Overview: the whole deck from above on G
+- 2026-10-04 113c1c6b Docs and words for the deck, and the room stage's before and after
+- 2026-10-04 e2080a0c video: engine support for the polish pass, and multi-still and type-sync capture
+- 2026-10-04 4bd59105 video: polish round 1, type on the beat and a truthful, readable cut
+- 2026-10-04 bc170855 video: verify checks type sync and the ink merge flash; README for round 1
+- 2026-10-04 abaa5df9 x402: one live payment settled on Base Sepolia through x402.org
+- 2026-10-04 e9a678fc Docs: x402 settled live on Base Sepolia, and how to repeat it
+- 2026-10-04 f31756ba Launch kits: the live x402 payment replaces the local-only wording
+- 2026-10-04 7f586e33 Solana SDK: releases that wait on a durable nonce, and an approver cosign that checks them first
+- 2026-10-04 0a726477 Units: faceless hover units that show their state four ways
+- 2026-10-04 c20e20cb Ready line: units that need you step up, and four lights follow the ranking
+- 2026-10-04 8febbb80 Operators: people on the deck share the units' body family
+- 2026-10-04 b5773cb2 Docs and shots for the units stage
+- 2026-10-04 624429c2 ao-bounty cosign: name the token by the bounty's own mint
+- 2026-10-04 78d17327 onchain/action: a GitHub Action that attests merges to the bounty escrow without the office
+- 2026-10-04 2ae08e73 Docs: the bounty attester GitHub Action, its approver flows and its live devnet run
+- 2026-10-04 e9327220 video: per-word type reveal that is set before its hit, and a verify check for it
+- 2026-10-04 5c99eda9 video: render.mjs takes a lock on out/frames, logs per run, writes the mp4 atomically
+- 2026-10-04 5f96bc72 video: polish round 2, every hit frame complete and the payoffs on their beats
+- 2026-10-04 6dab4b11 The Plot: the deck as a plan for the 2D view and the sign-in pages
+- 2026-10-04 e5364495 /pom/ becomes the Proof ledger, with a title-block share card
+- 2026-10-04 a87bbe69 Loading card over the grid, design notes and the surfaces stage shots
+- 2026-10-04 765be1dd video: README for polish round 2, the word reveal and the render lock
+- 2026-10-04 f7d7ea7b Devnet record: the GitHub Action's live bounty is the fifth release
+- 2026-10-04 856d8885 Launch kits and docs: the action, the funded registrar, the fifth bounty
+- 2026-10-04 473c935e video: a 1:1 format on the 16:9 grid, with local fixes where it collides
+- 2026-10-04 919c67e8 video: delivery set in out/final, credits and a Video section
+- 2026-10-04 e87b7bed video: type sync measures settled ink on the hit frame's own blocks
+- 2026-10-04 46689d40 Sound: four short cues for changes of state, off until you turn them on
+- 2026-10-04 9fe75443 Consistency pass: no emoji or old name in the chrome, units named by call sign
+- 2026-10-04 abf3436a Motion that marks a change of state: the merge beat, dispatch, flights
+- 2026-10-04 7036a1fd Demo mode: ?demo=1 for a screen share, a projector or a recording
+- 2026-10-04 b3485fe9 video: 1:1 timeline headline and inbox clear each other
+- 2026-10-04 ec252c7e Docs and shots for the motion stage: docs/design.md and README screenshots
+- 2026-10-04 9042694a One ranking, one clock, one currency in every view
+- 2026-10-04 19f1cdba The deck speaks for itself: plain ASCII copy, its own name, honest boards
+- 2026-10-04 49676545 A frame of its own: Units rail, bottom bar, one toast stack, clear labels
+- 2026-10-04 6120badf The menu by the deck's jobs, and one word for everything: deck, stand down
+- 2026-10-04 ae209226 Re-plan the deck: a 32 m square round a curved situation wall
+- 2026-10-04 a3715af8 README in the fork's own words, and docs for the new frame
+- 2026-10-04 a32e17c5 Goals that say what they are for, and a bounty on the rows it pays
+- 2026-10-04 796e188d The terminal becomes a unit console
+- 2026-10-04 1ec6798b One data palette of the deck's own, in place of upstream's pastels
+- 2026-10-04 c6d03d19 The Proof ledger reads as finished
+- 2026-10-04 facd2c63 Sign-in card on the plan's grid, credit under it, one focus ring
+- 2026-10-04 c2198584 The Formation mark on every unit, and shots of every reviewed view
+- 2026-10-04 cde75de0 Review round shots, before and after, with the rationale
+- 2026-10-04 fdfbd587 Viewports and the conn in the deck's plan
+- 2026-10-04 ea5dd824 The deck becomes a starship bridge: hull, canopy, conn and holo
+- 2026-10-04 b4ae13db Docs and shots for the bridge shell
+- 2026-10-04 ad12b7ae Ship motion: an in-app setting to slow or still the bridge
+- 2026-10-04 c9a3ae8f Space outside the bridge: the galaxy, stars streaming past, flybys, surge and jump
+- 2026-10-04 cf96d375 Shots, a clip and frame times for space outside the bridge
+- 2026-10-04 11fbc3ed Bridge lights setting: Night, Day or Auto, with Brightness
+- 2026-10-04 88e0c158 A light rig for the bridge, by Night and by Day
+- 2026-10-04 5c0cec82 Docs, shots and frame times for the bridge lights
+- 2026-10-04 88e207d3 The numbers behind the bridge's life, and their tests
+- 2026-10-04 2c5e34ed Life on the bridge: station screens, busy hands, pulses, heading and log
+- 2026-10-04 93545464 Docs for the bridge's life: rule 1, the motion table and the deck
+- 2026-10-04 9c95be49 Shots, a clip and frame times for the bridge's life
+- 2026-10-04 e840711d Review set for the bridge: Night and Day stills, a clip and the merge and warp frames
+- 2026-10-04 3dd04812 The needs-you beacon is light, not a slab
+- 2026-10-04 d5e4b0da Working units wear ship-cyan, keep their hands busy and send up motes
+- 2026-10-04 94a5f757 Callouts stay readable and the compass points to stuck units too
+- 2026-10-04 3a2c6031 Wide ports down both sides, and a hull that reads as a ship
+- 2026-10-04 c36844a7 A jump that feels like one, a flash that stays a glint, stars that hold still
+- 2026-10-04 26c072be Day as a cool mid-grey ship, not a white room; darker night floor
+- 2026-10-04 3d44ea2a The merge is the bridge's moment
+- 2026-10-04 e03e19fc A star map stands over the holo table; the conn's panels clear the hint bar
+- 2026-10-04 87c3f460 Planets with air and rings, a comet you can see, and meteors
+- 2026-10-04 6d75bff9 Running lights only from outside; quieter per-frame work
+- 2026-10-04 1c7de6d9 Units keep their silhouette; urgent tags read from the Overview
+- 2026-10-04 8ef539df Bake the next region of sky ahead of time; a meteor on demand
+- 2026-10-04 9a3b8777 shoot.mjs: a 10 s clip of the bridge, and 2D shots that match the set
+- 2026-10-04 a372fcb2 Docs for the starship bridge: the beacon, working cyan, ports, ship, moment
+- 2026-10-04 810ae338 Final shots of the bridge, Night and Day, a 10 s clip and the merge and jump
+- 2026-10-04 aeb3edab Keep every shader pow() base off the negative side, no more black frames at the mission table
+- 2026-10-04 5676a88c design/flicker-check.mjs: a headless black-frame check round the mission table
+- 2026-10-05 f662df8e Settings > Bridge > Life, and one signal for life to give way by
+- 2026-10-05 d99940c5 The destination ahead: the mission as a world that grows with real progress
+- 2026-10-05 68cb04e5 Fleet in formation: every other deck as an escort off the side ports
+- 2026-10-05 355af598 Squadron sorties: a fighter per working unit, open PRs on the picket
+- 2026-10-05 3172d20e Docs for the bridge's world: the destination, the fleet, the squadron, Life
+- 2026-10-05 4a1ae925 Shots, a clip and a GPU probe of the bridge's world
+- 2026-10-05 312b1dc0 A pull request's timeline events name the unit it came from
+- 2026-10-05 c96bc1e5 Settings > Bridge > Life: Ship's voice, crew epithets and the bridge droid
+- 2026-10-05 4713570b Crew dossiers: epithets, chevrons and the unit of the watch
+- 2026-10-05 4569c339 VESPER, the ship's mind: a dry line about what the crew really did
+- 2026-10-05 c5a7c59d Bolt, the bridge droid: the deck's handoffs made visible (ships off)
+- 2026-10-05 132d1dc5 Crew marks in a row, and none on a row that needs you
+- 2026-10-05 c8e6743b Docs for the bridge's crew: VESPER, the dossiers, Bolt
+- 2026-10-05 76e93547 Shots, a clip and a GPU probe of the bridge's crew
+- 2026-10-05 723ac5a0 Settings > Bridge > Moments: Celebrations and Alert conditions
+- 2026-10-05 323fab41 Alert conditions: the bridge goes darker round the problem, never red
+- 2026-10-05 f82c29f2 Hyperspace: a countdown, the tunnel, and the waypoint's name on the glass
+- 2026-10-05 7ec8eadc Earned celebrations, in tiers, with a recovery beat
+- 2026-10-05 c1acd26e Stand down before the held jump, and a bigger countdown on the glass
+- 2026-10-05 59b0ba96 design/shoot-moments.mjs, and the flicker check through the jump
+- 2026-10-05 4f7865a7 Docs and shots for the bridge's moments
+- 2026-10-05 adcc3e2d The deck's pace on the server: runs, the fleet's week, the turnaround, the day's log
+- 2026-10-05 217849f8 The drive core: a ring lit for each merge in the run, the fleet's week and its record
+- 2026-10-05 50307b12 The pit wall: the captain's turnaround clock over the Review bay
+- 2026-10-05 91f1ca75 Start of watch: the lights come up, the day's log crawls into the stars, the debrief
+- 2026-10-05 7afc62d9 design/shoot-rituals.mjs, and the flicker check through the rituals
+- 2026-10-05 962ee3fc Docs, shots and a clip of the bridge's rituals
+- 2026-10-05 b02bd852 The band never cries red with nothing behind it, and the counts agree with it
+- 2026-10-05 9773221e The destination large and low in the forward glass, under a livelier sky
+- 2026-10-05 460a14bc The jump in three beats: spool-up, punch, arrival
+- 2026-10-05 62ce8e6d Start of watch: the day's log typed onto the glass, and merges gathered into one toast
+- 2026-10-05 eb9e7401 The crew's body language, from their real state
+- 2026-10-05 18be5441 The heading band and the jump's name over the eaves ring, clear of the strip
+- 2026-10-05 06e4056d Bolt as a lopsided tool-drone with an arm, and on by default
+- 2026-10-05 abd3dc47 The drive core: a pulse up the column for each merge, and the run's count
+- 2026-10-05 88e25231 The crew's line in place of the captain's scorecard, and VESPER's voice plate
+- 2026-10-05 bb044292 design/shoot-life.mjs, and the perf probe's worst cases
+- 2026-10-05 49097d7a A unit done with no pull request stretches too
+- 2026-10-05 4fb8c0f4 The heading band in two lines under the world, in its own pane
+- 2026-10-05 26e167a6 The start of watch's words say typed, not crawled
+- 2026-10-05 321b0dfd Docs for the bridge's life, round two
+- 2026-10-05 11cbd47b Shots, clips and frame times of the bridge's life, round two
+- 2026-10-05 74e4498a Every painted screen samples at the renderer's most anisotropy
+- 2026-10-05 08745569 Wall boards that read from the conn
+- 2026-10-05 96e4fab2 Docs for the wall boards' shared layout and their shots
+- 2026-10-05 b24ee483 Shots and frame times of the wall boards, before and after
+- 2026-10-05 51a00ce4 The situation wall 2 m nearer the conn, and a count band over Attention
+- 2026-10-05 d8072c00 The holo keeps out of the wall boards' way
+- 2026-10-05 59951ac0 Unit callouts dock under the wall boards instead of covering them
+- 2026-10-05 ac584aa7 The focus lean: rest the crosshair on a board from the conn and lean in
+- 2026-10-05 0cd84455 Attention carriers never take fog
+- 2026-10-05 0aeead4d Docs for the readable wall, and shots of the focus lean
+- 2026-10-05 29fbb8f0 Shots, a clip and frame times of the readable wall, before and after
+- 2026-10-05 a250279f Quality tiers: Auto, Low, Medium or High under Settings > Bridge
+- 2026-10-05 c5ddb603 The deck's static meshes drawn as a few
+- 2026-10-05 099cc93e The aim tests only what it could reach, and big meshes a run at a time
+- 2026-10-05 a37a31ae Fewer draws and less work per frame for the CPU
+- 2026-10-05 3e448ceb A worked ship: trim atlas, finishes, a worked floor, rounded consoles and hull greebles
+- 2026-10-05 83aa511a Room and sky light: what the deck's surfaces reflect
+- 2026-10-05 55cc1a19 The droid's charger sits on the port's sill, clear of the glass
+- 2026-10-05 6f98e475 A Night and Day switch only retunes the lights
+- 2026-10-05 574846ca No shader warming at Low
+- 2026-10-05 c46584e6 Docs for the materials stage and Quality, and SHOOT_QUALITY for the shots
+- 2026-10-05 7657a38f Shots, a clip, frame times and a hue check of the materials stage, before and after
+- 2026-10-05 64ed5706 Quality tiers say how much light round the deck they hang
+- 2026-10-05 df429960 Space says what light it throws into the room
+- 2026-10-05 a87b8929 The polished floor can mirror the wall boards
+- 2026-10-05 79347f58 Light round the deck: shafts, dust, haze, pools, ribs, light from outside
+- 2026-10-05 b3864393 The flicker check passes over the light probes' cubes
+- 2026-10-05 1a1329c0 Shafts the conn can see, and none over the overhead strip
+- 2026-10-05 d8170053 Docs for the light round the deck
+- 2026-10-05 96932ed9 Shots, a clip and frame times of the light stage, before and after
+- 2026-10-05 2bc44b51 The floor's program carries the mirror only from High on
+- 2026-10-05 f82d459a A sky with depth out of every port: warped gas, filaments, knots and dark lanes
+- 2026-10-05 3343f47c The vista: dust streaming past the ports, a ringed giant abeam, the sun's flare
+- 2026-10-05 8ce7282f Shots of space close by, and the flicker check at a tier of its choosing
+- 2026-10-05 61cd3168 Docs for space outside the glass
+- 2026-10-05 ce2b8216 Shots, a clip and frame times of space outside, before and after
+- 2026-10-05 a2c3e11f Dust that drifts rather than streaks, and a giant that reads through it
+- 2026-10-05 2d600e78 The frame's composer at Medium and High by Night and by Day, SMAA at High
+- 2026-10-05 e8131ec9 The Overview starts from a framed pose: every board and the holo table up top
+- 2026-10-05 cfe3eb2c A merge here brings an escort alongside, in the canopy over the PR board
+- 2026-10-05 43c0efc8 The cinema: an arrival shot, breathing at the conn, framed moments, screens and a grade
+- 2026-10-05 bb6daf3f Shots of the arrival, the breathing, the screens held a second apart and the merge frame
+- 2026-10-05 ce2f73ee The cinema finds the sky and the stars once, and an arrival clip
+- 2026-10-05 a4ba0115 SMAA's edges and weights at 8 bits a channel, as SMAA has them
+- 2026-10-05 95534290 The arrival's shots wait for the course's jump to be over
+- 2026-10-05 3e951911 Docs for the cinema: the arrival, the breathing, framed moments, screens and the grade
+- 2026-10-05 387e3990 Shots, clips, frame times and the screens' check of the cinema, before and after
+- 2026-10-05 1e88364a Auto quality judges frames with hysteresis and forgets a stale Low
+- 2026-10-05 01618c5f Quality says what it runs at: a live chip and a HUD menu row with Try High
+- 2026-10-06 ba7051c9 Units, laptops and the floor's paint drawn in fewer pieces
+- 2026-10-06 919ab4ff Wall and slab boxes gathered by paint; flat glass and added light in one pass
+- 2026-10-06 deb1bca2 Perf probe holds each tier to its draw budget and times the motion layer
+- 2026-10-06 310bec30 Quality chip as a neutral meter; the menu row says a step in two lines
+- 2026-10-06 233c2e53 Tests for the unit's and laptop's skinned shells and the painted boxes
+- 2026-10-06 001cc593 Interior series tools: fixed seated shots, a quality soak, a sounder motion A/B
+- 2026-10-06 7f2a98cd Docs for Auto quality's governor, the chip, the menu row and the draw budgets
+- 2026-10-06 b9f32548 Shots, frame times and the soak of the quality stage, before and after
+- 2026-10-06 5b8b2cd4 The deck as a command amphitheatre: the plan and heightAt
+- 2026-10-06 5eb923d0 Build the amphitheatre: tiers, the dais and its chair, the hung arc
+- 2026-10-06 a9ca2aec Interior tools: seated and Overview shots, a board mask, a walk check
+- 2026-10-06 c1411e14 Docs for the amphitheatre: the deck, the chair's framing, walking the tiers
+- 2026-10-06 48478be5 Shots, masks, walk check and frame times of the layout stage
+- 2026-10-06 12dddcc1 Interior tools: crew fixtures, a course, the lean and a measure of the cards
+- 2026-10-06 feee528e The Attention board as the arc's hero, lit glass and chrome round every board
+- 2026-10-06 476fb717 Signals in the room and one label a unit
+- 2026-10-06 8ce0424a The holo as a route column, with one caption on a plate at the table's lip
+- 2026-10-06 67991978 Counts in two places, and a unit's call as a chip at the top
+- 2026-10-06 8204287f Hue zoned: the conn's gold and brass out of the orange band
+- 2026-10-06 879f2c4c Docs for the diegetic UI: the hero board, chrome, signals, labels, the holo
+- 2026-10-06 16d45c8f Diegetic UI: the stage's notes, shots and frame times, and the chip's type a size up
+- 2026-10-06 dcb9ecd4 Spectacle gives way locally: 85% while anyone waits, a 2.5 s duck to 60% on a new call
+- 2026-10-06 3e938a47 The grade sets the room's value, a spotlight rings who waits, and the breathing can be felt
+- 2026-10-06 19d55a0e A warm and cool key, a floor fog, and shafts tinted to the sun and kept off the stations
+- 2026-10-06 a61db1d0 Space you notice: a bright galaxy band, vivid gas, a sunlit planet by Day, a dark ground behind the arc
+- 2026-10-06 4e48ece4 Units with faces and state rims, stations never dark, warm footwells, four finishes
+- 2026-10-06 2e979a33 Medium keeps High's look: the half-size glow held to half strength, and a faint needs-you rim
+- 2026-10-06 bcc9fdcc Interior tools: a calm crew to set beside the need fixture, and a clip of a new call
+- 2026-10-06 3db15504 Docs and shots for the look: three zones of value, local give-way, the frame times
+- 2026-10-06 7baa0b5f The arc in motion: faces wiped on and typed, a scan every 6 s, card effects, a warp fold
+- 2026-10-06 43f23292 Take the conn: rise over the chair, tiers lit pit to dais, the arc built in
+- 2026-10-06 5e3c34b9 Attention beats: a hail flies its marker to the dais, stuck sweeps, done fills the course
+- 2026-10-06 2c05a5e7 Set pieces over the bow: kinetic type, the countdown once, mission complete, the iris
+- 2026-10-06 3ac22760 Interior tools: the motion beats held frame by frame, clips, and a hail in the probe
+- 2026-10-06 a0aa5dda Interior tools: real-time hail and conn clips for a before and after, the flicker check with Ship motion Off
+- 2026-10-06 06496538 Docs, shots and frame times of the motion layer
+- 2026-10-06 43bd368d Interior tools: force Quality in the life shots, idle and seated merge clips
+- 2026-10-06 7d5817ce Deep space by Night: the sky's gas rolled off under a cap, its hue kept
+- 2026-10-06 aed2340f The Attention board fills its glass: full-width cards, a hero, ALL CLEAR
+- 2026-10-06 da2e91de The countdown reads whole: JUMP IN and the digit, a ring wiping round it
+- 2026-10-06 aa3d3a25 The seated frame centres on the canvas right of the Units rail
+- 2026-10-06 257c1166 The captain's chair: shoulder-high, a headrest on posts, a cyan rim
+- 2026-10-06 1a4ebdf1 The Overview reads as a plan: steeper, the arc facing it, a slate deck
+- 2026-10-06 e5495110 Less clutter in the captain's frame: caption, beam, plus marks, hint
+- 2026-10-06 30bbe6ce The bridge's pulse: a wave down the canopy's ribs, the halo's glint, a wake
+- 2026-10-06 c13eb902 The pulse stays ship-cyan and does nothing at Low
+- 2026-10-06 2e0467dc Interior tools: the life clips can sit in the captain's chair
+- 2026-10-06 d2be6859 Docs and shots of the hype round: deep sky, a full board, the pulse
+- 2026-10-06 a6d08c36 Export the droid's way round the table, with its ring and clearance as arguments
+- 2026-10-06 c1d75eda Founder report: funding plan, assets and the upstream comparison in one page
+- 2026-10-06 f5fccb25 Tables for the deck's panels: one layout every panel shares
+- 2026-10-06 6f02befa Proof corner: a ledger of the escrow and the ERC-8004 records
+- 2026-10-06 4d42ca17 Review bay: its board and door sign as tables
+- 2026-10-06 c4518e30 Planning board: the mission's milestones as a table beside the sketch
+- 2026-10-06 54744c53 Docs rack: an index of the project's Markdown over the shelves
+- 2026-10-06 0be35060 Pit wall as a table of its clocks; capacity bars read as gauges
+- 2026-10-06 1dc7e94c Tests for the tables and what each panel puts in them
+- 2026-10-06 f3172ad6 Docs: every panel on the deck is a table
+- 2026-10-06 0261adb7 Shots of the tables stage: before and after, Night and Day, a tour
+- 2026-10-06 66e31693 Nubbin's ground and rules, the bridge mascot's pure half
+- 2026-10-06 daba2843 Nubbin drawn and animated: one skinned draw, procedural motion, the Sprig's sparkle
+- 2026-10-06 37554236 Nubbin on the bridge: every behaviour from a real event, and a switch to turn him off
+- 2026-10-06 a9af9999 Nubbin's softer face and a calmer scarf
+- 2026-10-06 208f5925 Docs and help for Nubbin, the bridge mascot
+- 2026-10-06 3489ca0f Shots and a 10 s clip of Nubbin, by Night and by Day, and the round's notes
+- 2026-10-06 fb16d701 Bounty tokens: stacks over the vault, coins on funded issues, the payout's flight
+- 2026-10-06 8a8d4b03 Proof ledger: paid as an amount, the network said as devnet test USDC
+- 2026-10-06 1aa33346 Tests for the bounty tokens
+- 2026-10-06 c3e42472 Docs: bounty tokens on the deck
+- 2026-10-06 55637aa0 Shots of the bounties stage: before and after, a payout clip
+- 2026-10-06 2ef6a20b Kip yields quietly, keeps his space, and runs like a toddler
+- 2026-10-06 bed5cbf7 Kip's own look: no dark ear tips or cheek spots, lit eyes, no blowout
+- 2026-10-06 6cfd37a3 A pass slot over the scene in the composer, and a hook on your reach
+- 2026-10-06 5db7fdad Settings > Bridge > Hands: Auto, On or Off
+- 2026-10-06 40ab0b32 First-person hands: gloved forearms that sway, reach and tap, and hold a datapad
+- 2026-10-06 77297bb0 Tests for the hands: when they show, sway, walk, reach, the datapad
+- 2026-10-06 72b776c6 Docs: your hands in first person
+- 2026-10-06 0f788242 Shots of the hands stage: before and after, Night and Day, a clip
+- 2026-10-06 69fc72f4 Kip's twirl reads from the chair: Sprig up beside his head, facing you
+- 2026-10-06 823e620e Docs for Kip: the new name, his look, where he hides and his space
+- 2026-10-06 59d0f1e1 Kip's final shots and 10 s clips by Night and Day, and the round's notes
+- 2026-10-06 8cfbb1bc Player rig: something can take hold of you each frame
+- 2026-10-06 e158edaf Forward lounge: a viewing balcony at the bow behind the arc, its ladder and three seats
+- 2026-10-06 c3637760 Climb the lounge's ladder and sit facing the glass with a wider view
+- 2026-10-06 b3a5a330 Hands grip the ladder's rungs, one over the other, while you climb
+- 2026-10-06 e62a794a Tests for the forward lounge: where it hangs, the climb, the rail, the seats
+- 2026-10-06 99a29ece Docs: the forward lounge
+- 2026-10-06 e6859189 Shots of the lounge stage: before and after, Night and Day, a jump from a seat, a clip
+- 2026-10-06 e97d0156 Sound engine: four groups under one master, a mix that follows the deck
+- 2026-10-06 fb8dccdb Settings > Sound & voice: the main volume and a mixer, and Shift+M in the help
+- 2026-10-06 16390f17 Soundscape: steps, seats, the ladder, Bolt, clicks and windows, the ambience
+- 2026-10-06 7f8369d4 A payout you hear fly, and the jump's punch, arrival and the surge
+- 2026-10-06 209f49a0 Tests for the deck's sound: the mix, steps, landings, seats, Bolt, the mixer
+- 2026-10-06 8cb5a921 Docs: the deck's sound, its groups and mixer, and Shift+M
+- 2026-10-06 8da73efb Shots of the sound stage: the mixer before and after, two clips with their sound
+- 2026-10-06 9e6fc683 Sound that sits right: no click on any start, steps under the alerts, quiet cues heard
+- 2026-10-06 fa436182 Hands that hold the ladder and make way for the boards
+- 2026-10-06 1b058097 Tables that read from the dais: each panel's far face
+- 2026-10-06 be41d056 Draw calls back under the budget: conn 385, the jump 420
+- 2026-10-06 7a3795a7 The lounge keeps you on call: a readout on the glass, only the urgent arrows
+- 2026-10-06 8d4f923d Bounties read from the chair: coins sized by distance with a trail, the lone escort out of the vault's window
+- 2026-10-06 6e4e4487 Hands make way only for a board you stand at, not the arc across the deck
+- 2026-10-06 a99565f4 Hands a little higher at rest, the lounge readout a little higher on the glass
+- 2026-10-06 94203c82 Docs: the feel pass in the README and the deck's lounge
+- 2026-10-06 f8cccef6 Shots of the feel pass: final stills, the reel with sound, perf before and after
+- 2026-10-06 2428a4c5 Take out the operator bench and its stools; E at the Attention board watches a shared screen
+- 2026-10-06 116454c8 Hang the planning board flush on the west wall
+- 2026-10-06 6bea6941 Review bay sign as a table, readable from the dais
+- 2026-10-06 4c470f28 Service monitor: a unit's dev server, live on the east wall
+- 2026-10-06 3e2fd6c1 Start of watch keeps the wall clock, not the frame's
+- 2026-10-06 d4a87ca9 Service monitor's hint fits one line: the service and its port as its title
+- 2026-10-06 f3be4ff2 Docs: the bay's sign, the planning board on the west wall, the service monitor
+- 2026-10-06 ab17acd1 Shots of the fixes round, and design/shoot-fixes.mjs that takes them
+- 2026-10-06 8958ea86 Browser tests skip a bundle older than its sources
+- 2026-10-06 7420b440 Add European pre-seed fundraising strategy page to the launch report
+- 2026-10-06 44290d1d Relay Beacon in the sky: its numbers, beats and outline rules, switched under Settings > Bridge > Life
+- 2026-10-06 0414f013 Shots and frame time for the Relay Beacon
+- 2026-10-06 f3fa5887 Docs and shots of the Relay Beacon, with the Stellar brand rules it follows
+- 2026-10-06 e5fa62bb Relay Beacon: a lamp at the heart of its rings, in clear glass, with light of its own
+- 2026-10-06 09b03bc6 Shots and flicker check for the Relay Beacon: a crop, a zoomed clip, its flare at the bloom's peak
+- 2026-10-06 1655187d Docs and final shots of the Relay Beacon, the brand notice first
+- 2026-10-06 34d3aafe Video kit for Colosseum: pitch and demo scripts, go-to-market note, recording guide
+- 2026-10-06 982fcd01 Demo footage from the real office, cut silent with captions
+- 2026-10-06 5ed1d58a Demo cut after review: no replay paired with a real tx, source repo on the cards, readable captions
+- 2026-10-06 f8c708fc Kits: our first commit is 2026-09-30 now the business playbook and launch kits are on the branch
+- 2026-10-07 561d302c Opening a terminal no longer kills the tab in a headless browser
+- 2026-10-07 98697868 Guard the MIT attribution: LICENSE and NOTICE checked and NOTICE shipped
+- 2026-10-07 9ebc6121 A crash check for /lite in four browsers, and the stage 0 design notes
+- 2026-10-07 47fd05b5 Naming: Mergeline and Agent Inbox checked against npm, domains and GitHub
+- 2026-10-07 372a51bd Home at /, the 3D bridge at /bridge, and Labs for what isn't the inbox
+- 2026-10-07 7b46aa71 Design scripts: the bridge is /bridge, and a shoot for the fundable track
+- 2026-10-07 613eed2a Docs: the inbox first, and Labs for the rest
+- 2026-10-07 5da2dd40 Inbox rules, a signed shipped log, and merging without GitHub
+- 2026-10-07 a5d4d881 The terminal and Changes windows can sit in a pane of the page
+- 2026-10-07 1e84ba13 The inbox at /: the list on the left, the selected agent on the right
+- 2026-10-07 8b47262e Docs: the inbox, its keys, the shipped log and merging without GitHub
+- 2026-10-07 25ed038f Design: the fundable shoot walks the inbox's loop
+- 2026-10-07 1f497d21 Design: the crash check and the bridge shoot open agents from the inbox
+- 2026-10-07 eb0492ea One light switch for the home page, and the crash check opens Idle
+- 2026-10-07 0d1da9dd Mergeline: the product's name, its npm package and its command
+- 2026-10-07 10d4a144 One command to start: a free port, signed in on this computer, nothing to answer first
+- 2026-10-07 0bb8abc9 Anonymous usage numbers, off unless someone turns them on
+- 2026-10-07 34c61d9c The setup card: agents found, this folder as the project, GitHub optional
+- 2026-10-07 3eed5710 mergeline attach: an agent started in a terminal moves into the inbox
+- 2026-10-07 3ab58b5b install.sh and install.ps1 install Mergeline from npm, not upstream's releases
+- 2026-10-07 7e53634e Design: the onboarding shoot and the timed npx-to-first-agent check
+- 2026-10-07 080c5791 Docs: npx mergeline first, the setup card, attach, and how signing in works locally
+- 2026-10-07 99377ecc Tests: the workspace test calls WorkerTrees.makeWorkspace, now that the manager's wrapper is gone
+- 2026-10-07 3375075b The Deploy sheet says which agents this computer doesn't have
+- 2026-10-07 b38f3408 Design notes: stage 3 of the fundable track, one command to first value
+- 2026-10-07 9e0e4f8f Codex's question reads Needs an answer, not request_user_input
+- 2026-10-07 87e5232c Inbox merge: one function for a person and for a scripted reviewer
+- 2026-10-07 fa12afa4 mergeline --demo: five scripted agents on a throwaway repository
+- 2026-10-07 06ada4ba The hosted demo is read only: visitors watch, nothing they send changes anything
+- 2026-10-07 06cb5cd3 The home page says when it's the demo, with the command to run next
+- 2026-10-07 74d013e4 Design: the demo's shoot, its video and GIF, and the stage notes
+- 2026-10-07 f43cb47d Docs and deploy: the demo first in the README, and the hosted demo on Fly
+- 2026-10-07 c5834b4d Numbers: human wait time, merges and merge rate from the shipped log
+- 2026-10-07 65a3e562 Settings in three panes, a short avatar menu, and Help on ?
+- 2026-10-07 71686c04 The landing page: one sentence, npx mergeline, the demo and a team waitlist
+- 2026-10-07 8118d0e4 Launch kit and metrics: posts, design-partner outreach, and what the deck shows
+- 2026-10-07 4f02faab Docs: the inbox first in the README, features and controls
+- 2026-10-07 9403bf14 Mission control stays in the avatar menu's Work group
+- 2026-10-07 ae964cad Design: the fundraising-surface shoot and the stage notes
+- 2026-10-07 1bb15486 Hosted demo: the second round is tested too, and its shoot waits a round
+- 2026-10-07 8cf0679c Toasts: never over the reply box, never your own action, deployed not hired
+- 2026-10-07 a12a16c8 Labs are off over the socket too, and a boards lab for the GitHub windows
+- 2026-10-07 afa2e386 Inbox merge: never commit a person's own work, one merge at a time
+- 2026-10-07 1336aebe Branches are named after the task, not the agent's nickname
+- 2026-10-07 4a7afd97 The inbox for a 60-second demo: the question in words, the pane never empty
+- 2026-10-07 df9aece8 Landing: the wedge above the fold, why not the tools you have, one field
+- 2026-10-07 9efb98e1 The agent you watch finishing turns the pane to its diff
+- 2026-10-07 8245dc49 Docs for the fundraising build, its stills shoot and the investor cut
+- 2026-10-07 4c43835a PRODUCT.md: the direction, what changed, what's hidden, the numbers and the pitch
+- 2026-10-07 5c4f973f Investor cut: a Numbers beat at the end, about a minute long
+- 2026-10-07 06972195 Landing: the product's name in one file, and the film and posters cut for the web
+- 2026-10-07 a198f667 Landing: twelve sections drawn from the app's own tokens, built with Vite
+- 2026-10-07 b941f233 Landing tests and shoot: both brands, labels, the wait, less motion, no shift
+- 2026-10-07 29125474 Docs: the landing page in site/landing, its name file, build and preview
+- 2026-10-07 5ec116b3 Landing stage 1 shots: 1440, 1920 and 390 in both themes, less motion, a scroll clip
+- 2026-10-07 2e37f2c2 Landing engine: odometer, glyph morph, typewriter, slides and a scene waker
+- 2026-10-07 596011a7 Landing field: units launch from the mark, and a frame costs a few strokes
+- 2026-10-07 ce1561a6 Landing hero: the opening, Codex asks, and every clock answers to one tap
+- 2026-10-07 ebfa16fa Landing tests, docs and a shoot for the hero's opening
+- 2026-10-07 41d2d003 Landing stage 2 shots: the hero's opening in both themes, phone and big screen
+- 2026-10-07 ada0945e Landing engine: scenes driven by one progress number, pinned, played or view-linked
+- 2026-10-07 00cde2f4 Landing scenes: every section moves to explain the product
+- 2026-10-07 a0ec2085 Landing scene tests, and nothing that a scene rewrites ever moves
+- 2026-10-07 e197d193 Docs: what each landing scene moves and says, how it pins, sound, and the scene shoot
+- 2026-10-07 3758d2e8 Landing deck: the bridge sits lower in its tile
+- 2026-10-07 b1ae6725 Landing stage 3 shots: every scene through its progress, both themes, phone, less motion, a scroll clip
+- 2026-10-07 c4123065 Landing performance: scenes in their own chunks, the bridge in a worker, a perf gate
+- 2026-10-07 5d9e3e4b Landing canvases: one quality governor, and a merge ring that lights only its band
+- 2026-10-07 45606a30 Landing: captions, AA contrast in both themes, search and share tags, and the tests that hold them
+- 2026-10-07 949d34c0 Landing hero on a phone: the stopwatch and the waiting unit keep clear of the words
+- 2026-10-07 c8119c04 Docs and stage 4 shots: the landing page's budgets, what holds them, access and search
+- 2026-10-07 7b72cf35 Landing: the hero's command runs the demo, and the repository lives in brand.ts
+- 2026-10-07 d45a0911 Landing 06: every part looks finished within a second, and the wall says what stays home
+- 2026-10-07 f430c469 Landing top bar and hero: no stray strokes, one clock format, and nothing over the words
+- 2026-10-07 40dd9dd7 Landing test: the headline's stopwatch is m:ss now
+- 2026-10-07 a30e8778 Landing 02 and 03: both pinned scenes open on a composed first frame
+- 2026-10-07 597202cf Landing 04: the loop's details add up, and the merge no longer compiles a shader
+- 2026-10-07 a99ef839 Landing 09 to 12: the ask works today, Proof runs by itself, and the end has an action
+- 2026-10-07 be46c136 Landing 07: the phone rests flat, and each touch lands on its button
+- 2026-10-07 47c55f1e Landing: make the merge's ring in the first idle moment after the opening
+- 2026-10-07 11fdc68c Landing docs: how to run, rename and ship it to Cloudflare Pages, and what each section moves
+- 2026-10-07 74c5969d Landing accessibility: what axe found, fixed
+- 2026-10-07 0b5d2a1f Landing final shots: every section on a laptop, a big screen and a phone, and a 54 s scroll
+- 2026-10-07 7ac03954 Landing 04: the log behind the question card and the Shipped header stay readable
+- 2026-10-07 b1440be6 Landing final shots: the loop with the question card up, after the contrast fix
+- 2026-10-07 67102019 One selected unit across the Overview, the Units rail and Walk
+- 2026-10-07 cedf1a3a N in Walk flies to the unit where it stands, framed, with a target-acquire bracket
+- 2026-10-07 c5924962 Overview as the remembered home view: eased Walk/Overview move, 650 ms flights, idle drift
+- 2026-10-07 1f7b43c2 Heartbeat: a tool-call pulse on every working unit and a draining quiet meter
+- 2026-10-07 179fd032 Pod zones by goal colour, with ground labels that count who needs you
+- 2026-10-07 a14817de Zoom-tiered unit callouts with a staggered pop-in
+- 2026-10-07 dfd47147 Mission control: dock mode, inline Review, row-as-button timeline, live Crew
+- 2026-10-07 bcd1b3aa Wire the selection into Mission control's Locate and the callout tiers
+- 2026-10-07 404a2711 Make the seven deck features agree: one selection, clear floor marks, labels that fit
+- 2026-10-08 5dfdef38 Glanceable deck pass: white selection reticle, pod zone labels, tiered callouts, docked Mission control
+- 2026-10-08 20f7f783 Docked e2e: check the card without a named page function, and take the keys before D
+- 2026-10-08 0073ff4f Round 1 review fixes: needs-you callouts always show, no glare on the move, one clock
+- 2026-10-08 8398b456 Round 2 review fixes: callouts wait for the Overview to land, labels keep clear, Locate lands like N
+- 2026-10-08 91f6e1b1 Plan labels: no more names drawn over each other on the sign-in art and 2D view
+- 2026-10-08 6e819992 Port the other round 2 review fixes onto the origin/main deck branch
+- 2026-10-08 7bab6ef0 Landing: Kip mascot from the deck
+- 2026-10-08 da004600 Rename the product from UGC Army to Kipdeck
+- 2026-10-08 e1910f3a Use the Kipdeck tagline on brand surfaces and tighten the copy guard
+- 2026-10-08 1a08637c Rename to Kipdeck (#6)
+- 2026-10-09 1994969f Deck polish: live mixed cover, merged close, one Kip, rebuilt competition (#15)
+- 2026-10-09 b2e33ced Landing: control and clarity in one place, said honestly (#17)
+- 2026-10-09 445a199a Inbox: split pulse, merge hold with Undo, owners, one wait clock, orange only for who needs you (#16)
+- 2026-10-09 e6b95ee9 One name, one story: Kipdeck wordmark, shared tagline, one waiting count, state names and wait clock (#14)
+- 2026-10-09 b6bfe15f Bridge: clear wait clocks, the urgent callout on top, N says who is next (#18)
+- 2026-10-09 5c780d7f Deck by default: labs on, the 3D view is the Deck, a CTA into it (#19)
+- 2026-10-09 128d1583 Kipdeck only: drop the Mergeline and UGC Army fallbacks (#20)
+- 2026-10-09 9a30f41f Kip logo everywhere, and the pitch deck drops the fork line (#21)
+- 2026-10-10 33d4811a Launch kits and Colosseum demo cut say what is true (#22)
+- 2026-10-10 aed0168c Film: Kipdeck end to end, our repo on the end card, honest test-run labels (#23)
+- 2026-10-10 12988a96 Recordings: README, docs and deck media from the current build, demo pill whole (#24)
+- 2026-10-10 7b0f7538 Surfaces say what is true: public repo, from source until npm, Kipdeck everywhere (#25)
+- 2026-10-10 29a538af Film: stop delivering the stale 1:1 cut nobody uses (#26)
+- 2026-10-10 491f6424 Name the bounty token by its mint: USDC only for USDC, TEST for the test mint (#27)
+- 2026-10-10 49f274bd Colosseum: SUBMIT.md ready to paste, commit stamped, showcase rebuild that finishes (#28)
+- 2026-10-10 dd3e2d7d Final sweep before Colosseum: upstream credit in the deck, one prior-work story, test tokens, leftovers (#29)
+- 2026-10-10 cbfff7d6 Pitch deck: drop the upstream credit lines for now (#30)
+- 2026-10-10 831b50d1 Rundown: the project map in the inbox and on the Deck (#31)
+- 2026-10-11 ec3abc07 Signal: a project's status at one look (#32)
+- 2026-10-11 7a0c2b94 Rundown ships in the package: kipdeck rundown, and every project's first map (#33)
+- 2026-10-12 839cc146 UX overhaul: ten fixes from the UX audit (#34-#43)
+- 2026-10-12 bc4ea245 Warmth: the crew voice, Kip and a warmer look across inbox, Deck, landing and CLI (#45-#50)
+
+Upstream, not ours (upstream pull requests re-committed in our history; the author is the upstream author):
+
+- 2026-10-01 ff1b76bd Issues board on the wall: pin only the open issues nobody has started on (upstream #262, by webdevcody)
+- 2026-10-01 4ed900bb Keep the repo's agent rules in AGENTS.md, which every agent CLI reads (upstream #263, by webdevcody)
+- 2026-10-01 f4869653 Meetings have no token limit: the table's tokens and cost are shown, never a reason to stop (upstream #264, by webdevcody)
+- 2026-10-01 4d44abae Say why a meeting's round limit is fixed instead of showing a locked control (upstream #265, by webdevcody)
+- 2026-10-01 3acfd45b Dictation: hold Ctrl+Space or the mic to talk a prompt into a terminal or a prompt box (upstream #266, by webdevcody)
+- 2026-10-01 8e12ea84 Issues move to In progress the moment a worker has them (upstream #268, by webdevcody)
+- 2026-10-01 0f5c49f4 Pick a model and reasoning effort for every harness, by the model's name (upstream #272, by webdevcody)
+- 2026-10-01 e825d794 Cursor CLI as a worker: hire, follow and resume cursor-agent at a desk (upstream #271, by webdevcody)
+- 2026-10-01 0622282c A worker that opens its own pull request shows it at its desk, and any agent can say which PR is whose (upstream #274, by webdevcody)
+- 2026-10-02 9e954b18 agent-office tunnel: every worker's web server opens on your own computer, by itself (upstream #273, by webdevcody)
+- 2026-10-02 5db9e681 Voice across strict networks: TURN servers from AGENT_OFFICE_TURN, and a toast when a call can't connect (upstream #244, by Lohrey)
+
+Not ours and not upstream (bots):
+
+- 2026-10-08 d48fc76c Bump the npm_and_yarn group across 2 directories with 2 updates (#1)
+- 2026-10-08 dd2fa0e1 Bump shell-quote (#11)
+
+Snapshot imports of upstream (upstream work):
+
+- 2026-09-30 01d85bbb Import agent-office at 665aeec
+
+Code:
+
+- modified: bin/office-queue.js
+- modified: bin/office-workers.js
+- added: src/client/bridge.html
+- modified: src/client/claim.html
+- modified: src/client/claim.ts
+- modified: src/client/core/arrival.ts
+- added: src/client/core/camera-overview.css
+- added: src/client/core/camera-overview.ts
+- modified: src/client/core/context.ts
+- modified: src/client/core/ctx.ts
+- added: src/client/core/flight.ts
+- modified: src/client/core/floors.ts
+- added: src/client/core/floorwatch.ts
+- modified: src/client/core/hintbar.ts
+- modified: src/client/core/loop.ts
+- deleted: src/client/core/maps.ts
+- deleted: src/client/core/outline.ts
+- added: src/client/core/overview-frame.ts
+- added: src/client/core/overview-transition.ts
+- added: src/client/core/overview-wheel.ts
+- modified: src/client/core/parts.ts
+- modified: src/client/core/place.ts
+- modified: src/client/core/registry.ts
+- modified: src/client/core/scene.ts
+- modified: src/client/core/stations.ts
+- modified: src/client/core/travel.ts
+- modified: src/client/core/worlds.ts
+- modified: src/client/core/you.ts
+- added: src/client/core/zoom.ts
+- deleted: src/client/dnb.ts
+- added: src/client/features/alert/band.ts
+- added: src/client/features/alert/index.ts
+- added: src/client/features/alert/logic.ts
+- added: src/client/features/amphitheater/arc.ts
+- added: src/client/features/amphitheater/framing.ts
+- added: src/client/features/amphitheater/index.ts
+- added: src/client/features/amphitheater/tiers.ts
+- deleted: src/client/features/arcade/index.ts
+- deleted: src/client/features/arcade/minesweeper.ts
+- deleted: src/client/features/arcade/ui.ts
+- added: src/client/features/arcchrome/index.ts
+- added: src/client/features/arcchrome/logic.ts
+- added: src/client/features/arcchrome/world.ts
+- added: src/client/features/atmos/cookie.ts
+- added: src/client/features/atmos/fog.ts
+- added: src/client/features/atmos/gloss.ts
+- added: src/client/features/atmos/index.ts
+- added: src/client/features/atmos/logic.ts
+- added: src/client/features/atmos/mirror.ts
+- added: src/client/features/atmos/motes.ts
+- added: src/client/features/atmos/outside.ts
+- added: src/client/features/atmos/plan.ts
+- added: src/client/features/atmos/pools.ts
+- added: src/client/features/atmos/shafts.ts
+- deleted: src/client/features/bar/booze.ts
+- deleted: src/client/features/bar/drunk.ts
+- deleted: src/client/features/bar/index.ts
+- deleted: src/client/features/bar/sound.ts
+- deleted: src/client/features/bar/ui.ts
+- deleted: src/client/features/bargames/controller.ts
+- deleted: src/client/features/bargames/index.ts
+- deleted: src/client/features/bargames/sound.ts
+- deleted: src/client/features/bargames/world.ts
+- deleted: src/client/features/basketball/index.ts
+- deleted: src/client/features/basketball/sound.ts
+- deleted: src/client/features/basketball/world.ts
+- added: src/client/features/beats/celebrate.ts
+- added: src/client/features/beats/index.ts
+- added: src/client/features/beats/logic.ts
+- added: src/client/features/beats/tiers.ts
+- added: src/client/features/beats/world.ts
+- added: src/client/features/boardfaces/index.ts
+- added: src/client/features/boardfaces/logic.ts
+- added: src/client/features/boards/far.ts
+- added: src/client/features/boards/fold.ts
+- modified: src/client/features/boards/index.ts
+- modified: src/client/features/boards/machine.ts
+- modified: src/client/features/boards/meeting.ts
+- added: src/client/features/boards/review-rows.ts
+- added: src/client/features/boards/screen.ts
+- added: src/client/features/boards/table.ts
+- modified: src/client/features/boards/world.ts
+- deleted: src/client/features/bookshelf/book.ts
+- added: src/client/features/bookshelf/index-screen.ts
+- modified: src/client/features/bookshelf/index.ts
+- modified: src/client/features/bookshelf/ui.css
+- modified: src/client/features/bookshelf/ui.ts
+- modified: src/client/features/bookshelf/world.ts
+- added: src/client/features/bottombar/index.ts
+- added: src/client/features/bottombar/nextword.ts
+- added: src/client/features/bounties/coin.ts
+- added: src/client/features/bounties/flight.ts
+- added: src/client/features/bounties/index.ts
+- added: src/client/features/bounties/logic.ts
+- added: src/client/features/bounties/sound.ts
+- added: src/client/features/bounties/vault.ts
+- added: src/client/features/bridge/conn.ts
+- added: src/client/features/bridge/holo-labels.ts
+- added: src/client/features/bridge/holo-map.ts
+- added: src/client/features/bridge/holo-mask.ts
+- added: src/client/features/bridge/holo-route.ts
+- added: src/client/features/bridge/holo.ts
+- added: src/client/features/bridge/hull.ts
+- added: src/client/features/bridge/index.ts
+- added: src/client/features/bridge/inlay.ts
+- added: src/client/features/bridge/readouts.ts
+- added: src/client/features/bridge/shapes.ts
+- added: src/client/features/bridge/skin.ts
+- added: src/client/features/bridge/stations.ts
+- deleted: src/client/features/cabinet/blocks.ts
+- deleted: src/client/features/cabinet/index.ts
+- deleted: src/client/features/cabinet/sound.ts
+- deleted: src/client/features/cabinet/ui.ts
+- deleted: src/client/features/cabinet/world.ts
+- modified: src/client/features/carrying/card.ts
+- modified: src/client/features/carrying/index.ts
+- deleted: src/client/features/cars/controller.ts
+- deleted: src/client/features/cars/index.ts
+- deleted: src/client/features/cars/laps.ts
+- deleted: src/client/features/cars/sound.ts
+- deleted: src/client/features/cars/world.ts
+- added: src/client/features/cinema/arrival.ts
+- added: src/client/features/cinema/grade.ts
+- added: src/client/features/cinema/index.ts
+- added: src/client/features/cinema/logic.ts
+- added: src/client/features/cinema/screens.ts
+- deleted: src/client/features/climbing/controller.ts
+- deleted: src/client/features/climbing/index.ts
+- deleted: src/client/features/climbing/sound.ts
+- deleted: src/client/features/coffee/caffeine.ts
+- deleted: src/client/features/coffee/index.ts
+- deleted: src/client/features/coffee/meter.ts
+- deleted: src/client/features/coffee/sound.ts
+- added: src/client/features/counters/index.ts
+- added: src/client/features/crew/index.ts
+- added: src/client/features/crew/world.ts
+- added: src/client/features/demo/demo.css
+- added: src/client/features/demo/index.ts
+- added: src/client/features/destination/index.ts
+- added: src/client/features/destination/logic.ts
+- added: src/client/features/destination/world.ts
+- added: src/client/features/dictation/index.ts
+- deleted: src/client/features/dog/index.ts
+- deleted: src/client/features/dog/sound.ts
+- deleted: src/client/features/dog/world.ts
+- added: src/client/features/drive/index.ts
+- added: src/client/features/drive/logic.ts
+- added: src/client/features/drive/world.ts
+- added: src/client/features/droid/index.ts
+- added: src/client/features/droid/path.ts
+- added: src/client/features/droid/world.ts
+- deleted: src/client/features/emotes/index.ts
+- deleted: src/client/features/emotes/ui.css
+- deleted: src/client/features/emotes/ui.ts
+- added: src/client/features/fleet/hail.css
+- added: src/client/features/fleet/hail.ts
+- added: src/client/features/fleet/hulls.ts
+- added: src/client/features/fleet/index.ts
+- added: src/client/features/fleet/logic.ts
+- added: src/client/features/focuslean/index.ts
+- added: src/client/features/focuslean/logic.ts
+- added: src/client/features/giveway/index.ts
+- added: src/client/features/giveway/logic.ts
+- deleted: src/client/features/golf/controller.ts
+- deleted: src/client/features/golf/index.ts
+- deleted: src/client/features/golf/sound.ts
+- deleted: src/client/features/golf/world.ts
+- deleted: src/client/features/gong/index.ts
+- deleted: src/client/features/gong/sound.ts
+- deleted: src/client/features/gong/world.ts
+- added: src/client/features/hail/course.ts
+- added: src/client/features/hail/index.ts
+- added: src/client/features/hail/logic.ts
+- added: src/client/features/hail/world.ts
+- added: src/client/features/hands/datapad.ts
+- added: src/client/features/hands/index.ts
+- added: src/client/features/hands/pose.ts
+- added: src/client/features/hands/rig.ts
+- deleted: src/client/features/hanging/controller.ts
+- deleted: src/client/features/hanging/gallery.ts
+- deleted: src/client/features/hanging/index.ts
+- deleted: src/client/features/hanging/ui.css
+- deleted: src/client/features/hanging/ui.ts
+- deleted: src/client/features/hanging/world.ts
+- added: src/client/features/heartbeat/index.ts
+- added: src/client/features/heartbeat/logic.ts
+- added: src/client/features/heartbeat/world.ts
+- deleted: src/client/features/herald/index.ts
+- added: src/client/features/holoui/faces.ts
+- added: src/client/features/holoui/index.ts
+- added: src/client/features/holoui/logic.ts
+- added: src/client/features/homeview/home.ts
+- added: src/client/features/homeview/index.ts
+- modified: src/client/features/hud/index.ts
+- added: src/client/features/ibl/index.ts
+- added: src/client/features/ibl/probe.ts
+- deleted: src/client/features/jukebox/index.ts
+- deleted: src/client/features/jukebox/sound.ts
+- deleted: src/client/features/jukebox/ui.css
+- deleted: src/client/features/jukebox/ui.ts
+- deleted: src/client/features/jukebox/world.ts
+- added: src/client/features/kinetic/index.ts
+- added: src/client/features/kinetic/logic.ts
+- added: src/client/features/kinetic/world.ts
+- added: src/client/features/labs/calm.ts
+- added: src/client/features/labs/index.ts
+- added: src/client/features/landed/index.ts
+- added: src/client/features/landed/text.ts
+- added: src/client/features/launch/debrief.css
+- added: src/client/features/launch/debrief.ts
+- added: src/client/features/launch/index.ts
+- added: src/client/features/launch/logic.ts
+- added: src/client/features/launch/watchlog.css
+- added: src/client/features/launch/watchlog.ts
+- added: src/client/features/life/heading.ts
+- added: src/client/features/life/index.ts
+- added: src/client/features/life/logic.ts
+- added: src/client/features/life/motes.ts
+- added: src/client/features/life/panels.ts
+- added: src/client/features/life/pulses.ts
+- added: src/client/features/life/ticker.ts
+- added: src/client/features/lights/bloom.ts
+- added: src/client/features/lights/index.ts
+- added: src/client/features/lights/modes.ts
+- added: src/client/features/lights/palette.ts
+- added: src/client/features/lights/rig.ts
+- added: src/client/features/lounge/climb.ts
+- added: src/client/features/lounge/grips.ts
+- added: src/client/features/lounge/index.ts
+- added: src/client/features/lounge/readout.ts
+- added: src/client/features/lounge/world.ts
+- added: src/client/features/mascot/anim.ts
+- added: src/client/features/mascot/deck.ts
+- added: src/client/features/mascot/hello.ts
+- added: src/client/features/mascot/index.ts
+- added: src/client/features/mascot/logic.ts
+- added: src/client/features/mascot/path.ts
+- added: src/client/features/mascot/sound.ts
+- added: src/client/features/mascot/trail.ts
+- added: src/client/features/mascot/world.ts
+- modified: src/client/features/meeting/index.ts
+- added: src/client/features/merge/index.ts
+- added: src/client/features/merge/merge.ts
+- added: src/client/features/merge/ray.ts
+- added: src/client/features/mission/index.ts
+- added: src/client/features/moments/card.css
+- added: src/client/features/moments/card.ts
+- added: src/client/features/moments/gesture.ts
+- added: src/client/features/moments/index.ts
+- added: src/client/features/moments/sweep.ts
+- added: src/client/features/monitor/face.ts
+- added: src/client/features/monitor/index.ts
+- added: src/client/features/monitor/live.ts
+- added: src/client/features/monitor/pick.ts
+- added: src/client/features/monitor/ui.css
+- added: src/client/features/monitor/ui.ts
+- added: src/client/features/monitor/visible.ts
+- added: src/client/features/monitor/world.ts
+- added: src/client/features/needsyou/index.ts
+- added: src/client/features/needsyou/logic.ts
+- added: src/client/features/needsyou/ui.css
+- added: src/client/features/needsyou/ui.ts
+- modified: src/client/features/palette/index.ts
+- modified: src/client/features/peers/index.ts
+- added: src/client/features/pods/draw.ts
+- added: src/client/features/pods/footprint.ts
+- added: src/client/features/pods/index.ts
+- added: src/client/features/pods/label.ts
+- added: src/client/features/pods/views.ts
+- added: src/client/features/pods/world.ts
+- added: src/client/features/pods/zone.ts
+- added: src/client/features/posture/index.ts
+- added: src/client/features/posture/logic.ts
+- added: src/client/features/proofcorner/index.ts
+- added: src/client/features/proofcorner/ledger.ts
+- added: src/client/features/proofcorner/world.ts
+- added: src/client/features/pulse/index.ts
+- added: src/client/features/pulse/logic.ts
+- added: src/client/features/pulse/world.ts
+- added: src/client/features/quality/cap.ts
+- added: src/client/features/quality/governor.ts
+- added: src/client/features/quality/index.ts
+- added: src/client/features/quality/menu.ts
+- added: src/client/features/quality/status.ts
+- added: src/client/features/quality/tiers.ts
+- added: src/client/features/quality/timing.ts
+- added: src/client/features/readyline/index.ts
+- added: src/client/features/readyline/ticks.ts
+- added: src/client/features/relay/fleet.ts
+- added: src/client/features/relay/geometry.ts
+- added: src/client/features/relay/guard.ts
+- added: src/client/features/relay/index.ts
+- added: src/client/features/relay/logic.ts
+- deleted: src/client/features/rooftop/index.ts
+- deleted: src/client/features/rooftop/world.ts
+- added: src/client/features/rundown/callouts.css
+- added: src/client/features/rundown/city.ts
+- added: src/client/features/rundown/index.ts
+- added: src/client/features/rundown/labels.ts
+- added: src/client/features/rundown/logic.ts
+- added: src/client/features/rundown/sound.ts
+- added: src/client/features/rundown/world.ts
+- added: src/client/features/seatframe/index.ts
+- added: src/client/features/seatframe/logic.ts
+- modified: src/client/features/seating/index.ts
+- added: src/client/features/selection/index.ts
+- added: src/client/features/selection/inspector.ts
+- added: src/client/features/selection/logic.ts
+- added: src/client/features/selection/pick.ts
+- added: src/client/features/selection/reticle.ts
+- added: src/client/features/selection/ui.css
+- added: src/client/features/signals/index.ts
+- added: src/client/features/signals/logic.ts
+- added: src/client/features/signals/world.ts
+- deleted: src/client/features/smoke/index.ts
+- added: src/client/features/sorties/index.ts
+- added: src/client/features/sorties/logic.ts
+- added: src/client/features/sorties/world.ts
+- added: src/client/features/soundscape/ambience.ts
+- added: src/client/features/soundscape/index.ts
+- added: src/client/features/soundscape/logic.ts
+- added: src/client/features/soundscape/sfx.ts
+- added: src/client/features/space/flybys.ts
+- added: src/client/features/space/glsl.ts
+- added: src/client/features/space/index.ts
+- added: src/client/features/space/jumpglow.css
+- added: src/client/features/space/jumpglow.ts
+- added: src/client/features/space/logic.ts
+- added: src/client/features/space/meteors.ts
+- added: src/client/features/space/sky.ts
+- added: src/client/features/space/stars.ts
+- added: src/client/features/space/tunnel.ts
+- added: src/client/features/spotlight/focus.ts
+- added: src/client/features/spotlight/index.ts
+- added: src/client/features/spotlight/logic.ts
+- added: src/client/features/takeconn/index.ts
+- added: src/client/features/takeconn/lights.ts
+- added: src/client/features/takeconn/logic.ts
+- deleted: src/client/features/telescope/controller.ts
+- deleted: src/client/features/telescope/index.ts
+- added: src/client/features/turnaround/index.ts
+- added: src/client/features/turnaround/ui.css
+- added: src/client/features/turnaround/world.ts
+- added: src/client/features/tv/attention.ts
+- modified: src/client/features/tv/index.ts
+- added: src/client/features/tv/plan.ts
+- added: src/client/features/tv/share.ts
+- added: src/client/features/vesper/caption.css
+- added: src/client/features/vesper/caption.ts
+- added: src/client/features/vesper/index.ts
+- added: src/client/features/vista/dust.ts
+- added: src/client/features/vista/flare.ts
+- added: src/client/features/vista/giant.ts
+- added: src/client/features/vista/index.ts
+- added: src/client/features/vista/logic.ts
+- modified: src/client/features/voice/index.ts
+- added: src/client/features/waiting/acquire.css
+- added: src/client/features/waiting/acquire.ts
+- added: src/client/features/waiting/frame.ts
+- modified: src/client/features/waiting/index.ts
+- modified: src/client/features/walking/index.ts
+- modified: src/client/features/walking/walkto.ts
+- added: src/client/features/whiteboard/face.ts
+- modified: src/client/features/whiteboard/index.ts
+- modified: src/client/features/whiteboard/ui.css
+- modified: src/client/features/whiteboard/ui.ts
+- modified: src/client/features/whiteboard/whiteboard-app.ts
+- modified: src/client/features/whiteboard/world.ts
+- modified: src/client/features/workers/actions.ts
+- added: src/client/features/workers/chips.css
+- added: src/client/features/workers/declutter.ts
+- added: src/client/features/workers/dock.ts
+- deleted: src/client/features/workers/jail.ts
+- added: src/client/features/workers/labels.ts
+- modified: src/client/features/workers/laptop.ts
+- modified: src/client/features/workers/leaving.ts
+- added: src/client/features/workers/lod.ts
+- deleted: src/client/features/workers/sendhome.ts
+- deleted: src/client/features/workers/sound.ts
+- modified: src/client/features/workers/views.ts
+- deleted: src/client/framerate.ts
+- added: src/client/home/actions.ts
+- added: src/client/home/approval-card.ts
+- added: src/client/home/approval.css
+- added: src/client/home/approval.ts
+- added: src/client/home/beat.css
+- added: src/client/home/beat.ts
+- added: src/client/home/brief/brief.css
+- added: src/client/home/brief/comments.ts
+- added: src/client/home/brief/index.ts
+- added: src/client/home/brief/store.ts
+- added: src/client/home/brief/view.ts
+- added: src/client/home/clock.ts
+- added: src/client/home/coach.css
+- added: src/client/home/coach.ts
+- added: src/client/home/deck-link.ts
+- added: src/client/home/demo.css
+- added: src/client/home/demo.ts
+- added: src/client/home/deploy.ts
+- added: src/client/home/empty.css
+- added: src/client/home/empty.ts
+- added: src/client/home/home.css
+- added: src/client/home/index.ts
+- added: src/client/home/keys.ts
+- added: src/client/home/kip-moments.css
+- added: src/client/home/kip-moments.ts
+- added: src/client/home/lazy.ts
+- added: src/client/home/list.ts
+- added: src/client/home/menu.ts
+- added: src/client/home/merge-hold.ts
+- added: src/client/home/motion.css
+- added: src/client/home/motion.ts
+- added: src/client/home/numbers.css
+- added: src/client/home/numbers.ts
+- added: src/client/home/owner.css
+- added: src/client/home/owner.ts
+- added: src/client/home/palette-match.ts
+- added: src/client/home/palette.ts
+- added: src/client/home/pane.ts
+- added: src/client/home/phone.css
+- added: src/client/home/phone.ts
+- added: src/client/home/preview.css
+- added: src/client/home/preview.ts
+- added: src/client/home/proposal-window.css
+- added: src/client/home/proposal-window.ts
+- added: src/client/home/proposals.css
+- added: src/client/home/proposals.ts
+- added: src/client/home/pulse.css
+- added: src/client/home/pulse.ts
+- added: src/client/home/question.css
+- added: src/client/home/question.ts
+- added: src/client/home/route.ts
+- added: src/client/home/settings.ts
+- added: src/client/home/setup.css
+- added: src/client/home/setup.ts
+- added: src/client/home/shipped.ts
+- added: src/client/home/signal.css
+- added: src/client/home/signal.ts
+- added: src/client/home/spend-control.ts
+- added: src/client/home/spend-slot.ts
+- added: src/client/home/spend.css
+- added: src/client/home/spend.ts
+- added: src/client/home/starter.css
+- added: src/client/home/starter.ts
+- added: src/client/home/state.ts
+- added: src/client/home/warm.css
+- added: src/client/home/warm.ts
+- modified: src/client/index.html
+- modified: src/client/input/focus.ts
+- modified: src/client/input/keyboard.ts
+- modified: src/client/input/pointer.ts
+- modified: src/client/interaction.ts
+- modified: src/client/join.html
+- modified: src/client/join.ts
+- deleted: src/client/lab/dog.html
+- deleted: src/client/lab/dog.ts
+- deleted: src/client/lab/props.html
+- deleted: src/client/lab/props.ts
+- deleted: src/client/lab/shot.mjs
+- deleted: src/client/lab/stage.ts
+- added: src/client/lighting.ts
+- added: src/client/lite-plot.ts
+- added: src/client/lite-theme.ts
+- modified: src/client/lite.css
+- deleted: src/client/lite.html
+- modified: src/client/lite.ts
+- modified: src/client/login.css
+- modified: src/client/login.html
+- modified: src/client/login.ts
+- modified: src/client/main.ts
+- deleted: src/client/models/desk_props.glb
+- deleted: src/client/models/dog-corgi.glb
+- deleted: src/client/models/dog-dachshund.glb
+- deleted: src/client/models/dog-pug.glb
+- deleted: src/client/models/dog-pup.glb
+- deleted: src/client/models/dog-shiba.glb
+- deleted: src/client/models/kitchen.glb
+- deleted: src/client/models/lounge.glb
+- deleted: src/client/models/plants.glb
+- added: src/client/motion.ts
+- modified: src/client/net.ts
+- modified: src/client/nextup.ts
+- modified: src/client/notify.ts
+- added: src/client/pair-redeem.ts
+- modified: src/client/player/camera.ts
+- modified: src/client/player/collide.ts
+- deleted: src/client/player/effects.ts
+- modified: src/client/player/index.ts
+- modified: src/client/player/pointer.ts
+- added: src/client/proof-ready.ts
+- added: src/client/public/apple-touch-icon.png
+- modified: src/client/public/favicon.svg
+- added: src/client/public/icon-192.png
+- added: src/client/public/icon-512.png
+- added: src/client/public/manifest.webmanifest
+- added: src/client/public/sw.js
+- added: src/client/pwa/app.ts
+- added: src/client/pwa/ask.ts
+- added: src/client/pwa/handled.ts
+- added: src/client/pwa/index.ts
+- added: src/client/pwa/presence.ts
+- added: src/client/pwa/push.ts
+- added: src/client/pwa/sw.ts
+- added: src/client/shared/crew.ts
+- modified: src/client/shared/hiring.ts
+- added: src/client/shared/plot.css
+- added: src/client/shared/plot.ts
+- added: src/client/shared/storage-key.ts
+- modified: src/client/shared/title.ts
+- added: src/client/showcase/board.ts
+- added: src/client/showcase/deck.webp
+- added: src/client/showcase/favicon.svg
+- added: src/client/showcase/format.ts
+- added: src/client/showcase/index.html
+- added: src/client/showcase/ledger.ts
+- added: src/client/showcase/main.ts
+- added: src/client/showcase/showcase.css
+- added: src/client/showcase/verify.ts
+- added: src/client/signin-art.ts
+- modified: src/client/sound/alerts.ts
+- deleted: src/client/sound/ambience.ts
+- deleted: src/client/sound/buffers.ts
+- modified: src/client/sound/core.ts
+- modified: src/client/sound/dsp.ts
+- modified: src/client/sound/index.ts
+- added: src/client/sound/jump.ts
+- added: src/client/sound/mix.ts
+- deleted: src/client/sound/music.ts
+- deleted: src/client/sound/places.ts
+- deleted: src/client/sound/steps.ts
+- deleted: src/client/sound/typing.ts
+- added: src/client/sound/ui.ts
+- deleted: src/client/sound/weather.ts
+- modified: src/client/state/index.ts
+- modified: src/client/state/persist.ts
+- added: src/client/state/slices/approvals.ts
+- deleted: src/client/state/slices/ball.ts
+- added: src/client/state/slices/bounties.ts
+- deleted: src/client/state/slices/cabinet.ts
+- deleted: src/client/state/slices/cars.ts
+- deleted: src/client/state/slices/decor.ts
+- deleted: src/client/state/slices/dog.ts
+- added: src/client/state/slices/gate.ts
+- modified: src/client/state/slices/index.ts
+- deleted: src/client/state/slices/jail.ts
+- deleted: src/client/state/slices/jukebox.ts
+- added: src/client/state/slices/labs.ts
+- modified: src/client/state/slices/leave-on-merge.ts
+- deleted: src/client/state/slices/map.ts
+- added: src/client/state/slices/mission.ts
+- added: src/client/state/slices/pace.ts
+- modified: src/client/state/slices/prompts.ts
+- added: src/client/state/slices/reputation.ts
+- added: src/client/state/slices/rundown.ts
+- added: src/client/state/slices/showcase.ts
+- added: src/client/state/slices/signal.ts
+- deleted: src/client/state/slices/sky.ts
+- added: src/client/state/slices/spend.ts
+- deleted: src/client/state/slices/theme.ts
+- added: src/client/state/slices/timeline.ts
+- modified: src/client/state/store.ts
+- modified: src/client/styles/base.css
+- added: src/client/styles/fonts/OFL-Archivo.txt
+- added: src/client/styles/fonts/OFL-JetBrainsMono.txt
+- added: src/client/styles/fonts/archivo-latin-ext.woff2
+- added: src/client/styles/fonts/archivo-latin.woff2
+- added: src/client/styles/fonts/jetbrains-mono-latin.woff2
+- modified: src/client/styles/hud.css
+- added: src/client/styles/kip.css
+- modified: src/client/styles/loading.css
+- added: src/client/styles/tokens.css
+- modified: src/client/ui/accounts.css
+- modified: src/client/ui/accounts.ts
+- added: src/client/ui/agentbadge.ts
+- modified: src/client/ui/ask.css
+- modified: src/client/ui/ask.ts
+- modified: src/client/ui/boards.css
+- modified: src/client/ui/boards.ts
+- added: src/client/ui/bounty-settings.ts
+- added: src/client/ui/bounty.css
+- added: src/client/ui/bounty.ts
+- added: src/client/ui/brand.ts
+- added: src/client/ui/bridge-settings.ts
+- modified: src/client/ui/changes.css
+- modified: src/client/ui/changes.ts
+- modified: src/client/ui/character.css
+- modified: src/client/ui/character.ts
+- modified: src/client/ui/chat.ts
+- modified: src/client/ui/compass.css
+- modified: src/client/ui/compass.ts
+- added: src/client/ui/counters.css
+- added: src/client/ui/counters.ts
+- added: src/client/ui/devices.ts
+- added: src/client/ui/dictate.css
+- added: src/client/ui/dictate.ts
+- modified: src/client/ui/dom.ts
+- modified: src/client/ui/elevator.css
+- modified: src/client/ui/elevator.ts
+- modified: src/client/ui/floormenu.css
+- modified: src/client/ui/floormenu.ts
+- modified: src/client/ui/floorplan.css
+- modified: src/client/ui/floorplan.ts
+- added: src/client/ui/gate-settings.css
+- added: src/client/ui/gate-settings.ts
+- modified: src/client/ui/github/close.ts
+- modified: src/client/ui/github/comment-box.ts
+- modified: src/client/ui/github/issue-window.ts
+- modified: src/client/ui/github/labels.ts
+- modified: src/client/ui/github/merge.ts
+- modified: src/client/ui/github/pieces.ts
+- added: src/client/ui/github/progress.ts
+- modified: src/client/ui/github/prompts.ts
+- modified: src/client/ui/github/pull-window.ts
+- modified: src/client/ui/github/pulldiff.css
+- modified: src/client/ui/github/pulldiff.ts
+- modified: src/client/ui/github/windows.css
+- added: src/client/ui/hands-settings.ts
+- modified: src/client/ui/help.ts
+- modified: src/client/ui/hud.css
+- modified: src/client/ui/hud.ts
+- added: src/client/ui/icons.ts
+- added: src/client/ui/labs.css
+- added: src/client/ui/labs.ts
+- added: src/client/ui/life-settings.css
+- added: src/client/ui/life-settings.ts
+- deleted: src/client/ui/litesuggest.css
+- deleted: src/client/ui/litesuggest.ts
+- modified: src/client/ui/loading.ts
+- modified: src/client/ui/markdown.css
+- modified: src/client/ui/markdown.ts
+- modified: src/client/ui/meeting.css
+- modified: src/client/ui/meeting.ts
+- modified: src/client/ui/menu.css
+- modified: src/client/ui/menu.ts
+- added: src/client/ui/mission/act.ts
+- added: src/client/ui/mission/attention.ts
+- added: src/client/ui/mission/crew.css
+- added: src/client/ui/mission/crew.ts
+- added: src/client/ui/mission/crewnow.ts
+- added: src/client/ui/mission/digest.ts
+- added: src/client/ui/mission/dock.ts
+- added: src/client/ui/mission/goalpick.ts
+- added: src/client/ui/mission/goals.ts
+- added: src/client/ui/mission/index.ts
+- added: src/client/ui/mission/locate.ts
+- added: src/client/ui/mission/logbook.ts
+- added: src/client/ui/mission/mission.css
+- added: src/client/ui/mission/reminders.ts
+- added: src/client/ui/mission/rep.ts
+- added: src/client/ui/mission/review.ts
+- added: src/client/ui/mission/rows.ts
+- added: src/client/ui/mission/strip.ts
+- added: src/client/ui/mission/timeline.ts
+- added: src/client/ui/mission/watch.ts
+- added: src/client/ui/moments-settings.ts
+- added: src/client/ui/paid-task.ts
+- added: src/client/ui/pair.css
+- added: src/client/ui/pair.ts
+- modified: src/client/ui/palette.css
+- modified: src/client/ui/palette.ts
+- modified: src/client/ui/people.ts
+- modified: src/client/ui/prompt.css
+- modified: src/client/ui/prompt.ts
+- modified: src/client/ui/prompts.css
+- modified: src/client/ui/prompts.ts
+- modified: src/client/ui/provider.css
+- modified: src/client/ui/provider.ts
+- modified: src/client/ui/pull.ts
+- added: src/client/ui/push-settings.css
+- added: src/client/ui/push-settings.ts
+- added: src/client/ui/quality-settings.css
+- added: src/client/ui/quality-settings.ts
+- modified: src/client/ui/queue.css
+- modified: src/client/ui/queue.ts
+- modified: src/client/ui/repos.css
+- modified: src/client/ui/repos.ts
+- added: src/client/ui/rituals-settings.ts
+- added: src/client/ui/rundown/branches.ts
+- added: src/client/ui/rundown/glyph.ts
+- added: src/client/ui/rundown/heatmap.ts
+- added: src/client/ui/rundown/index.ts
+- added: src/client/ui/rundown/sections.ts
+- added: src/client/ui/rundown/svg.ts
+- added: src/client/ui/rundown/treemap.ts
+- added: src/client/ui/rundown/ui.css
+- modified: src/client/ui/search.css
+- modified: src/client/ui/search.ts
+- added: src/client/ui/sendhome.ts
+- modified: src/client/ui/services.css
+- modified: src/client/ui/services.ts
+- added: src/client/ui/settings-core.ts
+- added: src/client/ui/settings-frame.ts
+- added: src/client/ui/settings-rows.ts
+- added: src/client/ui/settings-spend.css
+- added: src/client/ui/settings-spend.ts
+- modified: src/client/ui/settings.css
+- modified: src/client/ui/settings.ts
+- added: src/client/ui/showcase-settings.ts
+- added: src/client/ui/signal/index.ts
+- added: src/client/ui/signal/ui.css
+- modified: src/client/ui/signins.css
+- modified: src/client/ui/signins.ts
+- added: src/client/ui/sound-settings.css
+- added: src/client/ui/sound-settings.ts
+- added: src/client/ui/speech.ts
+- modified: src/client/ui/team.css
+- modified: src/client/ui/team.ts
+- added: src/client/ui/term-meta.css
+- added: src/client/ui/term-meta.ts
+- modified: src/client/ui/terminal.css
+- modified: src/client/ui/terminal.ts
+- modified: src/client/ui/termtabs.css
+- modified: src/client/ui/termtabs.ts
+- modified: src/client/ui/termtheme.ts
+- added: src/client/ui/units-rail.css
+- added: src/client/ui/unitsign.ts
+- modified: src/client/ui/upgrade.css
+- modified: src/client/ui/upgrade.ts
+- modified: src/client/ui/usage.ts
+- added: src/client/ui/waitclock.css
+- added: src/client/ui/waitclock.ts
+- added: src/client/ui/waitink.ts
+- added: src/client/ui/wallet.ts
+- modified: src/client/ui/whereabouts.ts
+- modified: src/client/ui/workers-panel.ts
+- modified: src/client/voice.ts
+- deleted: src/client/world/castle/boards.ts
+- deleted: src/client/world/castle/fire.ts
+- deleted: src/client/world/castle/index.ts
+- deleted: src/client/world/castle/kit.ts
+- deleted: src/client/world/castle/people.ts
+- deleted: src/client/world/castle/props.ts
+- deleted: src/client/world/castle/seats.ts
+- deleted: src/client/world/castle/shapes.ts
+- deleted: src/client/world/castle/shell.ts
+- deleted: src/client/world/castle/textures.ts
+- deleted: src/client/world/castle/throne.ts
+- added: src/client/world/character/callout-dock.ts
+- added: src/client/world/character/callout-view.ts
+- modified: src/client/world/character/curves.ts
+- modified: src/client/world/character/index.ts
+- deleted: src/client/world/character/person-emote.ts
+- deleted: src/client/world/character/person-golf.ts
+- deleted: src/client/world/character/person-hair.ts
+- added: src/client/world/character/person-head.ts
+- deleted: src/client/world/character/person-throw.ts
+- modified: src/client/world/character/person.ts
+- deleted: src/client/world/character/props.ts
+- modified: src/client/world/character/rig.ts
+- added: src/client/world/character/unit-body.ts
+- added: src/client/world/character/unit-callout.ts
+- added: src/client/world/character/unit-marks.ts
+- added: src/client/world/character/unit-paint.ts
+- deleted: src/client/world/character/worker-badges.ts
+- deleted: src/client/world/character/worker-dance.ts
+- deleted: src/client/world/character/worker-dress.ts
+- deleted: src/client/world/character/worker-jail.ts
+- deleted: src/client/world/character/worker-leave.ts
+- deleted: src/client/world/character/worker-props.ts
+- deleted: src/client/world/character/worker-stance.ts
+- modified: src/client/world/character/worker.ts
+- deleted: src/client/world/city.ts
+- deleted: src/client/world/confetti.ts
+- deleted: src/client/world/costumes.ts
+- deleted: src/client/world/court.ts
+- modified: src/client/world/desksigns.ts
+- deleted: src/client/world/dungeon.ts
+- modified: src/client/world/elevator.ts
+- added: src/client/world/glyphs.ts
+- deleted: src/client/world/hands.ts
+- deleted: src/client/world/holiday.ts
+- deleted: src/client/world/kitchen.ts
+- modified: src/client/world/models.ts
+- deleted: src/client/world/office/balcony.ts
+- modified: src/client/world/office/build.ts
+- modified: src/client/world/office/fixture.ts
+- added: src/client/world/office/floor.ts
+- added: src/client/world/office/floorpaint.ts
+- added: src/client/world/office/greebles.ts
+- deleted: src/client/world/office/ground.ts
+- modified: src/client/world/office/index.ts
+- deleted: src/client/world/office/loft.ts
+- modified: src/client/world/office/materials.ts
+- modified: src/client/world/office/meeting-room.ts
+- modified: src/client/world/office/props.ts
+- modified: src/client/world/office/room.ts
+- modified: src/client/world/office/seats.ts
+- modified: src/client/world/office/shell.ts
+- added: src/client/world/office/table.ts
+- added: src/client/world/office/trim.ts
+- modified: src/client/world/office/wing.ts
+- deleted: src/client/world/outside.ts
+- deleted: src/client/world/scenic/coast.ts
+- deleted: src/client/world/scenic/farm.ts
+- deleted: src/client/world/scenic/flora.ts
+- deleted: src/client/world/scenic/index.ts
+- deleted: src/client/world/scenic/kit.ts
+- deleted: src/client/world/scenic/mountains.ts
+- deleted: src/client/world/scenic/road.ts
+- deleted: src/client/world/scenic/trees.ts
+- deleted: src/client/world/scenic/tunnel.ts
+- deleted: src/client/world/scenic/water.ts
+- added: src/client/world/sharp.ts
+- deleted: src/client/world/sky.ts
+- deleted: src/client/world/smoke.ts
+- modified: src/client/world/stack.ts
+- deleted: src/client/world/styles.ts
+- deleted: src/client/world/texture.ts
+- modified: src/client/world/toon.ts
+- deleted: src/client/world/tower.ts
+- modified: src/client/world/types.ts
+- modified: src/client/world/world.ts
+- modified: src/server/accounts.ts
+- added: src/server/adopt.ts
+- modified: src/server/agents.ts
+- added: src/server/approvals.ts
+- added: src/server/attach.ts
+- modified: src/server/auth.ts
+- added: src/server/bounties.ts
+- added: src/server/brandenv.ts
+- added: src/server/brief/build.ts
+- added: src/server/brief/log.ts
+- added: src/server/browser.ts
+- modified: src/server/building.ts
+- deleted: src/server/cabinet.ts
+- added: src/server/chain/attest.ts
+- added: src/server/chain/flags.ts
+- added: src/server/chain/funding.ts
+- added: src/server/chain/identities.ts
+- added: src/server/chain/merge-proof.ts
+- added: src/server/chain/outbox.ts
+- added: src/server/chain/pseudonym.ts
+- added: src/server/chain/rep-index.ts
+- added: src/server/chain/reputation.ts
+- added: src/server/chain/sdk.ts
+- added: src/server/chain/settings.ts
+- added: src/server/chain/store.ts
+- modified: src/server/changes.ts
+- added: src/server/checkouts.ts
+- modified: src/server/cli.ts
+- modified: src/server/clone.ts
+- modified: src/server/codex.ts
+- added: src/server/commands.ts
+- modified: src/server/config.ts
+- deleted: src/server/court.ts
+- added: src/server/csp.ts
+- added: src/server/cursor.ts
+- deleted: src/server/decor.ts
+- added: src/server/demo/director.ts
+- added: src/server/demo/index.ts
+- added: src/server/demo/readonly.ts
+- added: src/server/demo/script.ts
+- added: src/server/demo/standin.ts
+- added: src/server/demo/workspace.ts
+- added: src/server/devices.ts
+- modified: src/server/docs.ts
+- deleted: src/server/dog.ts
+- modified: src/server/drops.ts
+- modified: src/server/dsh.ts
+- added: src/server/firstrun.ts
+- modified: src/server/floor.ts
+- modified: src/server/floorplan.ts
+- deleted: src/server/garage.ts
+- added: src/server/gate/actions.ts
+- added: src/server/gate/flow.ts
+- added: src/server/gate/store.ts
+- modified: src/server/github.ts
+- modified: src/server/grok.ts
+- modified: src/server/history.ts
+- modified: src/server/hooks/office-queue.ts
+- modified: src/server/hooks/office-workers.ts
+- modified: src/server/hooks/server.ts
+- added: src/server/hosts.ts
+- modified: src/server/http/router.ts
+- added: src/server/http/routes/actions.ts
+- modified: src/server/http/routes/agents.ts
+- modified: src/server/http/routes/auth.ts
+- added: src/server/http/routes/demo.ts
+- added: src/server/http/routes/devices.ts
+- modified: src/server/http/routes/files.ts
+- modified: src/server/http/routes/github.ts
+- modified: src/server/http/routes/index.ts
+- added: src/server/http/routes/local.ts
+- modified: src/server/http/routes/pages.ts
+- added: src/server/http/routes/push.ts
+- added: src/server/http/routes/reputation.ts
+- added: src/server/http/routes/rundown.ts
+- added: src/server/http/routes/services.ts
+- added: src/server/http/routes/showcase.ts
+- added: src/server/http/routes/x402.ts
+- modified: src/server/http/static.ts
+- modified: src/server/http/util.ts
+- added: src/server/image.ts
+- deleted: src/server/jail.ts
+- deleted: src/server/jukebox.ts
+- added: src/server/labs.ts
+- modified: src/server/leave-on-merge.ts
+- added: src/server/livesessions.ts
+- added: src/server/local.ts
+- added: src/server/localmerge.ts
+- modified: src/server/machine.ts
+- deleted: src/server/maps.ts
+- added: src/server/meeting-files.ts
+- modified: src/server/meetings.ts
+- added: src/server/mission.ts
+- modified: src/server/models.ts
+- modified: src/server/muse.ts
+- added: src/server/netguard.ts
+- modified: src/server/office-workers.ts
+- added: src/server/office/chain.ts
+- modified: src/server/office/client.ts
+- modified: src/server/office/context.ts
+- modified: src/server/office/core.ts
+- modified: src/server/office/floors.ts
+- modified: src/server/office/gates.ts
+- modified: src/server/office/input.ts
+- modified: src/server/office/messaging.ts
+- modified: src/server/office/navigation.ts
+- modified: src/server/office/people.ts
+- added: src/server/office/reminders.ts
+- added: src/server/office/roster.ts
+- modified: src/server/office/services.ts
+- modified: src/server/office/timers.ts
+- modified: src/server/office/views.ts
+- added: src/server/opencmd.ts
+- modified: src/server/opencode.ts
+- added: src/server/pace.ts
+- added: src/server/phone.ts
+- modified: src/server/pi.ts
+- added: src/server/port.ts
+- modified: src/server/prompts.ts
+- modified: src/server/providers/claude.ts
+- modified: src/server/providers/codex.ts
+- added: src/server/providers/cursor.ts
+- modified: src/server/providers/index.ts
+- modified: src/server/providers/opencode.ts
+- modified: src/server/providers/types.ts
+- modified: src/server/prune.ts
+- modified: src/server/ptys.ts
+- added: src/server/push/alerts.ts
+- added: src/server/push/crypto.ts
+- added: src/server/push/devices.ts
+- added: src/server/push/index.ts
+- added: src/server/push/presence.ts
+- modified: src/server/queue.ts
+- modified: src/server/relay.ts
+- added: src/server/review.ts
+- added: src/server/roster.ts
+- added: src/server/runcmd.ts
+- added: src/server/rundown/bin.ts
+- added: src/server/rundown/cli.ts
+- added: src/server/rundown/collect.ts
+- added: src/server/rundown/command.ts
+- added: src/server/rundown/files.ts
+- added: src/server/rundown/first.ts
+- added: src/server/rundown/git.ts
+- added: src/server/rundown/project.ts
+- added: src/server/rundown/service.ts
+- added: src/server/safefs.ts
+- modified: src/server/server.ts
+- modified: src/server/services.ts
+- modified: src/server/setup.ts
+- added: src/server/shiplog.ts
+- added: src/server/showcase/off.ts
+- added: src/server/showcase/og.ts
+- added: src/server/showcase/service.ts
+- added: src/server/showcase/settings.ts
+- added: src/server/signal/gist.ts
+- added: src/server/signal/push.ts
+- modified: src/server/signins.ts
+- deleted: src/server/sky.ts
+- added: src/server/spend/launch.ts
+- added: src/server/spend/office.ts
+- added: src/server/spend/service.ts
+- added: src/server/starters.ts
+- added: src/server/startup.ts
+- modified: src/server/stations.ts
+- modified: src/server/tailnet.ts
+- modified: src/server/tasks.ts
+- modified: src/server/team.ts
+- added: src/server/telemetry.ts
+- deleted: src/server/theme.ts
+- added: src/server/timeline.ts
+- added: src/server/tunnel/forwarder.ts
+- added: src/server/tunnel/index.ts
+- added: src/server/tunnel/office.ts
+- added: src/server/tunnel/session.ts
+- added: src/server/tunnel/ssh.ts
+- added: src/server/tunnel/wire.ts
+- modified: src/server/upgrade.ts
+- modified: src/server/usage.ts
+- modified: src/server/webhook.ts
+- modified: src/server/whiteboard.ts
+- added: src/server/worker-env.ts
+- modified: src/server/workers/acp.ts
+- added: src/server/workers/asked.ts
+- modified: src/server/workers/clock.ts
+- modified: src/server/workers/env.ts
+- added: src/server/workers/handle.ts
+- modified: src/server/workers/lifecycle.ts
+- modified: src/server/workers/manager.ts
+- modified: src/server/workers/persist.ts
+- modified: src/server/workers/pr.ts
+- modified: src/server/workers/process.ts
+- added: src/server/workers/says.ts
+- modified: src/server/workers/tasks.ts
+- modified: src/server/workers/terminal.ts
+- modified: src/server/workers/types.ts
+- modified: src/server/workers/util.ts
+- modified: src/server/workers/worker.ts
+- modified: src/server/workers/worktree.ts
+- modified: src/server/worktrees.ts
+- modified: src/server/ws/connection.ts
+- modified: src/server/ws/dispatch.ts
+- modified: src/server/ws/handlers/accounts.ts
+- added: src/server/ws/handlers/approvals.ts
+- deleted: src/server/ws/handlers/ball.ts
+- added: src/server/ws/handlers/bounties.ts
+- added: src/server/ws/handlers/brief.ts
+- deleted: src/server/ws/handlers/cabinet.ts
+- deleted: src/server/ws/handlers/car.ts
+- modified: src/server/ws/handlers/changes.ts
+- modified: src/server/ws/handlers/common.ts
+- deleted: src/server/ws/handlers/decor.ts
+- deleted: src/server/ws/handlers/dog.ts
+- modified: src/server/ws/handlers/floors.ts
+- added: src/server/ws/handlers/gate.ts
+- modified: src/server/ws/handlers/github.ts
+- added: src/server/ws/handlers/inbox.ts
+- modified: src/server/ws/handlers/index.ts
+- deleted: src/server/ws/handlers/jukebox.ts
+- added: src/server/ws/handlers/labs.ts
+- modified: src/server/ws/handlers/meetings.ts
+- added: src/server/ws/handlers/mission.ts
+- added: src/server/ws/handlers/pace.ts
+- modified: src/server/ws/handlers/plan.ts
+- modified: src/server/ws/handlers/presence.ts
+- added: src/server/ws/handlers/push.ts
+- modified: src/server/ws/handlers/queue.ts
+- added: src/server/ws/handlers/reputation.ts
+- deleted: src/server/ws/handlers/rooftop.ts
+- added: src/server/ws/handlers/rundown.ts
+- modified: src/server/ws/handlers/settings.ts
+- added: src/server/ws/handlers/setup.ts
+- added: src/server/ws/handlers/showcase.ts
+- added: src/server/ws/handlers/signal.ts
+- added: src/server/ws/handlers/spend.ts
+- added: src/server/ws/handlers/timeline.ts
+- modified: src/server/ws/handlers/types.ts
+- modified: src/server/ws/handlers/whiteboard.ts
+- modified: src/server/ws/handlers/workers.ts
+- added: src/server/ws/labgate.ts
+- modified: src/server/ws/upgrade.ts
+- added: src/server/x402/facilitator.ts
+- added: src/server/x402/gateway.ts
+- added: src/server/x402/protocol.ts
+- modified: src/shared/actions.ts
+- added: src/shared/agentname.ts
+- added: src/shared/amphitheater.ts
+- added: src/shared/approval.ts
+- added: src/shared/attention.ts
+- added: src/shared/autonomy.ts
+- modified: src/shared/avatar.ts
+- deleted: src/shared/bargames.ts
+- added: src/shared/bounty-text.ts
+- added: src/shared/brief/comments.ts
+- added: src/shared/brief/risk.ts
+- added: src/shared/brief/transcript.ts
+- added: src/shared/brief/verdict.ts
+- deleted: src/shared/cabinet.ts
+- added: src/shared/callsign.ts
+- added: src/shared/commendations.ts
+- added: src/shared/copy.ts
+- added: src/shared/datacolors.ts
+- added: src/shared/deck.ts
+- deleted: src/shared/decor.ts
+- added: src/shared/deeplink.ts
+- added: src/shared/demo.ts
+- added: src/shared/democoach.ts
+- added: src/shared/devices.ts
+- added: src/shared/digest.ts
+- modified: src/shared/docs.ts
+- deleted: src/shared/dog.ts
+- deleted: src/shared/emotes.ts
+- added: src/shared/empty-pane.ts
+- added: src/shared/epithet.ts
+- modified: src/shared/floorplan.ts
+- modified: src/shared/floors.ts
+- deleted: src/shared/garage.ts
+- added: src/shared/gate-rules.ts
+- added: src/shared/gate.ts
+- deleted: src/shared/hoop.ts
+- added: src/shared/inbox.ts
+- deleted: src/shared/jukebox.ts
+- added: src/shared/kip-art.ts
+- added: src/shared/labs.ts
+- added: src/shared/launch.ts
+- modified: src/shared/layout.ts
+- added: src/shared/logo-path.ts
+- added: src/shared/logo.ts
+- added: src/shared/lounge.ts
+- modified: src/shared/machine.ts
+- deleted: src/shared/maps/castle.ts
+- deleted: src/shared/maps/check.ts
+- deleted: src/shared/maps/dungeon.ts
+- deleted: src/shared/maps/index.ts
+- deleted: src/shared/maps/props.ts
+- deleted: src/shared/maps/types.ts
+- modified: src/shared/meetings.ts
+- added: src/shared/metrics.ts
+- added: src/shared/mission.ts
+- added: src/shared/money.ts
+- modified: src/shared/nav.ts
+- added: src/shared/pace.ts
+- added: src/shared/plan.ts
+- added: src/shared/podhue.ts
+- added: src/shared/pods.ts
+- modified: src/shared/prompts.ts
+- added: src/shared/proof-ready.ts
+- modified: src/shared/protocol.ts
+- modified: src/shared/protocol/agents.ts
+- added: src/shared/protocol/approvals.ts
+- added: src/shared/protocol/bounties.ts
+- added: src/shared/protocol/brief.ts
+- modified: src/shared/protocol/floors.ts
+- added: src/shared/protocol/gate.ts
+- modified: src/shared/protocol/github.ts
+- added: src/shared/protocol/inbox.ts
+- added: src/shared/protocol/labs.ts
+- added: src/shared/protocol/landed.ts
+- modified: src/shared/protocol/meetings.ts
+- added: src/shared/protocol/mission.ts
+- added: src/shared/protocol/pace.ts
+- modified: src/shared/protocol/presence.ts
+- added: src/shared/protocol/push.ts
+- modified: src/shared/protocol/queue.ts
+- added: src/shared/protocol/reputation.ts
+- deleted: src/shared/protocol/rooftop.ts
+- added: src/shared/protocol/rundown.ts
+- modified: src/shared/protocol/settings.ts
+- added: src/shared/protocol/setup.ts
+- added: src/shared/protocol/showcase.ts
+- added: src/shared/protocol/signal.ts
+- added: src/shared/protocol/spend.ts
+- added: src/shared/protocol/timeline.ts
+- deleted: src/shared/protocol/toys.ts
+- modified: src/shared/protocol/usage.ts
+- added: src/shared/protocol/whiteboard.ts
+- modified: src/shared/protocol/workers.ts
+- modified: src/shared/providers.ts
+- added: src/shared/pulltrust.ts
+- added: src/shared/push.ts
+- added: src/shared/qr.ts
+- added: src/shared/question.ts
+- added: src/shared/reminders.ts
+- added: src/shared/reputation.ts
+- added: src/shared/review.ts
+- added: src/shared/ritual-slots.ts
+- deleted: src/shared/rng.ts
+- deleted: src/shared/rooftop.ts
+- added: src/shared/rowtext.ts
+- added: src/shared/rundown/branches.ts
+- added: src/shared/rundown/diff.ts
+- added: src/shared/rundown/heatmap.ts
+- added: src/shared/rundown/html-assets.ts
+- added: src/shared/rundown/html-sections.ts
+- added: src/shared/rundown/html.ts
+- added: src/shared/rundown/infer.ts
+- added: src/shared/rundown/markdown.ts
+- added: src/shared/rundown/model.ts
+- added: src/shared/rundown/paths.ts
+- added: src/shared/rundown/schema.ts
+- added: src/shared/rundown/treemap.ts
+- added: src/shared/rundown/validate.ts
+- deleted: src/shared/scenic.ts
+- modified: src/shared/search.ts
+- added: src/shared/service-link.ts
+- added: src/shared/shiplog.ts
+- added: src/shared/shipvoice.ts
+- added: src/shared/showcase.ts
+- added: src/shared/signal-parts.ts
+- added: src/shared/signal.ts
+- added: src/shared/signin-next.ts
+- added: src/shared/spend.ts
+- added: src/shared/starters.ts
+- modified: src/shared/status.ts
+- deleted: src/shared/sun.ts
+- deleted: src/shared/theme.ts
+- added: src/shared/tones.ts
+- added: src/shared/turnaround.ts
+- added: src/shared/voice.ts
+- added: src/shared/wait.ts
+- added: src/shared/wall-screens.ts
+- added: src/shared/warm.ts
+- added: src/shared/webtabs.ts
+- modified: src/shared/whiteboard.ts
+
+On-chain packages (onchain/):
+
+- added: onchain/action/.gitignore
+- added: onchain/action/README.md
+- added: onchain/action/action.yml
+- added: onchain/action/dist/ao-bounty.mjs
+- added: onchain/action/dist/index.mjs
+- added: onchain/action/examples/bounty-gated.yml
+- added: onchain/action/examples/bounty-wallets.json
+- added: onchain/action/examples/bounty.yml
+- added: onchain/action/package-lock.json
+- added: onchain/action/package.json
+- added: onchain/action/scripts/build.mjs
+- added: onchain/action/src/attest.ts
+- added: onchain/action/src/facts.ts
+- added: onchain/action/src/github.ts
+- added: onchain/action/src/inputs.ts
+- added: onchain/action/src/main.ts
+- added: onchain/action/src/report.ts
+- added: onchain/action/src/run.ts
+- added: onchain/action/test/dist.test.ts
+- added: onchain/action/test/e2e/validator.test.ts
+- added: onchain/action/test/facts.test.ts
+- added: onchain/action/test/github.test.ts
+- added: onchain/action/test/inputs.test.ts
+- added: onchain/action/test/main.test.ts
+- added: onchain/action/test/run.test.ts
+- added: onchain/action/test/support.ts
+- added: onchain/action/tsconfig.json
+- added: onchain/attest/.gitignore
+- added: onchain/attest/.npmrc
+- added: onchain/attest/README.md
+- added: onchain/attest/contracts/MergeAttestor.sol
+- added: onchain/attest/deployments/base-sepolia.json
+- added: onchain/attest/deployments/localnet.json
+- added: onchain/attest/foundry.toml
+- added: onchain/attest/package-lock.json
+- added: onchain/attest/package.json
+- added: onchain/attest/scripts/deploy-fallback.ts
+- added: onchain/attest/scripts/deploy-local.ts
+- added: onchain/attest/scripts/deploy-sepolia.sh
+- added: onchain/attest/scripts/leaderboard.ts
+- added: onchain/attest/scripts/lib.ts
+- added: onchain/attest/scripts/register-schema.ts
+- added: onchain/attest/scripts/smoke.ts
+- added: onchain/attest/src/abi.ts
+- added: onchain/attest/src/attestor.ts
+- added: onchain/attest/src/chain.ts
+- added: onchain/attest/src/index.ts
+- added: onchain/attest/src/keyfile.ts
+- added: onchain/attest/src/read.ts
+- added: onchain/attest/src/schema.ts
+- added: onchain/attest/test/anvil.test.ts
+- added: onchain/attest/test/forge/MergeAttestor.t.sol
+- added: onchain/attest/test/office.test.ts
+- added: onchain/attest/test/retry.test.ts
+- added: onchain/attest/test/schema.test.ts
+- added: onchain/attest/test/support/anvil.ts
+- added: onchain/attest/tsconfig.build.json
+- added: onchain/attest/tsconfig.json
+- added: onchain/indexer/.gitignore
+- added: onchain/indexer/.npmrc
+- added: onchain/indexer/README.md
+- added: onchain/indexer/package-lock.json
+- added: onchain/indexer/package.json
+- added: onchain/indexer/scripts/index.ts
+- added: onchain/indexer/scripts/mcp.ts
+- added: onchain/indexer/scripts/scenario.ts
+- added: onchain/indexer/scripts/showcase.ts
+- added: onchain/indexer/src/indexer.ts
+- added: onchain/indexer/src/mcp.ts
+- added: onchain/indexer/src/showcase.ts
+- added: onchain/indexer/src/solana.ts
+- added: onchain/indexer/src/tape.ts
+- added: onchain/indexer/test/fixtures/dataset.json
+- added: onchain/indexer/test/fixtures/leaderboard.json
+- added: onchain/indexer/test/fixtures/scenario.json
+- added: onchain/indexer/test/fixtures/tape.json
+- added: onchain/indexer/test/mcp.test.ts
+- added: onchain/indexer/test/office-e2e.test.ts
+- added: onchain/indexer/test/replay.test.ts
+- added: onchain/indexer/test/rpc-limits.test.ts
+- added: onchain/indexer/test/showcase.test.ts
+- added: onchain/indexer/tsconfig.json
+- added: onchain/reputation/.gitignore
+- added: onchain/reputation/.npmrc
+- added: onchain/reputation/README.md
+- added: onchain/reputation/contracts/AgentRegistry.sol
+- added: onchain/reputation/contracts/ReputationLog.sol
+- added: onchain/reputation/deployments/base-sepolia.json
+- added: onchain/reputation/deployments/localnet.json
+- added: onchain/reputation/foundry.toml
+- added: onchain/reputation/package-lock.json
+- added: onchain/reputation/package.json
+- added: onchain/reputation/scripts/check-sepolia.ts
+- added: onchain/reputation/scripts/deploy-local.ts
+- added: onchain/reputation/scripts/fork-check.ts
+- added: onchain/reputation/scripts/lib.ts
+- added: onchain/reputation/scripts/new-key.ts
+- added: onchain/reputation/src/abi.ts
+- added: onchain/reputation/src/chain.ts
+- added: onchain/reputation/src/index.ts
+- added: onchain/reputation/src/keyfile.ts
+- added: onchain/reputation/src/read.ts
+- added: onchain/reputation/src/registry.ts
+- added: onchain/reputation/test/anvil.test.ts
+- added: onchain/reputation/test/forge/Reputation.t.sol
+- added: onchain/reputation/test/support/anvil.ts
+- added: onchain/reputation/tsconfig.build.json
+- added: onchain/reputation/tsconfig.json
+- added: onchain/solana/.gitignore
+- added: onchain/solana/Cargo.lock
+- added: onchain/solana/Cargo.toml
+- added: onchain/solana/PITCH.md
+- added: onchain/solana/README.md
+- added: onchain/solana/deployments/devnet.json
+- added: onchain/solana/deployments/localnet.json
+- added: onchain/solana/fixtures/transitions.json
+- added: onchain/solana/fixtures/vectors.json
+- added: onchain/solana/package-lock.json
+- added: onchain/solana/package.json
+- added: onchain/solana/programs/bounty-escrow-core/Cargo.toml
+- added: onchain/solana/programs/bounty-escrow-core/src/bytes.rs
+- added: onchain/solana/programs/bounty-escrow-core/src/error.rs
+- added: onchain/solana/programs/bounty-escrow-core/src/event.rs
+- added: onchain/solana/programs/bounty-escrow-core/src/instruction.rs
+- added: onchain/solana/programs/bounty-escrow-core/src/lib.rs
+- added: onchain/solana/programs/bounty-escrow-core/src/machine.rs
+- added: onchain/solana/programs/bounty-escrow-core/src/state.rs
+- added: onchain/solana/programs/bounty-escrow-core/tests/fixtures.rs
+- added: onchain/solana/programs/bounty-escrow-core/tests/layout.rs
+- added: onchain/solana/programs/bounty-escrow/Cargo.toml
+- added: onchain/solana/programs/bounty-escrow/src/cpi.rs
+- added: onchain/solana/programs/bounty-escrow/src/lib.rs
+- added: onchain/solana/programs/bounty-escrow/src/processor.rs
+- added: onchain/solana/programs/bounty-escrow/tests/harness/mod.rs
+- added: onchain/solana/programs/bounty-escrow/tests/program.rs
+- added: onchain/solana/programs/bounty-escrow/tests/vectors.rs
+- added: onchain/solana/rustfmt.toml
+- added: onchain/solana/scripts/e2e.sh
+- added: onchain/solana/sdk/src/actions.ts
+- added: onchain/solana/sdk/src/attester.ts
+- added: onchain/solana/sdk/src/base58.ts
+- added: onchain/solana/sdk/src/builders.ts
+- added: onchain/solana/sdk/src/cli.ts
+- added: onchain/solana/sdk/src/cosign.ts
+- added: onchain/solana/sdk/src/index.ts
+- added: onchain/solana/sdk/src/keys.ts
+- added: onchain/solana/sdk/src/layout.ts
+- added: onchain/solana/sdk/src/machine.ts
+- added: onchain/solana/sdk/src/mock.ts
+- added: onchain/solana/sdk/src/nonce.ts
+- added: onchain/solana/sdk/src/rpc.ts
+- added: onchain/solana/sdk/src/solana.ts
+- added: onchain/solana/sdk/src/tx.ts
+- added: onchain/solana/sdk/src/types.ts
+- added: onchain/solana/sdk/tests/actions.test.ts
+- added: onchain/solana/sdk/tests/attester.test.ts
+- added: onchain/solana/sdk/tests/cli.test.ts
+- added: onchain/solana/sdk/tests/cosign.test.ts
+- added: onchain/solana/sdk/tests/fixtures.test.ts
+- added: onchain/solana/sdk/tests/keys.test.ts
+- added: onchain/solana/sdk/tests/litesvm-rpc.ts
+- added: onchain/solana/sdk/tests/litesvm.test.ts
+- added: onchain/solana/sdk/tests/mock.test.ts
+- added: onchain/solana/sdk/tests/rpc.test.ts
+- added: onchain/solana/sdk/tests/tx.test.ts
+- added: onchain/solana/sdk/tests/vectors.test.ts
+- added: onchain/solana/tsconfig.json
+- added: onchain/solana/tsconfig.test.json
+- added: onchain/x402/.gitignore
+- added: onchain/x402/.npmrc
+- added: onchain/x402/README.md
+- added: onchain/x402/contracts/TestUSDC.sol
+- added: onchain/x402/deployments/base-sepolia.json
+- added: onchain/x402/foundry.toml
+- added: onchain/x402/package-lock.json
+- added: onchain/x402/package.json
+- added: onchain/x402/scripts/deploy-test-usdc.ts
+- added: onchain/x402/src/cli.ts
+- added: onchain/x402/src/facilitator.ts
+- added: onchain/x402/src/index.ts
+- added: onchain/x402/src/keyfile.ts
+- added: onchain/x402/src/mcp.ts
+- added: onchain/x402/src/networks.ts
+- added: onchain/x402/src/office.ts
+- added: onchain/x402/src/payer.ts
+- added: onchain/x402/test/anvil.test.ts
+- added: onchain/x402/test/cli.test.ts
+- added: onchain/x402/test/forge/TestUSDC.t.sol
+- added: onchain/x402/test/office.test.ts
+- added: onchain/x402/test/payment.test.ts
+- added: onchain/x402/test/support/anvil.ts
+- added: onchain/x402/tsconfig.json
+
+Tests:
+
+- modified: tests/agents.test.ts
+- added: tests/alert.test.ts
+- added: tests/amphitheater.test.ts
+- added: tests/approval.test.ts
+- added: tests/approvals-desk.test.ts
+- added: tests/approvals-e2e.test.ts
+- added: tests/asked.test.ts
+- added: tests/atmos.test.ts
+- added: tests/attach.test.ts
+- added: tests/attention.test.ts
+- added: tests/attribution.test.ts
+- modified: tests/auth.test.ts
+- added: tests/autonomy.test.ts
+- deleted: tests/bargames.test.ts
+- added: tests/boards-screen.test.ts
+- added: tests/bounties.test.ts
+- added: tests/bounty-tokens.test.ts
+- added: tests/brandenv.test.ts
+- added: tests/bridge-ship.test.ts
+- added: tests/bridge-warmth.test.ts
+- added: tests/brief.test.ts
+- added: tests/bringin-e2e.test.ts
+- modified: tests/building.test.ts
+- added: tests/business-landing.test.ts
+- added: tests/business.test.ts
+- deleted: tests/cabinet.test.ts
+- added: tests/callout-lod.test.ts
+- added: tests/cinema.test.ts
+- added: tests/cli-voice.test.ts
+- modified: tests/client-floors.test.ts
+- modified: tests/client-registry.test.ts
+- modified: tests/client-store.test.ts
+- modified: tests/client-structure.test.ts
+- modified: tests/clone.test.ts
+- modified: tests/codex.test.ts
+- modified: tests/config.test.ts
+- added: tests/copy.test.ts
+- added: tests/cursor.test.ts
+- added: tests/deeplink.test.ts
+- added: tests/demo-e2e.test.ts
+- added: tests/demo-waited.test.ts
+- added: tests/demo.test.ts
+- added: tests/democoach.test.ts
+- deleted: tests/desk-props-model.test.ts
+- added: tests/destination.test.ts
+- added: tests/devices.test.ts
+- added: tests/dictation.test.ts
+- added: tests/diegetic-ui.test.ts
+- deleted: tests/dog-model.test.ts
+- added: tests/drive.test.ts
+- deleted: tests/driving.test.ts
+- added: tests/droid.test.ts
+- deleted: tests/dungeon.test.ts
+- added: tests/e2e-bundle.test.ts
+- deleted: tests/emotes.test.ts
+- added: tests/epithet.test.ts
+- added: tests/first-sight.test.ts
+- added: tests/firstrun.test.ts
+- added: tests/fleet.test.ts
+- deleted: tests/framerate.test.ts
+- deleted: tests/garage.test.ts
+- added: tests/gate-e2e.test.ts
+- added: tests/gate.test.ts
+- modified: tests/github.test.ts
+- added: tests/giveway.test.ts
+- deleted: tests/glb.ts
+- added: tests/hands.test.ts
+- added: tests/heartbeat.test.ts
+- modified: tests/history.test.ts
+- added: tests/home-budget.test.ts
+- added: tests/home-motion.test.ts
+- deleted: tests/hoop.test.ts
+- added: tests/inbox-e2e.test.ts
+- added: tests/inbox.test.ts
+- modified: tests/interaction.test.ts
+- added: tests/interior-hype.test.ts
+- added: tests/issue-progress.test.ts
+- added: tests/kip-tween.test.ts
+- deleted: tests/kitchen-model.test.ts
+- added: tests/labels.test.ts
+- added: tests/labs.test.ts
+- added: tests/landed.test.ts
+- added: tests/landing-a11y.test.ts
+- added: tests/landing-kip.test.ts
+- added: tests/landing-scenes.test.ts
+- added: tests/landing.test.ts
+- added: tests/launch-calendar.test.ts
+- added: tests/launch-chain-calendar.test.ts
+- added: tests/launch-chain-e2e.test.ts
+- added: tests/launch-chain-kits.test.ts
+- added: tests/launch-chain-lint.test.ts
+- added: tests/launch-chain-whats-new.test.ts
+- added: tests/launch-e2e.test.ts
+- added: tests/launch-kits.test.ts
+- added: tests/launch-lint.test.ts
+- added: tests/launch-video.test.ts
+- added: tests/launch-whats-new.test.ts
+- added: tests/launch.test.ts
+- added: tests/layout.test.ts
+- added: tests/life.test.ts
+- added: tests/lights.test.ts
+- added: tests/livesessions.test.ts
+- modified: tests/loading.test.ts
+- added: tests/local-signin.test.ts
+- added: tests/logo.test.ts
+- deleted: tests/lounge-model.test.ts
+- added: tests/lounge.test.ts
+- deleted: tests/maps.test.ts
+- added: tests/mascot.test.ts
+- added: tests/meetings-security.test.ts
+- modified: tests/meetings.test.ts
+- added: tests/merge.test.ts
+- added: tests/metrics.test.ts
+- added: tests/mission-dock.test.ts
+- added: tests/mission-e2e.test.ts
+- added: tests/mission.test.ts
+- modified: tests/models.test.ts
+- added: tests/monitor.test.ts
+- added: tests/motion-layer.test.ts
+- added: tests/motion.test.ts
+- modified: tests/nav.test.ts
+- added: tests/needsyou.test.ts
+- added: tests/netguard.test.ts
+- modified: tests/nextup.test.ts
+- modified: tests/office-queue.test.ts
+- modified: tests/office-workers.test.ts
+- added: tests/old-names.test.ts
+- added: tests/one-name.test.ts
+- added: tests/one-story.test.ts
+- added: tests/one-truth.test.ts
+- modified: tests/opencode.test.ts
+- added: tests/overview-fit.test.ts
+- added: tests/overview-motion.test.ts
+- added: tests/painted-box.test.ts
+- added: tests/pairing.test.ts
+- added: tests/phone-e2e.test.ts
+- added: tests/phone-links.test.ts
+- added: tests/piles.test.ts
+- deleted: tests/plants-model.test.ts
+- modified: tests/player.test.ts
+- added: tests/plot-labels.test.ts
+- added: tests/plot.test.ts
+- added: tests/pod-label.test.ts
+- added: tests/podhue.test.ts
+- added: tests/pods.test.ts
+- added: tests/posture.test.ts
+- modified: tests/prompts.test.ts
+- added: tests/proof-of-merge.test.ts
+- added: tests/pseudonym.test.ts
+- added: tests/pulltrust.test.ts
+- added: tests/push-alerts.test.ts
+- added: tests/push-crypto.test.ts
+- added: tests/push-devices.test.ts
+- added: tests/push-e2e.test.ts
+- added: tests/push-sw.test.ts
+- added: tests/qr.test.ts
+- added: tests/quality-governor.test.ts
+- added: tests/quality.test.ts
+- added: tests/question.test.ts
+- modified: tests/queue.test.ts
+- added: tests/readability.test.ts
+- added: tests/relay-beacon.test.ts
+- modified: tests/relay.test.ts
+- added: tests/reminders.test.ts
+- modified: tests/repos.test.ts
+- added: tests/reputation-office.test.ts
+- added: tests/reputation.test.ts
+- added: tests/review-brief-e2e.test.ts
+- added: tests/review.test.ts
+- deleted: tests/rng.test.ts
+- added: tests/runcmd.test.ts
+- added: tests/rundown-cli.test.ts
+- added: tests/rundown-collect.test.ts
+- added: tests/rundown-command.test.ts
+- added: tests/rundown-diff.test.ts
+- added: tests/rundown-e2e.test.ts
+- added: tests/rundown-first-e2e.test.ts
+- added: tests/rundown-handlers.test.ts
+- added: tests/rundown-infer.test.ts
+- added: tests/rundown-markdown.test.ts
+- added: tests/rundown-ship.test.ts
+- added: tests/rundown-treemap.test.ts
+- added: tests/rundown-validate.test.ts
+- added: tests/safefs.test.ts
+- deleted: tests/scenic.test.ts
+- added: tests/seatframe.test.ts
+- modified: tests/seats.test.ts
+- added: tests/selection.test.ts
+- modified: tests/server-dispatch.test.ts
+- added: tests/server-security.test.ts
+- added: tests/sessions.test.ts
+- added: tests/shader-pow.test.ts
+- added: tests/shiplog.test.ts
+- added: tests/shipvoice.test.ts
+- added: tests/showcase-e2e.test.ts
+- added: tests/showcase.test.ts
+- added: tests/sightline.test.ts
+- added: tests/signal-e2e.test.ts
+- added: tests/signal-gist.test.ts
+- added: tests/signal-inferred.test.ts
+- added: tests/signal.test.ts
+- modified: tests/size.test.ts
+- added: tests/sorties.test.ts
+- added: tests/sound.test.ts
+- added: tests/space.test.ts
+- added: tests/spend-e2e.test.ts
+- added: tests/spend.test.ts
+- added: tests/start-command-e2e.test.ts
+- added: tests/starters.test.ts
+- added: tests/state-trust.test.ts
+- added: tests/storage-key.test.ts
+- deleted: tests/sun.test.ts
+- added: tests/support/bundle.ts
+- added: tests/support/literals.ts
+- added: tests/support/rundown-fixture.ts
+- added: tests/support/rundown-sample.ts
+- added: tests/support/showcase-fixture.ts
+- added: tests/support/standin.mjs
+- added: tests/surface-e2e.test.ts
+- added: tests/tables.test.ts
+- added: tests/task-fallback.test.ts
+- added: tests/telemetry.test.ts
+- deleted: tests/telescope.test.ts
+- added: tests/timeline.test.ts
+- added: tests/token-symbol.test.ts
+- added: tests/tones.test.ts
+- added: tests/tunnel.test.ts
+- added: tests/turnaround.test.ts
+- added: tests/tv-share.test.ts
+- added: tests/unit-body.test.ts
+- added: tests/units.test.ts
+- added: tests/upgrade-appdir.test.ts
+- added: tests/usage.test.ts
+- added: tests/vista.test.ts
+- added: tests/voice.test.ts
+- added: tests/waiting-frame.test.ts
+- added: tests/waittone.test.ts
+- added: tests/warm.test.ts
+- added: tests/warmth.test.ts
+- added: tests/webtabs.test.ts
+- modified: tests/whereabouts.test.ts
+- added: tests/wordmark.test.ts
+- added: tests/worker-env.test.ts
+- modified: tests/workers.test.ts
+- modified: tests/worktrees.test.ts
+- added: tests/x402.test.ts
+
+Docs:
+
+- modified: README.md
+- added: docs/agent-gate.md
+- modified: docs/agents.md
+- modified: docs/aws.md
+- modified: docs/azure.md
+- added: docs/bounties.md
+- modified: docs/code-layout.md
+- modified: docs/configuration.md
+- modified: docs/controls.md
+- added: docs/deck.md
+- added: docs/demo.md
+- added: docs/design.md
+- modified: docs/dokploy.md
+- modified: docs/dsh-acp-integration.md
+- modified: docs/features.md
+- modified: docs/fly.md
+- modified: docs/how-it-works.md
+- added: docs/img/agent-gate-request.png
+- added: docs/img/agent-gate-settings.png
+- added: docs/img/beat-landed.png
+- added: docs/img/bounty-payout.png
+- added: docs/img/bounty-vault.png
+- added: docs/img/cinema-arrival.png
+- added: docs/img/deck-overview.png
+- added: docs/img/deck-wall.png
+- added: docs/img/demo.gif
+- added: docs/img/demo.png
+- added: docs/img/hands-datapad.png
+- added: docs/img/hands.png
+- added: docs/img/inbox-phone.png
+- added: docs/img/inbox.png
+- added: docs/img/lite.png
+- added: docs/img/lounge-seat.png
+- added: docs/img/lounge.png
+- added: docs/img/planning-board.png
+- added: docs/img/proof-ledger.png
+- added: docs/img/toasts.png
+- added: docs/inbox.md
+- added: docs/labs.md
+- added: docs/landing.md
+- added: docs/launch.md
+- deleted: docs/maps.md
+- deleted: docs/maps/castle.json
+- added: docs/metrics.md
+- added: docs/mission-control.md
+- added: docs/proof-of-merge.md
+- added: docs/push.md
+- modified: docs/railway.md
+- added: docs/reputation.md
+- added: docs/rundown.md
+- added: docs/security.md
+- modified: docs/self-hosting.md
+- added: docs/showcase.md
+- added: docs/signal.md
+- added: docs/spend.md
+- added: docs/tunnel.md
+- added: docs/voice.md
+- added: docs/x402.md
+
+Deploy and CI:
+
+- added: .github/workflows/showcase-pages.yml
+- modified: deploy/aws.sh
+- modified: deploy/azure.sh
+- modified: deploy/container/Dockerfile
+- added: deploy/demo/Dockerfile
+- added: deploy/demo/Dockerfile.dockerignore
+- added: deploy/demo/fly.toml
+- modified: deploy/dokploy.sh
+- modified: deploy/fly.sh
+- modified: deploy/provision.sh
+- modified: deploy/railway.sh
+- modified: install.ps1
+- modified: install.sh
+
+Submission kits (launch/):
+
+- added: launch/README.md
+- added: launch/amazon-build-ship-shape.md
+- added: launch/base-builder-grants.md
+- added: launch/calendar.ics
+- added: launch/chain/README.md
+- added: launch/chain/SUBMIT.md
+- added: launch/chain/arbitrum-dubai.md
+- added: launch/chain/base-builder.md
+- added: launch/chain/build-in-public.md
+- added: launch/chain/calendar.ics
+- added: launch/chain/colosseum-worlds-fair.md
+- added: launch/chain/data/counts.json
+- added: launch/chain/data/leaderboard.json
+- added: launch/chain/deadlines.json
+- added: launch/chain/disclosure.md
+- added: launch/chain/judge-qa.md
+- added: launch/chain/landing.md
+- added: launch/chain/links.json
+- added: launch/chain/posts/2026-10-02.md
+- added: launch/chain/posts/2026-10-03.md
+- added: launch/chain/posts/2026-10-04.md
+- added: launch/chain/posts/2026-10-05.md
+- added: launch/chain/posts/2026-10-06.md
+- added: launch/chain/posts/2026-10-07.md
+- added: launch/chain/posts/2026-10-08.md
+- added: launch/chain/posts/2026-10-09.md
+- added: launch/chain/posts/2026-10-10.md
+- added: launch/chain/posts/2026-10-11.md
+- added: launch/chain/solana-foundation-grant.md
+- added: launch/chain/tempo-track.md
+- added: launch/chain/tools/calendar.ts
+- added: launch/chain/tools/counts.ts
+- added: launch/chain/tools/lint.ts
+- added: launch/chain/tools/whats-new.ts
+- added: launch/chain/video-scripts.md
+- added: launch/colosseum-worlds-fair.md
+- added: launch/deadlines.json
+- added: launch/disclosure.md
+- added: launch/filecoin-microgrant.md
+- added: launch/innovation-agency-lithuania.md
+- added: launch/kipdeck/README.md
+- added: launch/kipdeck/outreach.md
+- added: launch/kipdeck/posts.md
+- added: launch/meta-vr-start.md
+- added: launch/nebius-nvidia.md
+- added: launch/solana-foundation-grant.md
+- added: launch/sponsors.md
+- added: launch/templates/friction-log.md
+- added: launch/tools/calendar.ts
+- added: launch/tools/lint.ts
+- added: launch/tools/whats-new.ts
+- added: launch/video/README.md
+- added: launch/video/capture/README.md
+- added: launch/video/capture/assemble.mjs
+- added: launch/video/capture/cards.mjs
+- added: launch/video/capture/cut-list.txt
+- added: launch/video/capture/demo-3min-captions.srt
+- added: launch/video/capture/edit.json
+- added: launch/video/capture/office.mjs
+- added: launch/video/capture/pom.ts
+- added: launch/video/capture/voiceover.txt
+- added: launch/video/capture/web.mjs
+- added: launch/video/demo-script.md
+- added: launch/video/description.txt
+- added: launch/video/gtm.md
+- added: launch/video/pitch-script.md
+- added: launch/video/recording-guide.md
+- added: launch/vultr-agent-rush.md
+
+Other:
+
+- modified: .gitattributes
+- modified: .gitignore
+- added: AGENTS.md
+- modified: CLAUDE.md
+- added: DESIGN.md
+- modified: LICENSE
+- added: NOTICE
+- added: PRODUCT.md
+- deleted: blender/README.md
+- deleted: blender/scripts/aokit.py
+- deleted: blender/scripts/build_desk_props.py
+- deleted: blender/scripts/build_dog.py
+- deleted: blender/scripts/build_kitchen.py
+- deleted: blender/scripts/build_lounge.py
+- deleted: blender/scripts/build_plants.py
+- deleted: blender/scripts/dog_breeds.py
+- added: business/README.md
+- added: business/agent-team-lab-offer.md
+- added: business/employer-clearance-request.md
+- added: business/landing/index.html
+- added: business/naming.md
+- added: business/pricing-and-metrics.md
+- added: business/sow-template.md
+- added: business/upstream-partnership.md
+- added: business/vendor-credits.md
+- added: business/workshop/README.md
+- added: business/workshop/exercise-repos.md
+- added: business/workshop/one-day.md
+- added: business/workshop/setup-checklist.md
+- added: business/workshop/three-day.md
+- added: deck/.gitignore
+- added: deck/.vercelignore
+- added: deck/README.md
+- added: deck/out/deck-light.pdf
+- added: deck/out/deck.pdf
+- added: deck/package-lock.json
+- added: deck/package.json
+- added: deck/scripts/browser.mjs
+- added: deck/scripts/deck-check.mjs
+- added: deck/scripts/kip-check.mjs
+- added: deck/scripts/og.mjs
+- added: deck/scripts/pdf.mjs
+- added: deck/scripts/serve.mjs
+- added: deck/scripts/shots.mjs
+- added: deck/shots/01-final.png
+- added: deck/shots/01-mid.png
+- added: deck/shots/02-final.png
+- added: deck/shots/02-mid.png
+- added: deck/shots/03-final.png
+- added: deck/shots/03-mid.png
+- added: deck/shots/04-final.png
+- added: deck/shots/04-mid.png
+- added: deck/shots/05-final.png
+- added: deck/shots/05-mid.png
+- added: deck/shots/06-final.png
+- added: deck/shots/06-mid.png
+- added: deck/shots/07-final.png
+- added: deck/shots/07-mid.png
+- added: deck/shots/08-final.png
+- added: deck/shots/08-mid.png
+- added: deck/shots/09-final.png
+- added: deck/shots/09-mid.png
+- added: deck/shots/10-final.png
+- added: deck/shots/10-mid.png
+- added: deck/shots/11-final.png
+- added: deck/shots/11-mid.png
+- added: deck/shots/12-final.png
+- added: deck/shots/12-mid.png
+- added: deck/shots/13-final.png
+- added: deck/shots/13-mid.png
+- added: deck/shots/14-final.png
+- added: deck/shots/14-mid.png
+- added: deck/shots/15-final.png
+- added: deck/shots/15-mid.png
+- added: deck/shots/phone-01.png
+- added: deck/shots/phone-02.png
+- added: deck/shots/phone-03.png
+- added: deck/shots/phone-04.png
+- added: deck/shots/phone-05.png
+- added: deck/shots/phone-06.png
+- added: deck/shots/phone-07.png
+- added: deck/shots/phone-08.png
+- added: deck/shots/phone-09.png
+- added: deck/shots/phone-10.png
+- added: deck/shots/phone-11.png
+- added: deck/shots/phone-12.png
+- added: deck/shots/phone-13.png
+- added: deck/shots/phone-14.png
+- added: deck/shots/phone-15.png
+- added: deck/site/apple-touch-icon.png
+- added: deck/site/config.js
+- added: deck/site/deck.css
+- added: deck/site/deck.js
+- added: deck/site/favicon.svg
+- added: deck/site/fonts/LICENSE-inter.txt
+- added: deck/site/fonts/LICENSE-jetbrains-mono.txt
+- added: deck/site/fonts/LICENSE-space-grotesk.txt
+- added: deck/site/fonts/inter-latin-400-normal.woff2
+- added: deck/site/fonts/inter-latin-500-normal.woff2
+- added: deck/site/fonts/inter-latin-600-normal.woff2
+- added: deck/site/fonts/inter-latin-ext-400-normal.woff2
+- added: deck/site/fonts/inter-latin-ext-500-normal.woff2
+- added: deck/site/fonts/inter-latin-ext-600-normal.woff2
+- added: deck/site/fonts/jetbrains-mono-latin-400-normal.woff2
+- added: deck/site/fonts/jetbrains-mono-latin-500-normal.woff2
+- added: deck/site/fonts/jetbrains-mono-latin-700-normal.woff2
+- added: deck/site/fonts/jetbrains-mono-latin-ext-400-normal.woff2
+- added: deck/site/fonts/jetbrains-mono-latin-ext-500-normal.woff2
+- added: deck/site/fonts/jetbrains-mono-latin-ext-700-normal.woff2
+- added: deck/site/fonts/space-grotesk-latin-500-normal.woff2
+- added: deck/site/fonts/space-grotesk-latin-700-normal.woff2
+- added: deck/site/fonts/space-grotesk-latin-ext-500-normal.woff2
+- added: deck/site/fonts/space-grotesk-latin-ext-700-normal.woff2
+- added: deck/site/index.html
+- added: deck/site/kip.css
+- added: deck/site/kip.js
+- added: deck/site/media/demo-poster-v2.jpg
+- added: deck/site/media/deploy-desktop-v2.webp
+- added: deck/site/media/founder-zygimantas.jpg
+- added: deck/site/media/home-desktop-v2.webp
+- added: deck/site/media/home-phone-asking-v2.webp
+- added: deck/site/media/kipdeck-demo-v2.gif
+- added: deck/site/media/kipdeck-demo-v3.mp4
+- added: deck/site/media/merged-phone-v2.webp
+- added: deck/site/media/og-deck-v1.png
+- added: deck/site/media/question-phone-v2.webp
+- added: deck/site/media/team-ernestas.webp
+- added: deck/site/media/team-lukas.jpg
+- added: deck/site/slides.js
+- added: deck/site/vendor/gsap.min.js
+- added: deck/site/wow.js
+- added: deck/vercel.json
+- added: design/README.md
+- added: design/flicker-check.mjs
+- added: design/heartbeat-bench.ts
+- added: design/lite-crash-check.mjs
+- added: design/logo/app-icon-512.png
+- added: design/logo/app-icon-alert.svg
+- added: design/logo/app-icon.svg
+- added: design/logo/favicon-alert.svg
+- added: design/logo/favicon.svg
+- added: design/logo/lockup-dark.svg
+- added: design/logo/lockup-light.svg
+- added: design/logo/mark-small.svg
+- added: design/logo/mark.svg
+- added: design/logo/sync.ts
+- added: design/measure-final.mjs
+- added: design/perf-probe.mjs
+- added: design/record-demo.mjs
+- added: design/seed-bounties.js
+- added: design/shoot-boards.mjs
+- added: design/shoot-callouts.mjs
+- added: design/shoot-crew.mjs
+- added: design/shoot-demo.mjs
+- added: design/shoot-dock.mjs
+- added: design/shoot-final.mjs
+- added: design/shoot-fixes.mjs
+- added: design/shoot-fundable.mjs
+- added: design/shoot-hands.mjs
+- added: design/shoot-heartbeat.mjs
+- added: design/shoot-hero.mjs
+- added: design/shoot-interior.mjs
+- added: design/shoot-landing.mjs
+- added: design/shoot-life.mjs
+- added: design/shoot-lounge.mjs
+- added: design/shoot-mascot.mjs
+- added: design/shoot-moments.mjs
+- added: design/shoot-motion.mjs
+- added: design/shoot-nframe.mjs
+- added: design/shoot-onboarding.mjs
+- added: design/shoot-overview.mjs
+- added: design/shoot-pods.mjs
+- added: design/shoot-pom.ts
+- added: design/shoot-relay.mjs
+- added: design/shoot-rituals.mjs
+- added: design/shoot-rundown.mjs
+- added: design/shoot-scenes.mjs
+- added: design/shoot-selection.mjs
+- added: design/shoot-signal.ts
+- added: design/shoot-sound.mjs
+- added: design/shoot-surface.mjs
+- added: design/shoot.mjs
+- added: design/shots/landing/final/big-00-hero.png
+- added: design/shots/landing/final/big-01-funnel.png
+- added: design/shots/landing/final/big-01b-funnel.png
+- added: design/shots/landing/final/big-01c-funnel.png
+- added: design/shots/landing/final/big-02-problem.png
+- added: design/shots/landing/final/big-02b-problem.png
+- added: design/shots/landing/final/big-02c-problem.png
+- added: design/shots/landing/final/big-03-loop.png
+- added: design/shots/landing/final/big-03b-loop.png
+- added: design/shots/landing/final/big-03c-loop.png
+- added: design/shots/landing/final/big-04-why.png
+- added: design/shots/landing/final/big-05-yours.png
+- added: design/shots/landing/final/big-05b-yours.png
+- added: design/shots/landing/final/big-topbar-at-end.png
+- added: design/shots/landing/final/desktop-00-hero.png
+- added: design/shots/landing/final/desktop-01-funnel.png
+- added: design/shots/landing/final/desktop-01b-funnel.png
+- added: design/shots/landing/final/desktop-01c-funnel.png
+- added: design/shots/landing/final/desktop-02-problem.png
+- added: design/shots/landing/final/desktop-02b-problem.png
+- added: design/shots/landing/final/desktop-02c-problem.png
+- added: design/shots/landing/final/desktop-03-loop-card.png
+- added: design/shots/landing/final/desktop-03-loop.png
+- added: design/shots/landing/final/desktop-03b-loop.png
+- added: design/shots/landing/final/desktop-03c-loop.png
+- added: design/shots/landing/final/desktop-04-why.png
+- added: design/shots/landing/final/desktop-05-yours.png
+- added: design/shots/landing/final/desktop-05b-yours.png
+- added: design/shots/landing/final/desktop-05c-yours.png
+- added: design/shots/landing/final/desktop-06-phone.png
+- added: design/shots/landing/final/desktop-07-numbers.png
+- added: design/shots/landing/final/desktop-08-labs.png
+- added: design/shots/landing/final/desktop-08b-labs.png
+- added: design/shots/landing/final/desktop-08c-labs.png
+- added: design/shots/landing/final/desktop-09-teams.png
+- added: design/shots/landing/final/desktop-10-proof.png
+- added: design/shots/landing/final/desktop-11-end.png
+- added: design/shots/landing/final/desktop-topbar-at-end.png
+- added: design/shots/landing/final/keys-018.png
+- added: design/shots/landing/final/keys-019.png
+- added: design/shots/landing/final/keys-020.png
+- added: design/shots/landing/final/keys-021.png
+- added: design/shots/landing/final/keys-022.png
+- added: design/shots/landing/final/light-desktop-00-hero.png
+- added: design/shots/landing/final/light-desktop-01-funnel.png
+- added: design/shots/landing/final/light-desktop-02-problem.png
+- added: design/shots/landing/final/light-desktop-03-loop-card.png
+- added: design/shots/landing/final/light-desktop-03-loop.png
+- added: design/shots/landing/final/light-desktop-04-why.png
+- added: design/shots/landing/final/light-desktop-05-yours.png
+- added: design/shots/landing/final/light-desktop-06-phone.png
+- added: design/shots/landing/final/light-desktop-topbar-at-end.png
+- added: design/shots/landing/final/phone-00-hero.png
+- added: design/shots/landing/final/phone-01-funnel.png
+- added: design/shots/landing/final/phone-02-problem.png
+- added: design/shots/landing/final/phone-03-loop-card.png
+- added: design/shots/landing/final/phone-03-loop.png
+- added: design/shots/landing/final/phone-03b-loop.png
+- added: design/shots/landing/final/phone-03c-loop.png
+- added: design/shots/landing/final/phone-04-why.png
+- added: design/shots/landing/final/phone-04b-why.png
+- added: design/shots/landing/final/phone-04c-why.png
+- added: design/shots/landing/final/phone-05-yours.png
+- added: design/shots/landing/final/phone-05b-yours.png
+- added: design/shots/landing/final/phone-05c-yours.png
+- added: design/shots/landing/final/phone-06-phone.png
+- added: design/shots/landing/final/phone-07-numbers.png
+- added: design/shots/landing/final/phone-08-labs.png
+- added: design/shots/landing/final/phone-08b-labs.png
+- added: design/shots/landing/final/phone-08c-labs.png
+- added: design/shots/landing/final/phone-09-teams.png
+- added: design/shots/landing/final/phone-09b-teams.png
+- added: design/shots/landing/final/phone-09c-teams.png
+- added: design/shots/landing/final/phone-10-proof.png
+- added: design/shots/landing/final/phone-11-end.png
+- added: design/shots/landing/final/phone-topbar-at-end.png
+- added: design/shots/landing/final/reduced-desktop-00-hero.png
+- added: design/shots/landing/final/reduced-desktop-01-funnel.png
+- added: design/shots/landing/final/reduced-desktop-02-problem.png
+- added: design/shots/landing/final/reduced-desktop-03-loop.png
+- added: design/shots/landing/final/reduced-desktop-04-why.png
+- added: design/shots/landing/final/reduced-desktop-05-yours.png
+- added: design/shots/landing/final/reduced-desktop-06-phone.png
+- added: design/shots/landing/final/reduced-desktop-07-numbers.png
+- added: design/shots/landing/final/reduced-desktop-08-labs.png
+- added: design/shots/landing/final/reduced-desktop-09-teams.png
+- added: design/shots/landing/final/reduced-desktop-10-proof.png
+- added: design/shots/landing/final/reduced-desktop-11-end.png
+- added: design/shots/landing/final/reduced-desktop-topbar-at-end.png
+- added: design/shots/landing/final/reduced-phone-00-hero.png
+- added: design/shots/landing/final/reduced-phone-01-funnel.png
+- added: design/shots/landing/final/reduced-phone-02-problem.png
+- added: design/shots/landing/final/reduced-phone-03-loop.png
+- added: design/shots/landing/final/reduced-phone-04-why.png
+- added: design/shots/landing/final/reduced-phone-05-yours.png
+- added: design/shots/landing/final/reduced-phone-06-phone.png
+- added: design/shots/landing/final/reduced-phone-07-numbers.png
+- added: design/shots/landing/final/reduced-phone-08-labs.png
+- added: design/shots/landing/final/reduced-phone-09-teams.png
+- added: design/shots/landing/final/reduced-phone-10-proof.png
+- added: design/shots/landing/final/reduced-phone-11-end.png
+- added: design/shots/landing/final/reduced-phone-topbar-at-end.png
+- added: design/shots/landing/final/report.json
+- added: design/shots/landing/final/scroll-1920x1080.mp4
+- added: design/shots/landing/final/webkit-desktop-00-hero.png
+- added: design/shots/landing/final/webkit-desktop-04-loop.png
+- added: design/shots/landing/final/webkit-desktop-12-end.png
+- added: design/shots/landing/final/webkit-phone-00-hero.png
+- added: design/shots/landing/final/webkit-phone-04-loop.png
+- added: design/shots/landing/final/webkit-phone-12-end.png
+- added: design/shots/landing/stage-1/big-dark-00-hero.png
+- added: design/shots/landing/stage-1/desktop-dark-00-hero.png
+- added: design/shots/landing/stage-1/desktop-dark-01-funnel.png
+- added: design/shots/landing/stage-1/desktop-dark-02-problem.png
+- added: design/shots/landing/stage-1/desktop-dark-03-loop.png
+- added: design/shots/landing/stage-1/desktop-dark-04-why.png
+- added: design/shots/landing/stage-1/desktop-dark-05-yours.png
+- added: design/shots/landing/stage-1/desktop-dark-06-phone.png
+- added: design/shots/landing/stage-1/desktop-dark-07-numbers.png
+- added: design/shots/landing/stage-1/desktop-dark-08-labs.png
+- added: design/shots/landing/stage-1/desktop-dark-09-proof.png
+- added: design/shots/landing/stage-1/desktop-dark-10-teams.png
+- added: design/shots/landing/stage-1/desktop-dark-11-end.png
+- added: design/shots/landing/stage-1/desktop-light-00-hero.png
+- added: design/shots/landing/stage-1/desktop-light-01-funnel.png
+- added: design/shots/landing/stage-1/desktop-light-02-problem.png
+- added: design/shots/landing/stage-1/desktop-light-03-loop.png
+- added: design/shots/landing/stage-1/desktop-light-04-why.png
+- added: design/shots/landing/stage-1/desktop-light-05-yours.png
+- added: design/shots/landing/stage-1/desktop-light-06-phone.png
+- added: design/shots/landing/stage-1/desktop-light-07-numbers.png
+- added: design/shots/landing/stage-1/desktop-light-08-labs.png
+- added: design/shots/landing/stage-1/desktop-light-09-proof.png
+- added: design/shots/landing/stage-1/desktop-light-10-teams.png
+- added: design/shots/landing/stage-1/desktop-light-11-end.png
+- added: design/shots/landing/stage-1/desktop-scroll-sheet.png
+- added: design/shots/landing/stage-1/desktop-scroll.mp4
+- added: design/shots/landing/stage-1/og-mergeline.png
+- added: design/shots/landing/stage-1/phone-dark-00-hero.png
+- added: design/shots/landing/stage-1/phone-dark-01-funnel.png
+- added: design/shots/landing/stage-1/phone-dark-02-problem.png
+- added: design/shots/landing/stage-1/phone-dark-03-loop.png
+- added: design/shots/landing/stage-1/phone-dark-04-why.png
+- added: design/shots/landing/stage-1/phone-dark-05-yours.png
+- added: design/shots/landing/stage-1/phone-dark-06-phone.png
+- added: design/shots/landing/stage-1/phone-dark-07-numbers.png
+- added: design/shots/landing/stage-1/phone-dark-08-labs.png
+- added: design/shots/landing/stage-1/phone-dark-09-proof.png
+- added: design/shots/landing/stage-1/phone-dark-10-teams.png
+- added: design/shots/landing/stage-1/phone-dark-11-end.png
+- added: design/shots/landing/stage-1/phone-light-00-hero.png
+- added: design/shots/landing/stage-1/phone-light-01-funnel.png
+- added: design/shots/landing/stage-1/phone-light-02-problem.png
+- added: design/shots/landing/stage-1/phone-light-03-loop.png
+- added: design/shots/landing/stage-1/phone-light-04-why.png
+- added: design/shots/landing/stage-1/phone-light-05-yours.png
+- added: design/shots/landing/stage-1/phone-light-06-phone.png
+- added: design/shots/landing/stage-1/phone-light-07-numbers.png
+- added: design/shots/landing/stage-1/phone-light-08-labs.png
+- added: design/shots/landing/stage-1/phone-light-09-proof.png
+- added: design/shots/landing/stage-1/phone-light-10-teams.png
+- added: design/shots/landing/stage-1/phone-light-11-end.png
+- added: design/shots/landing/stage-1/reduced-dark-00-hero.png
+- added: design/shots/landing/stage-1/reduced-dark-01-funnel.png
+- added: design/shots/landing/stage-1/reduced-dark-02-problem.png
+- added: design/shots/landing/stage-1/reduced-dark-03-loop.png
+- added: design/shots/landing/stage-1/reduced-dark-04-why.png
+- added: design/shots/landing/stage-1/reduced-dark-05-yours.png
+- added: design/shots/landing/stage-1/reduced-dark-06-phone.png
+- added: design/shots/landing/stage-1/reduced-dark-07-numbers.png
+- added: design/shots/landing/stage-1/reduced-dark-08-labs.png
+- added: design/shots/landing/stage-1/reduced-dark-09-proof.png
+- added: design/shots/landing/stage-1/reduced-dark-10-teams.png
+- added: design/shots/landing/stage-1/reduced-dark-11-end.png
+- added: design/shots/landing/stage-1/report.json
+- added: design/shots/landing/stage-2/big-dark-answered.png
+- added: design/shots/landing/stage-2/big-dark-back-to-work.png
+- added: design/shots/landing/stage-2/big-dark-t00250-launch.png
+- added: design/shots/landing/stage-2/big-dark-t00650-inhale.png
+- added: design/shots/landing/stage-2/big-dark-t01200-rows.png
+- added: design/shots/landing/stage-2/big-dark-t02550-asks.png
+- added: design/shots/landing/stage-2/big-dark-t03300-climbed.png
+- added: design/shots/landing/stage-2/big-dark-t07000-waiting.png
+- added: design/shots/landing/stage-2/desktop-copied.png
+- added: design/shots/landing/stage-2/desktop-dark-answered.png
+- added: design/shots/landing/stage-2/desktop-dark-back-to-work.png
+- added: design/shots/landing/stage-2/desktop-dark-t00250-launch.png
+- added: design/shots/landing/stage-2/desktop-dark-t00650-inhale.png
+- added: design/shots/landing/stage-2/desktop-dark-t01200-rows.png
+- added: design/shots/landing/stage-2/desktop-dark-t02550-asks.png
+- added: design/shots/landing/stage-2/desktop-dark-t03300-climbed.png
+- added: design/shots/landing/stage-2/desktop-dark-t07000-waiting.png
+- added: design/shots/landing/stage-2/desktop-ghost-answers.png
+- added: design/shots/landing/stage-2/desktop-ghost-arrives.png
+- added: design/shots/landing/stage-2/desktop-light-answered.png
+- added: design/shots/landing/stage-2/desktop-light-back-to-work.png
+- added: design/shots/landing/stage-2/desktop-light-t00250-launch.png
+- added: design/shots/landing/stage-2/desktop-light-t00650-inhale.png
+- added: design/shots/landing/stage-2/desktop-light-t01200-rows.png
+- added: design/shots/landing/stage-2/desktop-light-t02550-asks.png
+- added: design/shots/landing/stage-2/desktop-light-t03300-climbed.png
+- added: design/shots/landing/stage-2/desktop-light-t07000-waiting.png
+- added: design/shots/landing/stage-2/desktop-opening.mp4
+- added: design/shots/landing/stage-2/desktop-pointer.png
+- added: design/shots/landing/stage-2/desktop-reduced.png
+- added: design/shots/landing/stage-2/hero-report.json
+- added: design/shots/landing/stage-2/phone-dark-answered.png
+- added: design/shots/landing/stage-2/phone-dark-back-to-work.png
+- added: design/shots/landing/stage-2/phone-dark-t00250-launch.png
+- added: design/shots/landing/stage-2/phone-dark-t00650-inhale.png
+- added: design/shots/landing/stage-2/phone-dark-t01200-rows.png
+- added: design/shots/landing/stage-2/phone-dark-t02550-asks.png
+- added: design/shots/landing/stage-2/phone-dark-t03300-climbed.png
+- added: design/shots/landing/stage-2/phone-dark-t07000-waiting.png
+- added: design/shots/landing/stage-3/big-dark-00-hero.png
+- added: design/shots/landing/stage-3/big-dark-01-funnel.png
+- added: design/shots/landing/stage-3/big-dark-02-problem.png
+- added: design/shots/landing/stage-3/big-dark-03-loop.png
+- added: design/shots/landing/stage-3/big-dark-04-why.png
+- added: design/shots/landing/stage-3/big-dark-05-yours.png
+- added: design/shots/landing/stage-3/big-dark-06-phone.png
+- added: design/shots/landing/stage-3/big-dark-07-numbers.png
+- added: design/shots/landing/stage-3/big-dark-08-labs.png
+- added: design/shots/landing/stage-3/big-dark-09-proof.png
+- added: design/shots/landing/stage-3/big-dark-10-teams.png
+- added: design/shots/landing/stage-3/big-dark-11-end.png
+- added: design/shots/landing/stage-3/desktop-dark-00-hero.png
+- added: design/shots/landing/stage-3/desktop-dark-01-funnel.png
+- added: design/shots/landing/stage-3/desktop-dark-02-problem.png
+- added: design/shots/landing/stage-3/desktop-dark-03-loop.png
+- added: design/shots/landing/stage-3/desktop-dark-04-why.png
+- added: design/shots/landing/stage-3/desktop-dark-05-yours.png
+- added: design/shots/landing/stage-3/desktop-dark-06-phone.png
+- added: design/shots/landing/stage-3/desktop-dark-07-numbers.png
+- added: design/shots/landing/stage-3/desktop-dark-08-labs.png
+- added: design/shots/landing/stage-3/desktop-dark-09-proof.png
+- added: design/shots/landing/stage-3/desktop-dark-10-teams.png
+- added: design/shots/landing/stage-3/desktop-dark-11-end.png
+- added: design/shots/landing/stage-3/desktop-light-00-hero.png
+- added: design/shots/landing/stage-3/desktop-light-01-funnel.png
+- added: design/shots/landing/stage-3/desktop-light-02-problem.png
+- added: design/shots/landing/stage-3/desktop-light-03-loop.png
+- added: design/shots/landing/stage-3/desktop-light-04-why.png
+- added: design/shots/landing/stage-3/desktop-light-05-yours.png
+- added: design/shots/landing/stage-3/desktop-light-06-phone.png
+- added: design/shots/landing/stage-3/desktop-light-07-numbers.png
+- added: design/shots/landing/stage-3/desktop-light-08-labs.png
+- added: design/shots/landing/stage-3/desktop-light-09-proof.png
+- added: design/shots/landing/stage-3/desktop-light-10-teams.png
+- added: design/shots/landing/stage-3/desktop-light-11-end.png
+- added: design/shots/landing/stage-3/desktop-scroll.mp4
+- added: design/shots/landing/stage-3/phone-dark-00-hero.png
+- added: design/shots/landing/stage-3/phone-dark-01-funnel.png
+- added: design/shots/landing/stage-3/phone-dark-02-problem.png
+- added: design/shots/landing/stage-3/phone-dark-03-loop.png
+- added: design/shots/landing/stage-3/phone-dark-04-why.png
+- added: design/shots/landing/stage-3/phone-dark-05-yours.png
+- added: design/shots/landing/stage-3/phone-dark-06-phone.png
+- added: design/shots/landing/stage-3/phone-dark-07-numbers.png
+- added: design/shots/landing/stage-3/phone-dark-08-labs.png
+- added: design/shots/landing/stage-3/phone-dark-09-proof.png
+- added: design/shots/landing/stage-3/phone-dark-10-teams.png
+- added: design/shots/landing/stage-3/phone-dark-11-end.png
+- added: design/shots/landing/stage-3/phone-light-00-hero.png
+- added: design/shots/landing/stage-3/phone-light-01-funnel.png
+- added: design/shots/landing/stage-3/phone-light-02-problem.png
+- added: design/shots/landing/stage-3/phone-light-03-loop.png
+- added: design/shots/landing/stage-3/phone-light-04-why.png
+- added: design/shots/landing/stage-3/phone-light-05-yours.png
+- added: design/shots/landing/stage-3/phone-light-06-phone.png
+- added: design/shots/landing/stage-3/phone-light-07-numbers.png
+- added: design/shots/landing/stage-3/phone-light-08-labs.png
+- added: design/shots/landing/stage-3/phone-light-09-proof.png
+- added: design/shots/landing/stage-3/phone-light-10-teams.png
+- added: design/shots/landing/stage-3/phone-light-11-end.png
+- added: design/shots/landing/stage-3/reduced-dark-00-hero.png
+- added: design/shots/landing/stage-3/reduced-dark-01-funnel.png
+- added: design/shots/landing/stage-3/reduced-dark-02-problem.png
+- added: design/shots/landing/stage-3/reduced-dark-03-loop.png
+- added: design/shots/landing/stage-3/reduced-dark-04-why.png
+- added: design/shots/landing/stage-3/reduced-dark-05-yours.png
+- added: design/shots/landing/stage-3/reduced-dark-06-phone.png
+- added: design/shots/landing/stage-3/reduced-dark-07-numbers.png
+- added: design/shots/landing/stage-3/reduced-dark-08-labs.png
+- added: design/shots/landing/stage-3/reduced-dark-09-proof.png
+- added: design/shots/landing/stage-3/reduced-dark-10-teams.png
+- added: design/shots/landing/stage-3/reduced-dark-11-end.png
+- added: design/shots/landing/stage-3/report.json
+- added: design/shots/landing/stage-3/scenes/1440-dark-end-v030.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-end-v070.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-end-v120.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-funnel-p002.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-funnel-p020.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-funnel-p040.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-funnel-p058.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-funnel-p068.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-funnel-p078.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-funnel-p090.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-funnel-p100.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-labs-v010.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-labs-v040.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-labs-v070.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-labs-v100.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-labs-v140.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-loop-p004.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-loop-p010.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-loop-p016.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-loop-p022.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-loop-p032.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-loop-p042.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-loop-p048.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-loop-p056.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-loop-p064.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-loop-p072.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-loop-p080.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-loop-p090.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-loop-p100.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-numbers-v020.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-numbers-v050.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-numbers-v080.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-numbers-v100.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-numbers-v130.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-phone-t00300.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-phone-t01200.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-phone-t02400.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-phone-t03600.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-phone-t05200.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-problem-p005.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-problem-p020.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-problem-p036.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-problem-p048.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-problem-p062.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-problem-p078.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-problem-p090.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-problem-p097.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-problem-p100.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-proof-v020.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-proof-v060.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-proof-v100.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-proof-v140.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-teams-t00300.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-teams-t01000.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-teams-t02000.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-why-t00300.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-why-t00900.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-why-t01600.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-why-t02600.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-yours-t00400.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-yours-t01500.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-yours-t03000.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-yours-t05000.png
+- added: design/shots/landing/stage-3/scenes/1440-dark-yours-t07000.png
+- added: design/shots/landing/stage-3/scenes/1440-light-funnel-p002.png
+- added: design/shots/landing/stage-3/scenes/1440-light-funnel-p020.png
+- added: design/shots/landing/stage-3/scenes/1440-light-funnel-p040.png
+- added: design/shots/landing/stage-3/scenes/1440-light-funnel-p058.png
+- added: design/shots/landing/stage-3/scenes/1440-light-funnel-p068.png
+- added: design/shots/landing/stage-3/scenes/1440-light-funnel-p078.png
+- added: design/shots/landing/stage-3/scenes/1440-light-funnel-p090.png
+- added: design/shots/landing/stage-3/scenes/1440-light-funnel-p100.png
+- added: design/shots/landing/stage-3/scenes/1440-light-labs-v010.png
+- added: design/shots/landing/stage-3/scenes/1440-light-labs-v040.png
+- added: design/shots/landing/stage-3/scenes/1440-light-labs-v070.png
+- added: design/shots/landing/stage-3/scenes/1440-light-labs-v100.png
+- added: design/shots/landing/stage-3/scenes/1440-light-labs-v140.png
+- added: design/shots/landing/stage-3/scenes/1440-light-loop-p004.png
+- added: design/shots/landing/stage-3/scenes/1440-light-loop-p010.png
+- added: design/shots/landing/stage-3/scenes/1440-light-loop-p016.png
+- added: design/shots/landing/stage-3/scenes/1440-light-loop-p022.png
+- added: design/shots/landing/stage-3/scenes/1440-light-loop-p032.png
+- added: design/shots/landing/stage-3/scenes/1440-light-loop-p042.png
+- added: design/shots/landing/stage-3/scenes/1440-light-loop-p048.png
+- added: design/shots/landing/stage-3/scenes/1440-light-loop-p056.png
+- added: design/shots/landing/stage-3/scenes/1440-light-loop-p064.png
+- added: design/shots/landing/stage-3/scenes/1440-light-loop-p072.png
+- added: design/shots/landing/stage-3/scenes/1440-light-loop-p080.png
+- added: design/shots/landing/stage-3/scenes/1440-light-loop-p090.png
+- added: design/shots/landing/stage-3/scenes/1440-light-loop-p100.png
+- added: design/shots/landing/stage-3/scenes/1440-light-problem-p005.png
+- added: design/shots/landing/stage-3/scenes/1440-light-problem-p020.png
+- added: design/shots/landing/stage-3/scenes/1440-light-problem-p036.png
+- added: design/shots/landing/stage-3/scenes/1440-light-problem-p048.png
+- added: design/shots/landing/stage-3/scenes/1440-light-problem-p062.png
+- added: design/shots/landing/stage-3/scenes/1440-light-problem-p078.png
+- added: design/shots/landing/stage-3/scenes/1440-light-problem-p090.png
+- added: design/shots/landing/stage-3/scenes/1440-light-problem-p097.png
+- added: design/shots/landing/stage-3/scenes/1440-light-problem-p100.png
+- added: design/shots/landing/stage-3/scenes/1440-light-proof-v020.png
+- added: design/shots/landing/stage-3/scenes/1440-light-proof-v060.png
+- added: design/shots/landing/stage-3/scenes/1440-light-proof-v100.png
+- added: design/shots/landing/stage-3/scenes/1440-light-proof-v140.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-end-v030.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-end-v070.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-end-v120.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-funnel-t00300.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-funnel-t01500.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-funnel-t03000.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-funnel-t04500.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-funnel-t06000.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-labs-v010.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-labs-v040.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-labs-v070.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-labs-v100.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-labs-v140.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-loop-t00300.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-loop-t01500.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-loop-t03000.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-loop-t04500.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-loop-t06000.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-numbers-v020.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-numbers-v050.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-numbers-v080.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-numbers-v100.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-numbers-v130.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-phone-t00300.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-phone-t01200.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-phone-t02400.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-phone-t03600.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-phone-t05200.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-problem-t00300.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-problem-t01500.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-problem-t03000.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-problem-t04500.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-problem-t06000.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-proof-v020.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-proof-v060.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-proof-v100.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-proof-v140.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-teams-t00300.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-teams-t01000.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-teams-t02000.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-why-t00300.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-why-t00900.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-why-t01600.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-why-t02600.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-yours-t00400.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-yours-t01500.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-yours-t03000.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-yours-t05000.png
+- added: design/shots/landing/stage-3/scenes/phone-dark-yours-t07000.png
+- added: design/shots/landing/stage-3/scenes/scenes-1440-dark.json
+- added: design/shots/landing/stage-3/scenes/scenes-1440-light.json
+- added: design/shots/landing/stage-3/scenes/scenes-phone-dark.json
+- added: design/shots/landing/stage-4/big-dark-00-hero.png
+- added: design/shots/landing/stage-4/big-dark-01-funnel.png
+- added: design/shots/landing/stage-4/big-dark-02-problem.png
+- added: design/shots/landing/stage-4/big-dark-03-loop.png
+- added: design/shots/landing/stage-4/big-dark-04-why.png
+- added: design/shots/landing/stage-4/big-dark-05-yours.png
+- added: design/shots/landing/stage-4/big-dark-06-phone.png
+- added: design/shots/landing/stage-4/big-dark-07-numbers.png
+- added: design/shots/landing/stage-4/big-dark-08-labs.png
+- added: design/shots/landing/stage-4/big-dark-09-proof.png
+- added: design/shots/landing/stage-4/big-dark-10-teams.png
+- added: design/shots/landing/stage-4/big-dark-11-end.png
+- added: design/shots/landing/stage-4/desktop-dark-00-hero.png
+- added: design/shots/landing/stage-4/desktop-dark-01-funnel.png
+- added: design/shots/landing/stage-4/desktop-dark-02-problem.png
+- added: design/shots/landing/stage-4/desktop-dark-03-loop.png
+- added: design/shots/landing/stage-4/desktop-dark-04-why.png
+- added: design/shots/landing/stage-4/desktop-dark-05-yours.png
+- added: design/shots/landing/stage-4/desktop-dark-06-phone.png
+- added: design/shots/landing/stage-4/desktop-dark-07-numbers.png
+- added: design/shots/landing/stage-4/desktop-dark-08-labs.png
+- added: design/shots/landing/stage-4/desktop-dark-09-proof.png
+- added: design/shots/landing/stage-4/desktop-dark-10-teams.png
+- added: design/shots/landing/stage-4/desktop-dark-11-end.png
+- added: design/shots/landing/stage-4/desktop-light-00-hero.png
+- added: design/shots/landing/stage-4/desktop-light-01-funnel.png
+- added: design/shots/landing/stage-4/desktop-light-02-problem.png
+- added: design/shots/landing/stage-4/desktop-light-03-loop.png
+- added: design/shots/landing/stage-4/desktop-light-04-why.png
+- added: design/shots/landing/stage-4/desktop-light-05-yours.png
+- added: design/shots/landing/stage-4/desktop-light-06-phone.png
+- added: design/shots/landing/stage-4/desktop-light-07-numbers.png
+- added: design/shots/landing/stage-4/desktop-light-08-labs.png
+- added: design/shots/landing/stage-4/desktop-light-09-proof.png
+- added: design/shots/landing/stage-4/desktop-light-10-teams.png
+- added: design/shots/landing/stage-4/desktop-light-11-end.png
+- added: design/shots/landing/stage-4/desktop-scroll.mp4
+- added: design/shots/landing/stage-4/hero-1440-dark-5s.png
+- added: design/shots/landing/stage-4/hero-360-light-5s.png
+- added: design/shots/landing/stage-4/hero-390-dark-5s.png
+- added: design/shots/landing/stage-4/hero-390-light-5s.png
+- added: design/shots/landing/stage-4/merge-ring-260ms.png
+- added: design/shots/landing/stage-4/merge-ring-510ms.png
+- added: design/shots/landing/stage-4/perf.json
+- added: design/shots/landing/stage-4/phone-dark-00-hero.png
+- added: design/shots/landing/stage-4/phone-dark-01-funnel.png
+- added: design/shots/landing/stage-4/phone-dark-02-problem.png
+- added: design/shots/landing/stage-4/phone-dark-03-loop.png
+- added: design/shots/landing/stage-4/phone-dark-04-why.png
+- added: design/shots/landing/stage-4/phone-dark-05-yours.png
+- added: design/shots/landing/stage-4/phone-dark-06-phone.png
+- added: design/shots/landing/stage-4/phone-dark-07-numbers.png
+- added: design/shots/landing/stage-4/phone-dark-08-labs.png
+- added: design/shots/landing/stage-4/phone-dark-09-proof.png
+- added: design/shots/landing/stage-4/phone-dark-10-teams.png
+- added: design/shots/landing/stage-4/phone-dark-11-end.png
+- added: design/shots/landing/stage-4/phone-light-00-hero.png
+- added: design/shots/landing/stage-4/phone-light-01-funnel.png
+- added: design/shots/landing/stage-4/phone-light-02-problem.png
+- added: design/shots/landing/stage-4/phone-light-03-loop.png
+- added: design/shots/landing/stage-4/phone-light-04-why.png
+- added: design/shots/landing/stage-4/phone-light-05-yours.png
+- added: design/shots/landing/stage-4/phone-light-06-phone.png
+- added: design/shots/landing/stage-4/phone-light-07-numbers.png
+- added: design/shots/landing/stage-4/phone-light-08-labs.png
+- added: design/shots/landing/stage-4/phone-light-09-proof.png
+- added: design/shots/landing/stage-4/phone-light-10-teams.png
+- added: design/shots/landing/stage-4/phone-light-11-end.png
+- added: design/shots/landing/stage-4/reduced-dark-00-hero.png
+- added: design/shots/landing/stage-4/reduced-dark-01-funnel.png
+- added: design/shots/landing/stage-4/reduced-dark-02-problem.png
+- added: design/shots/landing/stage-4/reduced-dark-03-loop.png
+- added: design/shots/landing/stage-4/reduced-dark-04-why.png
+- added: design/shots/landing/stage-4/reduced-dark-05-yours.png
+- added: design/shots/landing/stage-4/reduced-dark-06-phone.png
+- added: design/shots/landing/stage-4/reduced-dark-07-numbers.png
+- added: design/shots/landing/stage-4/reduced-dark-08-labs.png
+- added: design/shots/landing/stage-4/reduced-dark-09-proof.png
+- added: design/shots/landing/stage-4/reduced-dark-10-teams.png
+- added: design/shots/landing/stage-4/reduced-dark-11-end.png
+- added: design/shots/landing/stage-4/report.json
+- added: design/shots/rundown/final/bridge-city.png
+- added: design/shots/rundown/final/bridge-conn.png
+- added: design/shots/rundown/final/bridge-overview.png
+- added: design/shots/rundown/final/bridge-side-down.png
+- added: design/shots/rundown/final/bridge-side.png
+- added: design/shots/rundown/final/download-page.png
+- added: design/shots/rundown/final/window-bottom.png
+- added: design/shots/rundown/final/window-dark.png
+- added: design/shots/rundown/final/window-light.png
+- added: design/shots/rundown/final/window-part.png
+- added: design/shots/rundown/final/window-phone.png
+- added: design/shots/signal/card-at-risk-dark-1440.png
+- added: design/soak-quality.mjs
+- added: design/sound-levels.mjs
+- added: design/sound-render.ts
+- added: design/time-to-first-agent.mjs
+- added: design/walk-check.mjs
+- modified: package-lock.json
+- modified: package.json
+- added: site/build.mjs
+- added: site/env.d.mts
+- added: site/env.mjs
+- added: site/landing/README.md
+- added: site/landing/brand.ts
+- added: site/landing/index.html
+- added: site/landing/package.json
+- added: site/landing/public/OFL-Archivo.txt
+- added: site/landing/public/OFL-JetBrainsMono.txt
+- added: site/landing/public/_headers
+- added: site/landing/public/apple-touch-icon.png
+- added: site/landing/public/favicon-alert.svg
+- added: site/landing/public/favicon.svg
+- added: site/landing/public/media/film-16x9-v2.mp4
+- added: site/landing/public/media/film-16x9-v2.webm
+- added: site/landing/public/media/film-9x16-v2.mp4
+- added: site/landing/public/media/film-captions-v2.vtt
+- added: site/landing/public/media/poster-16x9.webp
+- added: site/landing/public/media/poster-9x16.webp
+- added: site/landing/public/og.png
+- added: site/landing/public/robots.txt
+- added: site/landing/public/theme-boot.js
+- added: site/landing/src/engine/arrive.ts
+- added: site/landing/src/engine/count.ts
+- added: site/landing/src/engine/drive.ts
+- added: site/landing/src/engine/env.ts
+- added: site/landing/src/engine/flip.ts
+- added: site/landing/src/engine/governor.ts
+- added: site/landing/src/engine/loop.ts
+- added: site/landing/src/engine/morph.ts
+- added: site/landing/src/engine/odometer.ts
+- added: site/landing/src/engine/spring.ts
+- added: site/landing/src/engine/stack.ts
+- added: site/landing/src/engine/type.ts
+- added: site/landing/src/engine/wake.ts
+- added: site/landing/src/fx/bridge-scene.ts
+- added: site/landing/src/fx/bridge-worker.ts
+- added: site/landing/src/fx/bridge.ts
+- added: site/landing/src/fx/field.ts
+- added: site/landing/src/fx/march.ts
+- added: site/landing/src/fx/shockwave.ts
+- added: site/landing/src/kip/corner.ts
+- added: site/landing/src/kip/director.ts
+- added: site/landing/src/kip/draw.ts
+- added: site/landing/src/kip/fx.ts
+- added: site/landing/src/kip/hosts.ts
+- added: site/landing/src/kip/index.ts
+- added: site/landing/src/kip/kit.ts
+- added: site/landing/src/kip/math.ts
+- added: site/landing/src/kip/moments/end.ts
+- added: site/landing/src/kip/moments/funnel.ts
+- added: site/landing/src/kip/moments/hero.ts
+- added: site/landing/src/kip/moments/index.ts
+- added: site/landing/src/kip/moments/kinds.ts
+- added: site/landing/src/kip/moments/labs.ts
+- added: site/landing/src/kip/moments/loop.ts
+- added: site/landing/src/kip/moments/numbers.ts
+- added: site/landing/src/kip/moments/phone.ts
+- added: site/landing/src/kip/moments/problem.ts
+- added: site/landing/src/kip/moments/teams.ts
+- added: site/landing/src/kip/moments/why.ts
+- added: site/landing/src/kip/moments/yours.ts
+- added: site/landing/src/kip/moves.ts
+- added: site/landing/src/kip/perch.ts
+- added: site/landing/src/kip/poses.ts
+- added: site/landing/src/kip/probe.ts
+- added: site/landing/src/kip/tricks.ts
+- added: site/landing/src/kip/tween.ts
+- added: site/landing/src/main.ts
+- added: site/landing/src/scenes/end.ts
+- added: site/landing/src/scenes/funnel.ts
+- added: site/landing/src/scenes/hero.ts
+- added: site/landing/src/scenes/index.ts
+- added: site/landing/src/scenes/labs.ts
+- added: site/landing/src/scenes/loop.ts
+- added: site/landing/src/scenes/numbers.ts
+- added: site/landing/src/scenes/phone.ts
+- added: site/landing/src/scenes/problem.ts
+- added: site/landing/src/scenes/teams.ts
+- added: site/landing/src/scenes/why.ts
+- added: site/landing/src/scenes/yours.ts
+- added: site/landing/src/styles/app.css
+- added: site/landing/src/styles/base.css
+- added: site/landing/src/styles/kip.css
+- added: site/landing/src/styles/labs.css
+- added: site/landing/src/styles/loop.css
+- added: site/landing/src/styles/motion.css
+- added: site/landing/src/styles/perf.css
+- added: site/landing/src/styles/pins.css
+- added: site/landing/src/styles/rest.css
+- added: site/landing/src/styles/scenes.css
+- added: site/landing/src/styles/story.css
+- added: site/landing/src/styles/tokens.css
+- added: site/landing/src/ui/anchors.ts
+- added: site/landing/src/ui/controls.ts
+- added: site/landing/src/ui/ghost.ts
+- added: site/landing/src/ui/sound.ts
+- added: site/landing/src/ui/wait.ts
+- added: site/landing/src/ui/waitlist.ts
+- added: site/landing/src/ui/watch.ts
+- added: site/landing/tsconfig.json
+- added: site/landing/vite.config.ts
+- added: site/npx.d.mts
+- added: site/npx.mjs
+- added: site/perf.mjs
+- added: site/serve.mjs
+- added: skills/rundown/README.md
+- added: skills/rundown/SKILL.md
+- added: tsconfig.launch.json
+- added: vercel.json
+- added: video/.gitignore
+- added: video/README.md
+- added: video/assets/CREDITS.md
+- added: video/assets/audio/soundtrack.wav
+- added: video/assets/fonts/Archivo-VF.ttf
+- added: video/assets/fonts/InterTight-VF.ttf
+- added: video/assets/fonts/JetBrainsMono-VF.ttf
+- added: video/assets/fonts/OFL-Archivo.txt
+- added: video/assets/fonts/OFL-InterTight.txt
+- added: video/assets/fonts/OFL-JetBrainsMono.txt
+- added: video/audio/compose.mjs
+- added: video/audio/dsp.mjs
+- added: video/audio/instruments.mjs
+- added: video/audio/score.mjs
+- added: video/package.json
+- added: video/render.mjs
+- added: video/src/beatmap.json
+- added: video/src/engine/design.js
+- added: video/src/engine/ease.js
+- added: video/src/engine/fonts.js
+- added: video/src/engine/kinetic.js
+- added: video/src/engine/kip.js
+- added: video/src/engine/overlays.js
+- added: video/src/engine/post.js
+- added: video/src/engine/prng.js
+- added: video/src/engine/timeline.js
+- added: video/src/engine/typeLayer.js
+- added: video/src/index.html
+- added: video/src/main.js
+- added: video/src/scenes/act1.js
+- added: video/src/scenes/act2.js
+- added: video/src/scenes/act3.js
+- added: video/src/scenes/common.js
+- added: video/src/scenes/director.js
+- added: video/test/engine.test.mjs
+- added: video/test/kip.test.mjs
+- added: video/tools/contact.py
+- added: video/tools/deliver.py
+- added: video/tools/hits.py
+- added: video/tools/sheet.py
+- added: video/tools/verify.py
+- modified: vite.config.ts
+- added: vite.rundown.config.ts
+- added: vite.showcase.config.ts
