@@ -98,7 +98,7 @@ test('the demo on your computer: the coach strip, a question from Codex opening 
   const coach = page.locator('#demo-coach');
   await coach.waitFor();
   const coachSteps = () => coach.locator('.coach-step').allInnerTexts();
-  assert.deepEqual((await coachSteps()).map((s) => s.replace(/^\d\s*/, '').trim().split('\n')[0].trim()), ['Answer the question in Needs you', 'Review the change and merge it', "That's the loop. Now run it on your repo."]);
+  assert.deepEqual((await coachSteps()).map((s) => s.replace(/^\d\s*/, '').trim().split('\n')[0].trim()), ['Answer the question in Needs you', 'Review the change and merge it', 'Run it on your repo']);
   // The command this demo was started with (here: node and this checkout's bin script, too long to
   // show): a Copy command button with all of it, also in the step's tooltip.
   const run = demoNote({ readOnly: false, project: 'acme-shop', run: launchCommand() }).command;
@@ -150,6 +150,8 @@ test('the demo on your computer: the coach strip, a question from Codex opening 
   await page.locator('.ship', { hasText: 'Add rate limiting' }).waitFor({ timeout: 20_000 });
   // Both steps the demo opened with are done: the strip checks them off.
   await coach.locator('.coach-step.done').nth(1).waitFor({ timeout: 10_000 });
+  // Only now, with the loop run and nothing waiting, does the last step say so.
+  await coach.locator('.coach-run', { hasText: "That's the loop. Now run it on your repo." }).waitFor({ timeout: 5_000 });
 
   await row('review', 'Write the README quickstart').waitFor({ timeout: 30_000 });
   assert.match(await row('review', 'Write the README quickstart').locator('.agent-mark').getAttribute('class') ?? '', /p-cursor/);

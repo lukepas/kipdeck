@@ -61,7 +61,7 @@ cd ~/code/your-project && node ~/kipdeck/bin/agent-office.js      # or: npm link
 node ~/kipdeck/bin/agent-office.js --demo                         # the demo, anywhere
 ```
 
-The demo's coach strip ends at *That's the loop. Now run it on your repo.* with the command you started the demo with, without `--demo`, to copy.
+The demo's coach strip ends at *Run it on your repo* (*That's the loop. Now run it on your repo.* once you've answered and merged) with the command you started the demo with, without `--demo`, to copy.
 
 From here on, `kipdeck` stands for the way you run it: `npx github:zbagdzevicius/kipdeck`, `node <clone>/bin/agent-office.js`, or `kipdeck` once it is on your PATH (`npm link` in the clone). `kipdeck --help` says which one you used, and every command Kipdeck prints is already in that form.
 

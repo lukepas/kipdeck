@@ -1,6 +1,6 @@
 // The demo's coach strip over the inbox (shared/democoach.ts): three steps that walk you through the
 // loop the demo opens with, a question in Needs you and a change in To review, and end on "Run it on
-// your repo" with the command to copy (a Copy command button when it is too long to show). A step you've done gets its check; pressing one opens the agent it's about.
+// your repo" ("That's the loop. Now run it on your repo." once both are done) with the command to copy (a Copy command button when it is too long to show). A step you've done gets its check; pressing one opens the agent it's about.
 // Loaded by demo.ts only in a demo office, so the inbox loads none of it up front.
 import { coachRun, coachSteps, type CoachSeen } from '../../shared/democoach';
 import { fitsPill, type DemoInfo } from '../../shared/demo';

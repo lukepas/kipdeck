@@ -37,7 +37,7 @@ Real strings from `origin/ux/integration`. "Keep" rows are as important as the r
 | exit on Ctrl+C (`src/server/startup.ts` goodbye) | closing Kipdeck... | Kipdeck stopped, and its agents with it. 3 shipped this session. (Ctrl+C stops the agents, so the line says so. The tally is left out when nothing merged.) |
 | `src/client/home/setup.ts:165` | Looking for your agents and projects... | Checking who's aboard: agents and projects... |
 | `src/client/home/setup.ts:180` | Deploy your first agent | Give your first agent a job |
-| `src/client/home/setup.ts:181` | It works on a branch of its own. When it needs an answer or has something to review, it shows up here. | It works on its own branch and comes back here when it needs you or has something to show. |
+| `src/client/home/setup.ts:181` | It works on a branch of its own. When it needs an answer or has something to review, it shows up here. | It works on its own branch and comes back here when it needs you or has something to review. ("Something to show" was cut: "review" names the To review section it lands in.) |
 | `src/client/home/deploy.ts:90` | What should it do? For example: add rate limiting to /api/login | What's the job? For example: add rate limiting to /api/login |
 | `src/client/home/empty.ts:60` | All clear | All clear. Nobody's waiting on you. |
 | `src/client/home/list.ts:187` | Nothing needs you. | Keep. It is a section line people scan. |
@@ -50,7 +50,7 @@ Real strings from `origin/ux/integration`. "Keep" rows are as important as the r
 | `src/client/home/palette.ts:53` | Nothing matches | Nothing matches. Try fewer words. |
 | `src/client/login.html:18` | Sign in (heading) | Welcome back (first claim: Welcome aboard). The button stays Sign in. |
 | `src/client/login.html:19` | The inbox for your AI coding agents. | Keep. The tagline is the same on every surface (`TAGLINE` in `src/shared/copy.ts`). |
-| `src/shared/democoach.ts:26` | Run it on your repo | That's the loop. Now run it on your repo. |
+| `src/shared/democoach.ts` coachSteps | Run it on your repo | Keep while a step is open. Once the question is answered and the change merged: That's the loop. Now run it on your repo. (Said earlier, it is untrue and sits over an item that needs you.) |
 | `site/landing/index.html:456` | What else is in the box. | B-sides: off by default. |
 | `site/landing/index.html:406` | The couch counts. | Keep. This is the humour level to aim for. |
 | `src/client/home/approval-card.ts:83` | Sent. Waiting for the agent... | Keep. It is an approval. |
@@ -89,7 +89,7 @@ Each plays once, never loops, never while Needs you is above zero (a queued beat
 5. **Greeting by time of day** (empty pane eyebrow, tape label, never next to a waiting item): MORNING (05 to 12), AFTERNOON (12 to 18), EVENING (18 to 22), NIGHT SHIFT (22 to 05) with "Still up? Nothing needs you. Kip's keeping watch."
 6. **Back after 8 hours.** "Welcome back. While you were out: 4 merged, 1 waiting 2h." Facts first, and the waiting item is a link.
 7. **Zero-wait day.** One line in Shipped today: "Nobody waited over 5 minutes today. Tight crew." No badge, never a ranking of people.
-8. **Demo end.** The coach strip's last step: "That's the loop. Now run it on your repo." with Kip waving and the copy command.
+8. **Demo end.** Once the first two steps are done, the coach strip's last step turns from "Run it on your repo" into "That's the loop. Now run it on your repo." with Kip waving and the copy command.
 
 ## Where fun is forbidden
 
