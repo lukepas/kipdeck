@@ -61,7 +61,9 @@ export async function copy(text: string): Promise<boolean> {
     // Not a secure context: fall back to a hidden textarea.
     const ta = h('textarea', { style: 'position:fixed;opacity:0' });
     ta.value = text;
-    document.body.append(ta);
+    // In the top window if one is open: the page behind a modal dialog is inert, and can't be selected in.
+    const windows = document.querySelectorAll('#modal-root > dialog[open]');
+    (windows[windows.length - 1] ?? document.body).append(ta);
     ta.select();
     const ok = document.execCommand('copy');
     ta.remove();

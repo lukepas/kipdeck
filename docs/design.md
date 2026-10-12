@@ -533,6 +533,8 @@ Open the deck with `?demo=1` for a screen share, a projector or a recording. It 
 
 Every control can be reached by keyboard, and focus is always a 2px ring in the text color (`--act`) with a 2px offset, never Signal (inset on rows and tabs that fill their container). Every window has a close button top right with a 28px target; Esc or the close button puts you straight back into mouse-look in Walk, or back in the Overview if you opened it from there, with no extra click.
 
+A window is a modal dialog: while it is open the page behind it can't be clicked or tabbed to, focus starts inside it (its first field, else its close button), Tab and Shift+Tab go round inside it, and closing it puts focus back on the button that opened it. Screen readers hear it as a dialog with its title as its name.
+
 ## Checking a change
 
 - `npm run typecheck`, `npm test` and `npm run build` must all pass with clean output.

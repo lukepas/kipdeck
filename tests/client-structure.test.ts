@@ -84,7 +84,23 @@ test('the home page loads no three.js, and none of the 3D office: what it shares
 
 test("the home page's first load leaves out the dialogs and Mission control's actions: they load when wanted", () => {
   const first = graph(path.join(client, 'lite.ts'));
-  for (const later of ['ui/prompt.ts', 'ui/dictate.ts', 'ui/mission/act.ts', 'ui/sendhome.ts']) {
+  for (const later of ['ui/prompt.ts', 'ui/dictate.ts', 'ui/mission/act.ts', 'ui/sendhome.ts', 'home/deploy.ts']) {
     assert.ok(!first.has(path.join(client, later)), `lite.ts imports ${later} up front: load it through home/lazy.ts`);
+  }
+});
+
+test('every window goes through openModal: no module builds its own dialog overlay', () => {
+  /** Modules whose window content another module opens with openModal, and that module. */
+  const HANDED = { 'ui/mission/index.ts': 'ui/mission/dock.ts' } as Record<string, string>;
+  const ROLE = /role: '(alert)?dialog'|role="(alert)?dialog"|setAttribute\('role', '(alert)?dialog'\)/;
+  const OWN = /\.showModal\(|createElement\('dialog'\)|h\('dialog|h\('div\.backdrop/;
+  const opens = (rel: string) => /\bopenModal\(/.test(read(path.join(client, rel)));
+  for (const rel of readdirSync(client, { recursive: true }) as string[]) {
+    if (!rel.endsWith('.ts')) continue;
+    const text = read(path.join(client, rel));
+    if (rel !== 'ui/dom.ts') assert.doesNotMatch(text, OWN, `${rel} opens a <dialog> or a .backdrop overlay itself: use openModal (ui/dom.ts)`);
+    if (!ROLE.test(text) || opens(rel)) continue;
+    const by = HANDED[rel];
+    assert.ok(by && opens(by), `${rel} makes a role 'dialog' window without openModal (ui/dom.ts): open it with openModal so it is a real modal dialog with its focus rules`);
   }
 });
