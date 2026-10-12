@@ -2,42 +2,45 @@ import * as THREE from 'three';
 import { FLOOR, WALL_T, type Side } from '../../../shared/layout';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { trimShader, type TrimLook } from './trim';
+import { NIGHT } from '../../../shared/tones';
 
-// What the deck is made of: one family of matte, slightly rough materials on a slate ramp, the
+// What the deck is made of: one family of matte, slightly rough materials on a warm graphite ramp, the
 // emissive practicals that light it, the floor's grid, the contact shadows that ground everything,
 // and smoked glass. world/toon.ts hands these out under its old names, so most call sites stay as
 // they were. Every color here is in DESIGN.md's 3D row.
 
 /**
- * The deck's 3D palette by Night (low light): slate and steel, with hue kept for state and proof. Day
- * (high light) swaps the neutrals for its own (DAY_PALETTE in features/lights/modes.ts) on the same
- * materials; the hues and the instrument black under every mark stay.
+ * The deck's 3D palette by Night (low light): warm graphite and worn steel, the cockpit of a crew with
+ * a tape deck playing (docs/design.md, Warmth), with hue kept for state and proof. Each neutral sits at
+ * the luminance its old slate had, so every contrast on the deck holds; only the cast moved from blue
+ * to warm. Day (high light) swaps the neutrals for its own (DAY_PALETTE in features/lights/modes.ts) on
+ * the same materials; the hues and the instrument black under every mark stay.
  */
 export const DECK = {
-  void: '#0D131A',
-  floor: '#1C2430',
-  gridMinor: '#2C3744',
-  gridMajor: '#3A4858',
-  wall: '#1C2530',
-  wallReveal: '#0A0F15',
-  console: '#26303C',
-  consoleTop: '#2E3946',
-  steel: '#3A4756',
-  steelLight: '#8A97A5',
-  unit: '#333D49',
-  text: '#E8ECEF',
-  muted: '#8A97A5',
-  line: '#26313D',
+  void: '#13100D',
+  floor: '#241F1A',
+  gridMinor: '#352E28',
+  gridMajor: '#463D35',
+  wall: '#221D18',
+  wallReveal: '#0F0C0A',
+  console: '#2E2822',
+  consoleTop: '#37302A',
+  steel: '#4A4239',
+  steelLight: '#A0968A',
+  unit: '#3B342E',
+  text: NIGHT.text.toUpperCase(),
+  muted: NIGHT.muted.toUpperCase(),
+  line: '#2F2924',
   signal: '#FF6A1A',
   stuck: '#FF4D5E',
   review: '#F5C542',
-  working: '#C9D2DC',
+  working: NIGHT.working.toUpperCase(),
   proof: '#A68BFF',
   settled: '#3DDC97',
   /** The bridge's hull plating, its seams, and the instrument black under screens and marks. */
-  hull: '#1C2530',
-  hullSeam: '#2A3644',
-  instrument: '#0B1219',
+  hull: '#221D18',
+  hullSeam: '#332C26',
+  instrument: '#0F0D0B',
   /** Ship-cyan: the instruments' own color, never a state. Hairlines and small type only; `shipDim` for lit areas. */
   ship: '#6FC3DF',
   shipDim: '#2C5E70',
@@ -45,7 +48,7 @@ export const DECK = {
 
 /**
  * Old names some fixtures still paint with (the back office's desks, the meeting room's chairs), all
- * mapped onto the slate ramp: nothing on the deck is pastel any more.
+ * mapped onto the graphite ramp: nothing on the deck is pastel any more.
  */
 export const PALETTE = {
   desk: DECK.consoleTop,

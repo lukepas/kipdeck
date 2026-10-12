@@ -27,7 +27,7 @@ node --import tsx --import=#tests/css --test tests/landing.test.ts tests/landing
 
 ## Change the name
 
-The name, tagline, wordmark, npm package, source repository and contact address live in one file, `site/landing/brand.ts`. The page title, the share tags, the wordmark, every sentence that names the product, every Source and Docs link, the clone commands, the design-partner link, the structured data and the generated share card (`og.png`) all read from it. The logo is not in `brand.ts`: Kip's mark in the header, the mini inbox and the footer, the favicons (`favicon-alert.svg` lights his light while someone waits), `apple-touch-icon.png` and the share card's mark are written from `src/shared/logo.ts` by `npm run logo` ([the logo](../../docs/design.md#the-logo)). Edit the `kipdeck` entry in `BRANDS`, or add one and pick it at build time:
+The name, tagline, wordmark, npm package, source repository and contact address live in one file, `site/landing/brand.ts`. The page title, the share tags, the wordmark, every sentence that names the product, every Source and Docs link, the start commands (`npx github:owner/repo`), the design-partner link, the structured data and the generated share card (`og.png`) all read from it. The logo is not in `brand.ts`: Kip's mark in the header, the mini inbox and the footer, the favicons (`favicon-alert.svg` lights his light while someone waits), `apple-touch-icon.png` and the share card's mark are written from `src/shared/logo.ts` by `npm run logo` ([the logo](../../docs/design.md#the-logo)). Edit the `kipdeck` entry in `BRANDS`, or add one and pick it at build time:
 
 ```bash
 KIPDECK_BRAND=<id> npm run build:site
@@ -45,11 +45,11 @@ npm run build:site
 | Variable | What it does | When unset |
 | --- | --- | --- |
 | `KIPDECK_SITE_URL` | Canonical link, `og:url`, absolute share-card addresses, `sitemap.xml` | None of those (a relative one would be wrong wherever the page is copied) |
-| `KIPDECK_REPO_URL` | Replaces the brand's repository everywhere, the clone command's folder and `cd` too | The repository in `brand.ts` |
+| `KIPDECK_REPO_URL` | Replaces the brand's repository everywhere, the `npx github:owner/repo` commands too | The repository in `brand.ts` |
 | `KIPDECK_WAITLIST_URL` | Shows the Team waitlist form and lets it POST `{ email, source }` there (and nowhere else) | No form; the ask is the design-partner link, an email to the brand's contact address |
 | `KIPDECK_DEMO_URL` | **Try the demo** opens a hosted read-only demo | **Try the demo** copies the hero's demo command |
-| `KIPDECK_NPM_PUBLISHED=1` | `npx` replaces the from-source commands | The from-source commands and the "Not on npm yet" line stay |
-| `KIPDECK_REPO_PUBLIC=0` | For a brand whose repository is private: the clone command, the 06 terminal and the Source and Docs links are left out, and the hero leads with the film and the design-partner email | Public (github.com/zbagdzevicius/kipdeck is): all of them are shown |
+| `KIPDECK_NPM_PUBLISHED=1` | `npx kipdeck` replaces the `npx github:` commands | The `npx github:` commands and the "Not on npm yet" line stay |
+| `KIPDECK_REPO_PUBLIC=0` | For a brand whose repository is private: the hero's command, the 06 terminal and the Source and Docs links are left out, and the hero leads with the film and the design-partner email | Public (github.com/zbagdzevicius/kipdeck is): all of them are shown |
 | `KIPDECK_BRAND` | Picks an entry in `brand.ts` | `kipdeck` |
 
 Every address must be `https`, or the build stops. The build draws `og.png` with headless Chromium when one is installed (`playwright-core`'s, `CHROMIUM_PATH`, or Google Chrome). Without one it says so and the committed `site/landing/public/og.png` ships instead. When the brand or the headline changes, build where Chromium is available and copy `dist/site/og.png` over it.
@@ -102,9 +102,9 @@ Everything is drawn in code from the app's own tokens and glyphs: DOM replicas o
 | 06 Yours | One command, your machine, a signed record | A three-line security strip (localhost by default, sign-in off localhost, a signed record whose key stays on the machine); the terminal runs in about a second; the measured times (3.4 s, 10.7 s, 4 clicks, scripted demo) count up as soon as they are in view; packets pass through your machine's wall to the model APIs and stop at it on the way to servers of ours (there are none); the signed record prints like a receipt. |
 | 07 Phone | Answer from anywhere | The phone turns in and rests flat, a push drops, and touch rings answer Codex and merge the README. |
 | 08 Numbers | The metric a team lead asks for | A modelled week's columns grow while the median rolls from 23 to 7 minutes. |
-| 09 Labs | What else is in the box | The `--labs` command line switches its flags on in turn and lights each tile; inbox rows lift into consoles on a bridge deck, and a three.js bridge takes over on capable devices. The flags are real toggles. Proof of Merge (testnet only) is a card here. |
+| 09 Labs | B-sides: off by default | The `--labs` command line switches its flags on in turn and lights each tile; inbox rows lift into consoles on a bridge deck, and a three.js bridge takes over on capable devices. The flags are real toggles. Proof of Merge (testnet only) is a card here. |
 | 10 Teams | Free for you, paid for the team | A zipper line runs between the plans; five empty seats; **Apply as a design partner** opens an email to the brand's contact address. The page ends here. |
-| 11 End | Nothing waits on you | The footer tells the truth about the wait (it offers Answer if Codex asked again), the wordmark opens to the header's width, then the links and credits. |
+| 11 End | Nothing waits on you. Kip has the watch. | The footer tells the truth about the wait (it offers Answer if Codex asked again), the wordmark opens to the header's width, then the links and credits. |
 
 With less motion (the system setting) none of it runs: every section shows its final state, and only the hero's clocks keep counting. Without script the page reads in full.
 
@@ -119,4 +119,4 @@ He never stands over text, a link, a button or a field: every spot is checked ag
 - No users and no revenue yet; the page says so and asks for five design partners.
 - Proof of Merge runs on testnets only (Solana devnet, Base Sepolia) with test funds; every chain value says so.
 - `npx kipdeck` is not on npm yet: the page shows the run-from-source command and says so.
-- The repository named in `brand.ts`, github.com/zbagdzevicius/kipdeck, is public, so the default build shows the Source and Docs links and the clone command. The design-partner ask is an email to `contact` in `brand.ts`, so it also works in a `KIPDECK_REPO_PUBLIC=0` build.
+- The repository named in `brand.ts`, github.com/zbagdzevicius/kipdeck, is public, so the default build shows the Source and Docs links and the `npx github:` command. The design-partner ask is an email to `contact` in `brand.ts`, so it also works in a `KIPDECK_REPO_PUBLIC=0` build.

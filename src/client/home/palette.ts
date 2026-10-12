@@ -50,7 +50,7 @@ export function openPalette(commands: () => Command[]) {
           c.hint ? h('small', {}, c.hint) : null,
         ),
       ),
-      ...(items.length ? [] : [h('li.pal-none', {}, 'Nothing matches')]),
+      ...(items.length ? [] : [h('li.pal-none', {}, 'Nothing matches. Try fewer words.')]),
     );
     list.querySelector('.on')?.scrollIntoView({ block: 'nearest' });
   };

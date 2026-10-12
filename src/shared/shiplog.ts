@@ -105,13 +105,13 @@ export interface ConditionWhy {
 }
 
 const REMINDER_WORDS: Record<NonNullable<ConditionWhy['reminder']>, string> = {
-  'needs-input-long': 'A UNIT HAS WAITED OVER AN HOUR',
+  'needs-input-long': 'AN AGENT HAS WAITED OVER AN HOUR',
   'approved-unmerged': 'AN APPROVED PR WAITS TO MERGE',
   'milestone-overdue': 'A WAYPOINT IS PAST ITS DATE',
 };
 
 /**
- * "CONDITION AMBER - UNITS AWAIT ORDERS", "CONDITION RED - C-01 STUCK 14 MIN", "CONDITION GREEN - ALL
+ * "CONDITION AMBER - AGENTS NEED YOU", "CONDITION RED - C-01 STUCK 14 MIN", "CONDITION GREEN - ALL
  * STATIONS WORKING". No counts: the room counts in two places only, the top bar and the Attention
  * board's header, so the band names who and why, never how many.
  */
@@ -119,21 +119,21 @@ export function conditionLine(c: ConditionName, why: ConditionWhy, working = 0):
   if (c === 'green') return working > 0 ? 'CONDITION GREEN - ALL STATIONS WORKING' : 'CONDITION GREEN - ALL CLEAR';
   const head = `CONDITION ${c.toUpperCase()}`;
   if (c === 'red') {
-    if (why.stuck > 1) return `${head} - UNITS STUCK`;
+    if (why.stuck > 1) return `${head} - AGENTS STUCK`;
     if (why.top?.stuck) return `${head} - ${why.top.unit} STUCK ${why.top.min} MIN${asksTail(why)}`;
   }
-  if (why.waiting > 0) return `${head} - ${why.waiting === 1 ? 'A UNIT AWAITS' : 'UNITS AWAIT'} ORDERS`;
+  if (why.waiting > 0) return `${head} - ${why.waiting === 1 ? 'AN AGENT NEEDS YOU' : 'AGENTS NEED YOU'}`;
   return why.reminder ? `${head} - ${REMINDER_WORDS[why.reminder]}` : head;
 }
 
-/** The quick answer after a stuck unit's line: " - ORDERS AWAITED AT A-03". */
+/** The quick answer after a stuck agent's line: " - A-03 NEEDS YOU". */
 function asksTail(why: ConditionWhy): string {
   if (!why.asks?.n) return '';
-  return ` - ORDERS AWAITED AT ${why.asks.unit}`;
+  return ` - ${why.asks.unit} NEEDS YOU`;
 }
 
 /** What the band says while the latch is still on its way down and nothing waits any more. */
-export const STANDING_DOWN = 'STANDING DOWN - EVERY CALL CLEARED';
+export const STANDING_DOWN = 'BACK TO GREEN - EVERY CALL CLEARED';
 
 /** A unit back from stuck that landed its work: "WIDGET (B-02) RECOVERED, 40M STUCK". */
 export function recoveredLine(name: string, unit: string | undefined, stuckMs: number): string {
@@ -149,6 +149,8 @@ function stuckFor(ms: number): string {
 
 /** A celebration's card: a title in mono, plain lines under it. */
 export interface MomentCard {
+  /** A warm eyebrow over the title, as a tape label (the start of watch's greeting); quiet moments only. */
+  eyebrow?: string;
   title: string;
   lines: string[];
 }
@@ -197,7 +199,7 @@ const tallyLine = (t: LogTally) =>
 /** Tier 3: "Waypoint 3: 14 merges, 2 days, 0 reverts, 120.00 USDC paid". */
 export function waypointCard(o: { n: number; title: string; tally: LogTally }): MomentCard {
   const lines = [`Waypoint ${o.n}: ${tallyLine(o.tally)}.`];
-  if (o.tally.recoveries) lines.push(`${o.tally.recoveries} ${o.tally.recoveries === 1 ? 'unit' : 'units'} came back from stuck to land their work.`);
+  if (o.tally.recoveries) lines.push(`${o.tally.recoveries} ${o.tally.recoveries === 1 ? 'agent' : 'agents'} came back from stuck to land their work.`);
   if (o.tally.units.length) lines.push(`Merged by ${listWords(o.tally.units)}.`);
   return { title: `WAYPOINT ${o.n} REACHED: ${clip(o.title, 40).toUpperCase()}`, lines };
 }

@@ -10,6 +10,9 @@ import { h, modalOpen } from '../../ui/dom';
 import { icon } from '../../ui/icons';
 
 export class MomentCards {
+  // The greeting shows over the title but is read after the facts (docs/voice.md, fact first).
+  private readonly eyebrow = h('p.moment-card-eyebrow', { hidden: true, 'aria-hidden': 'true' });
+  private readonly eyebrowSaid = h('span.sr-only');
   private readonly title = h('p.moment-card-title');
   private readonly body = h('div');
   private readonly voice = h('p.moment-card-voice');
@@ -19,7 +22,7 @@ export class MomentCards {
 
   constructor(private readonly backToGame: () => void) {
     const close = h('button.btn.close', { type: 'button', 'aria-label': 'Close', title: 'Close (Esc)', onclick: () => this.close(true) }, icon('close', 16));
-    this.el = h('div.moment-card', { role: 'status', 'aria-live': 'polite', hidden: true }, this.title, this.body, this.voice, close);
+    this.el = h('div.moment-card', { role: 'status', 'aria-live': 'polite', hidden: true }, this.eyebrow, this.title, this.body, this.voice, this.eyebrowSaid, close);
     (document.getElementById('hud') ?? document.body).append(this.el);
     window.addEventListener(
       'keydown',
@@ -37,6 +40,9 @@ export class MomentCards {
   show(card: MomentCard, ms: number, voice?: string | null) {
     clearTimeout(this.timer);
     this.shown = card;
+    this.eyebrow.textContent = card.eyebrow ?? '';
+    this.eyebrow.hidden = !card.eyebrow;
+    this.eyebrowSaid.textContent = card.eyebrow ? ` ${card.eyebrow}.` : '';
     this.title.textContent = card.title;
     this.body.replaceChildren(...card.lines.map((l) => h('p.moment-card-line', {}, l)));
     this.voice.textContent = voice ?? '';
@@ -54,6 +60,15 @@ export class MomentCards {
     this.el.classList.remove('on');
     this.timer = window.setTimeout(() => (this.el.hidden = true), 420);
     if (byHand) this.backToGame();
+  }
+
+  /** Takes the greeting off the card it shows, as soon as someone needs you; the facts stay. */
+  plain() {
+    if (!this.shown?.eyebrow) return;
+    this.shown = { ...this.shown, eyebrow: undefined };
+    this.eyebrow.hidden = true;
+    this.eyebrow.textContent = '';
+    this.eyebrowSaid.textContent = '';
   }
 
   /** What it shows now, if anything (the shots read it). */

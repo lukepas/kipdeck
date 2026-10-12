@@ -147,12 +147,12 @@ export function goodDay(t: Pick<Turnaround, 'reply' | 'review' | 'cleared'>): bo
 
 /**
  * The crew's line in the top bar's corner, framed as what the crew got through, never as a tally of
- * the captain: "2 units back on task", "4 PRs through review today". Null until the first one, so a
+ * the captain: "2 agents back on task", "4 PRs through review today". Null until the first one, so a
  * day never opens on a row of zeros.
  */
 export function captainsBar(c: Turnaround['cleared']): string | null {
   const parts: string[] = [];
-  if (c.recovered > 0) parts.push(`${c.recovered} ${c.recovered === 1 ? 'unit' : 'units'} back on task`);
+  if (c.recovered > 0) parts.push(`${c.recovered} ${c.recovered === 1 ? 'agent' : 'agents'} back on task`);
   if (c.reviews > 0) parts.push(`${c.reviews} ${c.reviews === 1 ? 'PR' : 'PRs'} through review today`);
   return parts.length ? parts.join(', ') : null;
 }

@@ -1,0 +1,16 @@
+/* Kip's colours, one set for every surface that draws him flat (src/shared/kip-art.ts): the landing
+   page, the sign-in pages and the inbox's quiet moments. They are the investor deck's (deck/site/kip.css)
+   and the Deck's 3D Kip's, so he is the same character everywhere. Only his outline changes with the light. */
+:root {
+  --kip-fur: #E9DCC6; --kip-belly: #F6EEDF; --kip-slate: #3B4350; --kip-tan: #B89F82;
+  --kip-vest: #4A5A70; --kip-knit: #8592A6; --kip-vest-dark: #3E4C5F; --kip-brass: #B9A86E;
+  --kip-iris: #6B4A2B; --kip-pupil: #1A1410; --kip-glint: #E8E6E2; --kip-wood: #CDAE84;
+  --kip-rim: #F3A6BC;
+  --kip-ink: rgba(0, 0, 0, .35);
+}
+:root[data-theme='light'], :root[data-theme='print'] { --kip-ink: rgba(10, 15, 28, .45); }
+@media (prefers-color-scheme: light) {
+  :root[data-theme='auto'] { --kip-ink: rgba(10, 15, 28, .45); }
+}
+/* His outline, on the shapes marked .o. */
+.kip .o { stroke: var(--kip-ink); stroke-width: 1.2; stroke-linejoin: round; }

@@ -16,6 +16,21 @@
   --ship-dim: #2c5e70;
   --code-bg: #0f0d0b;
   --term-text: #d6cdc1;
+  /* The terminals, the command lines and the phone stay dark in both themes, so their inks are fixed:
+     the night set's text, muted and edges (src/shared/tones.ts NIGHT), and the night state hues. */
+  --term-ink: #f2ece3;
+  --term-dim: #a69c8f;
+  --term-faint: #7a7064;
+  --term-raised: #1c1814;
+  --term-line: #342d27;
+  --term-edge: #4d443b;
+  --term-ok: #3ddc97;
+  --term-signal: #ff6a1a;
+  --term-ship: #6fc3df;
+  --shell-1: #2b2520;
+  --shell-2: #15120f;
+  --cursor-fill: #f2ece3;
+  --cursor-edge: #15120f;
   --add-bg: rgb(61 220 151 / .10);
   --add-line: rgb(61 220 151 / .55);
   --shadow-lift: 0 30px 80px -20px rgb(0 0 0 / .65), 0 0 0 1px rgb(255 255 255 / .02);
@@ -35,7 +50,7 @@
   :root:not([data-theme='dark']) {
     color-scheme: light;
     --void: #f8f4ed; --surface-1: #fffdf9; --surface-2: #f1ece3; --surface-3: #e7e0d5;
-    --line: #ded6c9; --line-strong: #c4b9a8; --line-input: #7f7466; --text: #1c1814; --muted: #5f574d; --faint: #8a7f70; --tape: #6b5a46; --plum: #7a5f76; --grain: none;
+    --line: #ded6c9; --line-strong: #c4b9a8; --line-input: #7f7466; --text: #1c1814; --muted: #5f574d; --faint: #8a7f70; --tape: #6b5a46; --plum: #7a5f76; --grain: none; --sunset: none;
     --signal: #a8380a; --stuck: #c01f33; --review: #8a5a00; --working: #5f574d; --proof: #5b3fd1; --settled: #0f7a4f;
     --on-signal: #ffffff;
     --signal-tint: rgb(168 56 10 / .07); --review-tint: rgb(138 90 0 / .08); --proof-tint: rgb(91 63 209 / .08);
@@ -50,7 +65,7 @@
 :root[data-theme='light'] {
   color-scheme: light;
   --void: #f8f4ed; --surface-1: #fffdf9; --surface-2: #f1ece3; --surface-3: #e7e0d5;
-  --line: #ded6c9; --line-strong: #c4b9a8; --line-input: #7f7466; --text: #1c1814; --muted: #5f574d; --faint: #8a7f70; --tape: #6b5a46; --plum: #7a5f76; --grain: none;
+  --line: #ded6c9; --line-strong: #c4b9a8; --line-input: #7f7466; --text: #1c1814; --muted: #5f574d; --faint: #8a7f70; --tape: #6b5a46; --plum: #7a5f76; --grain: none; --sunset: none;
   --signal: #a8380a; --stuck: #c01f33; --review: #8a5a00; --working: #5f574d; --proof: #5b3fd1; --settled: #0f7a4f;
   --on-signal: #ffffff;
   --signal-tint: rgb(168 56 10 / .07); --review-tint: rgb(138 90 0 / .08); --proof-tint: rgb(91 63 209 / .08);

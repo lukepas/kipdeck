@@ -114,7 +114,7 @@ export function chip(g: CanvasRenderingContext2D, c: Chip, x: number, y: number,
   const top = Math.round(y - h / 2);
   g.beginPath();
   g.roundRect(x, top, w, h, r);
-  g.fillStyle = c.strong ? withAlpha(c.hue, 0.22) : 'rgba(13,19,26,0.85)';
+  g.fillStyle = c.strong ? withAlpha(c.hue, 0.22) : withAlpha(INK.bg, 0.85);
   g.fill();
   g.strokeStyle = c.hue;
   g.lineWidth = Math.max(2, size * 0.07);
@@ -186,7 +186,7 @@ export function table(g: CanvasRenderingContext2D, t: TableSpec): number {
     const top = y + hh + i * rowH;
     const mid = top + rowH / 2;
     if (i % 2) {
-      g.fillStyle = 'rgba(27,35,45,0.55)';
+      g.fillStyle = withAlpha(INK.card, 0.55);
       g.fillRect(x, top, w, rowH);
     }
     if (r.hue) {

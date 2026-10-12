@@ -44,33 +44,35 @@ export interface Rig {
 }
 
 export const LIGHT_MODES: Record<LightMode, Rig> = {
-  // Night: a warm and cool key (each light's colour stays out of the state hues: a cool blue-indigo,
-  // hue about 230, and a warm white of low chroma, tests/lights.test.ts). Cool violet-blue starlight from over the bow and low from either side rims
-  // the tiers and the units; the pods' lamps and the dais's practicals are warm; the fill from the sky
-  // is low, so the hull stays dark (luma 6 to 30) and the stations over it read (40 to 120).
+  // Night: the crew's cockpit after dark, warm lamps inside and cool starlight outside (each light's
+  // colour stays out of the state hues: a cool blue-indigo, hue about 230, and warm whites of low
+  // chroma, tests/lights.test.ts). Pale starlight from over the bow and a low cool rim from either side
+  // cut the tiers and the units out of the floor; the sky's fill, the pods' lamps, the table and the
+  // fill from aft are warm, like a cabin lit by its own lamps, so the room reads warm graphite rather
+  // than blue. The hull stays dark (luma 6 to 30) and the stations over it read (40 to 120).
   night: {
     exposure: 1.4,
-    hemi: { sky: '#7C8AD8', ground: '#262838', i: 2.6 },
-    key: { color: '#B3BCFF', i: 4.8 },
-    fill: { color: '#EEE2D2', i: 1.5 },
-    rim: { color: '#7F90FF', i: 3.0 },
-    pods: { color: '#EFE3D3', i: 150 },
-    table: { color: '#C9D6E6', i: 38 },
+    hemi: { sky: '#B8AC9E', ground: '#2A241F', i: 1.9 },
+    key: { color: '#CDD0EC', i: 4.4 },
+    fill: { color: '#F0E2D2', i: 1.8 },
+    rim: { color: '#97A0DA', i: 2.4 },
+    pods: { color: '#F0E2D3', i: 150 },
+    table: { color: '#EFE3D3', i: 38 },
     holo: { color: '#6FC3DF', i: 26 },
     bloom: { strength: 0.48, radius: 0.45, threshold: 0.85 },
     env: 1.3,
   },
   // Day: high orbit over a sunlit planet. A warm, hard sun key casts the canopy's ribs across the
-  // tiers; the fill is the planet's cool blue; the hull keeps a mid-dark albedo (DAY_PALETTE), so the sun
-  // does the brightening and the boards keep their contrast.
+  // tiers; the fill is the planet's cool blue; the hull keeps a mid-dark warm albedo (DAY_PALETTE), so
+  // the sun does the brightening and the boards keep their contrast.
   day: {
     exposure: 1.7,
-    hemi: { sky: '#A9C3E6', ground: '#5C564E', i: 1.6 },
+    hemi: { sky: '#C9CCD6', ground: '#5C564E', i: 1.6 },
     key: { color: '#FCEFE0', i: 5.6 },
     fill: { color: '#B9D2F0', i: 0.9 },
     rim: { color: '#CFE0FF', i: 0.6 },
     pods: { color: '#EFE3D3', i: 24 },
-    table: { color: '#C9D2DC', i: 22 },
+    table: { color: '#EFE3D3', i: 22 },
     holo: { color: '#6FC3DF', i: 6 },
     bloom: null,
     env: 1.0,
@@ -99,39 +101,39 @@ export function brightnessFactor(step: number): number {
 
 /**
  * Day's colors for the deck's neutrals, by their Night color (DECK in world/office/materials.ts): the
- * floor, walls and hull go a cool mid-grey (Day lifts the exposure rather than whitening them, so the
- * hues of state and the screens stay the strongest things in view), and the consoles go darker still, graphite instrument blocks that
- * stand out of a light floor. Units stay graphite in both, and every attention mark sits on its own
+ * floor, walls and hull go a warm mid-grey, worn paper in shadow (Day lifts the exposure rather than
+ * whitening them, so the hues of state and the screens stay the strongest things in view), and the
+ * consoles go darker still, graphite instrument blocks that stand out of a light floor. Units stay graphite in both, and every attention mark sits on its own
  * instrument-black carrier (the ring inlay, the callout chip), so its hue reads the same by day.
  */
 export const DAY_PALETTE: Readonly<Record<string, string>> = {
-  // floor and its grid (the floor's canvas texture): a cool mid-dark deck plate, never near-white
-  '#1c2430': '#7c8794',
-  '#2c3744': '#727d8a',
-  '#3a4858': '#65707d',
+  // floor and its grid (the floor's canvas texture): a warm mid-dark deck plate, never near-white
+  '#241f1a': '#8a8176',
+  '#352e28': '#80776c',
+  '#463d35': '#736a5f',
   // walls, hull plating and its seams, reveals: albedo about 0.3 at most, the sun does the lifting
-  '#1c2530': '#8a95a2',
-  '#2a3644': '#7a8592',
-  '#0a0f15': '#59636f',
+  '#221d18': '#988f84',
+  '#332c26': '#888075',
+  '#0f0c0a': '#665e55',
   // consoles and their tops: darker than by night, so they read against the deck
-  '#26303c': '#141a22',
-  '#2e3946': '#171e27',
+  '#2e2822': '#1a1612',
+  '#37302a': '#1e1a16',
   // steel and lines
-  '#3a4756': '#56626f',
-  '#26313d': '#6c7682',
+  '#4a4239': '#62594f',
+  '#2f2924': '#7a7167',
 };
 
 /**
  * What Day multiplies lettering and paint on walls and floor by (materials.ts, ink): drawn light for
- * Night's dark surfaces, it comes out dark slate on Day's light ones.
+ * Night's dark surfaces, it comes out dark warm graphite on Day's light ones.
  */
-export const DAY_INK = '#4a4f55';
+export const DAY_INK = '#4f4a44';
 
 /**
  * The instrument black every unit's marks sit on (world/character/unit-marks.ts): a disc 6 cm wider
  * than its ring, so a state's hue is read against the same dark in Night and in Day, never against a
  * light floor.
  */
-export const RING_INLAY = '#101720';
+export const RING_INLAY = '#120f0c';
 /** The callouts' chip under a unit's name and state (world/character/unit-callout.ts), in both modes: dense enough that stuck red still reads 4.5:1 over Day's lightest surface. */
-export const CALLOUT_CHIP = { rgb: [13, 19, 26], alpha: 0.92 } as const;
+export const CALLOUT_CHIP = { rgb: [19, 16, 13], alpha: 0.92 } as const;

@@ -40,6 +40,9 @@ function calmInbox(section: HTMLElement) {
   const answer = box.querySelector<HTMLButtonElement>('.calm-answer')!;
   let stop: (() => void) | null = null;
   let shown = '';
+  // The calm line's warm clause, after the fact and in its own span (docs/voice.md). Never while
+  // an agent waits.
+  const warm = line.querySelector('.warm') ?? Object.assign(document.createElement('span'), { className: 'warm', textContent: 'Kip has the watch.' });
   answer.addEventListener('click', () => wait.clear());
   const paint = () => {
     const t = clock(wait.seconds());
@@ -49,7 +52,8 @@ function calmInbox(section: HTMLElement) {
     const waiting = since !== null;
     box.classList.toggle('waiting', waiting);
     answer.tabIndex = waiting ? 0 : -1;
-    line.textContent = waiting ? 'Codex is waiting on you.' : 'Nothing waits on you.';
+    if (waiting) line.textContent = 'Codex is waiting on you.';
+    else line.replaceChildren('Nothing waits on you. ', warm);
     if (!waiting) {
       clockEl.textContent = shown = '0:00';
       box.classList.remove('settled');

@@ -1,6 +1,7 @@
 /* The demo's coach strip over the inbox (coach.ts): three steps, each checked off once done, ending at the command. */
-.coach { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); font-size: 13px; }
-.coach-tag { flex: none; font: 600 11px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.coach { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--surface-2); font-size: 13px; }
+/* A tape label: the demo strip is a warm eyebrow. */
+.coach-tag { flex: none; font: 500 var(--label-size) var(--label-font); letter-spacing: var(--label-track); text-transform: uppercase; color: var(--tape); }
 .coach-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; min-width: 0; }
 .coach-step { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
 .coach-n { display: grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--line-strong); font: 600 11px var(--font-mono); color: var(--muted); }

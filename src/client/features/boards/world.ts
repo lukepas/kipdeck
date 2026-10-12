@@ -1,4 +1,5 @@
 import { DATA_COLORS } from '../../../shared/datacolors';
+import { NIGHT } from '../../../shared/tones';
 import * as THREE from 'three';
 import { OFFICE_PLAN } from '../../../shared/plan';
 import { SITUATION } from '../../../shared/layout';
@@ -9,8 +10,8 @@ import type { GhIssue, GhPull, GhState, QueueState, QueueTask, ServiceInfo, Work
 import { workerForPull } from '../../state';
 import type { BoardBounty } from '../bounties/logic';
 
-/** An issue's card on the wall: a light slate card, its pin from the data palette (shared/datacolors.ts). */
-export const NOTE_COLORS = ['#C9D2DC', '#BCC6D1', '#D3DAE1', '#C2CCD6', '#CDD5DD'];
+/** An issue's card on the wall: a warm paper card, its pin from the data palette (shared/datacolors.ts). */
+export const NOTE_COLORS = ['#E6D9C3', '#DCCFBA', '#EADFCC', '#D8CCB8', '#E2D6C1'];
 export const PINS: readonly string[] = DATA_COLORS;
 
 export function wrap(ctx: CanvasRenderingContext2D, text: string, maxW: number, maxLines: number): string[] {
@@ -30,30 +31,30 @@ export function wrap(ctx: CanvasRenderingContext2D, text: string, maxW: number, 
   return lines;
 }
 
-/** The panels' ramp: the same tokens as the DOM's (styles/tokens.css), for canvases. */
+/** The panels' ramp: the DOM's warm graphite (src/shared/tones.ts NIGHT, as styles/tokens.css), for canvases. */
 export const PANEL = {
-  bg: '#141B23',
-  card: '#1A222C',
-  cardHi: '#212A35',
-  line: '#26313D',
-  lineStrong: '#3A4756',
-  text: '#E8ECEF',
-  muted: '#8A97A5',
+  bg: NIGHT.void,
+  card: NIGHT.surface1,
+  cardHi: NIGHT.surface2,
+  line: NIGHT.line,
+  lineStrong: NIGHT.lineStrong,
+  text: NIGHT.text,
+  muted: NIGHT.muted,
   signal: '#FF6A1A',
   stuck: '#FF4D5E',
   review: '#F5C542',
-  working: '#C9D2DC',
+  working: NIGHT.working,
   proof: '#A68BFF',
   settled: '#3DDC97',
 } as const;
 export const UI_FONT = (weight: number, size: number) => `${weight} ${size}px Archivo, system-ui, sans-serif`;
 export const MONO_FONT = (size: number, weight = 500) => `${weight} ${size}px "JetBrains Mono", ui-monospace, monospace`;
 
-/** A panel's ground: flat slate with a faint 1 m-style grid, the deck's floor in miniature. */
+/** A panel's ground: flat graphite with a faint 1 m-style grid, the deck's floor in miniature. */
 export function panelGround(g: CanvasRenderingContext2D, W: number, H: number) {
   g.fillStyle = PANEL.bg;
   g.fillRect(0, 0, W, H);
-  g.fillStyle = 'rgba(38,49,61,0.45)';
+  g.fillStyle = 'rgba(52,45,39,0.45)';
   for (let x = 40; x < W; x += 40) g.fillRect(x, 0, 1, H);
   for (let y = 40; y < H; y += 40) g.fillRect(0, y, W, 1);
 }
@@ -301,7 +302,7 @@ export class ServicesBoardTexture {
     this.last = [items, workers];
     const rows = items.map((s) => {
       const w = workers.get(s.workerId);
-      return { port: s.port, title: s.title || s.command, who: [w?.name ?? 'A unit', w?.worktree?.branch].filter(Boolean).join('  ') };
+      return { port: s.port, title: s.title || s.command, who: [w?.name ?? 'An agent', w?.worktree?.branch].filter(Boolean).join('  ') };
     });
     // Worker updates stream in constantly; only redraw when what's shown changes.
     const key = JSON.stringify([rows, this.lifted, this.panel.h]);
@@ -360,7 +361,7 @@ export class QueueBoardTexture {
         const w = t.workerId ? workers.get(t.workerId) : undefined;
         const st = { starting: 'starting', idle: 'idle', working: 'working', needs_input: 'needs you', done: 'done', exited: 'stopped', offline: 'asleep' }[w?.status ?? 'working'];
         const needs = w?.status === 'needs_input';
-        return { hue: needs ? PANEL.signal : PANEL.working, mark: glyphMark(needs ? 'needs-you' : 'working'), tag: tag(t), text: title(t), side: st, sideColor: needs ? PANEL.signal : INK.dim, sub: t.workerName ?? 'a unit' };
+        return { hue: needs ? PANEL.signal : PANEL.working, mark: glyphMark(needs ? 'needs-you' : 'working'), tag: tag(t), text: title(t), side: st, sideColor: needs ? PANEL.signal : INK.dim, sub: t.workerName ?? 'an agent' };
       }),
       ...queued.map((t, i): Row => ({ hue: PANEL.lineStrong, mark: queuedMark, tag: tag(t), text: title(t), side: i === 0 ? 'up next' : `${i + 1} in line` })),
       ...done.map((t): Row => {
