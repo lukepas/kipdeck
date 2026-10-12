@@ -2,8 +2,9 @@
 // roll of the units that merged, or any moment that comes out as its card (Settings > Deck >
 // Celebrations at Cards only, reduced motion, or one held too long behind a call). One at a time, the
 // newest in place of the last. It never takes the mouse: it shows while you keep walking and puts itself
-// away after a while. A ✕ top right puts it away now, and so does Esc while the mouse is free, which
-// hands the mouse straight back to the view, as every window does.
+// away after a while. A ✕ top right puts it away now, and so does Esc while the mouse is free (once a
+// selected unit has let go of it, docs/controls.md), which hands the mouse straight back to the view,
+// as every window does.
 import './card.css';
 import type { MomentCard } from '../../../shared/shiplog';
 import { h, modalOpen } from '../../ui/dom';
@@ -20,14 +21,18 @@ export class MomentCards {
   private timer = 0;
   private shown: MomentCard | null = null;
 
-  constructor(private readonly backToGame: () => void) {
+  /** `escTaken`: whether Esc belongs to something else first (a selected unit lets go before this goes). */
+  constructor(
+    private readonly backToGame: () => void,
+    private readonly escTaken?: () => boolean,
+  ) {
     const close = h('button.btn.close', { type: 'button', 'aria-label': 'Close', title: 'Close (Esc)', onclick: () => this.close(true) }, icon('close', 16));
     this.el = h('div.moment-card', { role: 'status', 'aria-live': 'polite', hidden: true }, this.eyebrow, this.title, this.body, this.voice, this.eyebrowSaid, close);
     (document.getElementById('hud') ?? document.body).append(this.el);
     window.addEventListener(
       'keydown',
       (e) => {
-        if (e.key !== 'Escape' || !this.shown || modalOpen() || document.pointerLockElement) return;
+        if (e.key !== 'Escape' || !this.shown || modalOpen() || document.pointerLockElement || this.escTaken?.()) return;
         e.preventDefault();
         e.stopPropagation();
         this.close(true);

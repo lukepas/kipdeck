@@ -54,11 +54,15 @@ export function reviewHint(n: number): string {
   return `${n} to review - Mission control (I)`;
 }
 
-export function installMoments(ctx: Ctx, parts: Pick<Parts, 'views' | 'giveWay' | 'alert' | 'space' | 'fleet' | 'vesper' | 'focus'>): Moments {
+export function installMoments(ctx: Ctx, parts: Pick<Parts, 'views' | 'giveWay' | 'alert' | 'space' | 'fleet' | 'vesper' | 'focus' | 'selection'>): Moments {
   const gestures = new Gestures(ctx, parts);
   const sweep = new PodSweep();
   ctx.scene.add(sweep.mesh);
-  const cards = new MomentCards(() => parts.focus.backToGame());
+  // Esc lets go of a selected unit first (docs/controls.md); the selection is installed after this, so asked when Esc comes.
+  const cards = new MomentCards(
+    () => parts.focus.backToGame(),
+    () => !!parts.selection?.id(),
+  );
   const queue = new MomentQueue();
   let clock = 0;
   let recoveries = 0;
