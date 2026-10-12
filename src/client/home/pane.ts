@@ -16,7 +16,7 @@ import { h } from '../ui/dom';
 import { icon } from '../ui/icons';
 import { modelBadge } from '../ui/provider';
 import type { Actions } from './actions';
-import { onProject } from './deploy';
+import { onProject } from './on-project';
 import * as lazy from './lazy';
 import { agentMark, currentView, entryTitle, waitingNow, whereLabel } from './list';
 import { commentsOf, installBrief, reviewBrief } from './brief';

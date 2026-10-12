@@ -13,21 +13,10 @@ import { agentFound } from './setup';
 import { home } from './state';
 import { storageKey } from '../shared/storage-key';
 import { askOnceAtDeploy } from '../pwa/ask';
+import { onProject } from './on-project';
 import { pushName } from '../pwa';
 
 const LAST_AGENT = storageKey('agent');
-
-/** Runs `then` once you're on project `floor`: at once on yours, else after the office has moved you there. */
-export function onProject(net: Net, floor: string, then: () => void) {
-  if (!floor || floor === store.floor) return then();
-  const off = store.on('floor', () => {
-    if (store.floor !== floor) return;
-    off();
-    // A tick later, once the project's agents have arrived.
-    setTimeout(then, 0);
-  });
-  net.send({ t: 'floor.go', floor });
-}
 
 function lastAgent(): AgentProvider | undefined {
   try {
