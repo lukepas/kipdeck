@@ -9,7 +9,7 @@
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import net from 'node:net';
 import { tmpdir } from 'node:os';
@@ -56,6 +56,14 @@ before(async () => {
   execFileSync('git', ['init', '-q', '-b', 'main'], { cwd: project });
   execFileSync('git', ['-c', 'user.email=t@example.invalid', '-c', 'user.name=t', 'commit', '-q', '--allow-empty', '-m', 'start'], { cwd: project });
   const agent = writeStandIn(bin);
+  // The stand-in runs as the office's --agent, off the PATH, and is signed in to a Claude config of
+  // its own: the setup card finds it ready on a machine with no agent CLI (CI) and never reads the
+  // real ~/.claude.
+  const claudeDir = path.join(root, 'claude-config');
+  mkdirSync(claudeDir, { recursive: true });
+  writeFileSync(path.join(claudeDir, '.credentials.json'), '{}');
+  process.env.CLAUDE_CONFIG_DIR = claudeDir;
+  for (const k of ['ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN', 'CLAUDE_CODE_OAUTH_TOKEN']) delete process.env[k];
   const s = net.createServer();
   await new Promise<void>((r) => s.listen(0, '127.0.0.1', r));
   const port = (s.address() as net.AddressInfo).port;
@@ -279,8 +287,10 @@ test('a phone: the list alone, an agent over it with large buttons, Back to the 
   assert.ok(!(await page.locator('.pane').isVisible()), 'no pane beside the list');
   await first.locator('.row-main').click();
   await page.locator('.pane .rv-merge').waitFor();
-  const box = await page.locator('.pane .rv-merge').boundingBox();
-  assert.ok(box && box.height >= 44, `Merge is a large tap target (${box?.height}px)`);
+  // Measured in the page in one go: the review bar is drawn again on every roster tick (pane.ts,
+  // reviewBar), so a button found by one call can be gone by the next.
+  const height = await page.evaluate(() => document.querySelector('.pane .rv-merge')?.getBoundingClientRect().height);
+  assert.ok(height !== undefined && height >= 44, `Merge is a large tap target (${height}px)`);
   const pane = await page.locator('.pane').boundingBox();
   assert.ok(pane && pane.width >= 389, 'the pane covers the screen');
   await page.locator('.pane-back').click();

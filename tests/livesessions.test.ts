@@ -98,7 +98,7 @@ test('Bring in: admins only, and only sessions the office itself found running',
   const sent: { t: string }[] = [];
   const make = (admin: boolean) =>
     ({
-      cfg: { dataDir: tmp() },
+      cfg: { dataDir: tmp(), agentCmd: 'claude' },
       building: { list: () => [] },
       floors: new Map(),
       telemetry: { state: () => ({ on: false, allowed: true }) },
