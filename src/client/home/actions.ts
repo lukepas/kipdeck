@@ -14,7 +14,8 @@ import type { MissionDeps } from '../ui/mission/act';
 import { reminderAction } from '../../shared/reminders';
 import { clearComments, commentsNote } from './brief';
 import { quiet } from './warm';
-import { onProject, openDeploy } from './deploy';
+import type { openDeploy as OpenDeploy } from './deploy';
+import { onProject } from './on-project';
 import * as lazy from './lazy';
 import { currentView, entryRef, entryTitle } from './list';
 import { agentRef } from '../../shared/agentname';
@@ -50,6 +51,8 @@ export interface Actions {
 }
 
 export function createActions(net: Net): Actions {
+  /** The Deploy sheet, loaded the first time it's opened (home/lazy.ts). */
+  const openDeploy = (n: Net, opts: Parameters<typeof OpenDeploy>[1]) => void lazy.deploy().then((m) => m.openDeploy(n, opts));
   const merging = new Set<string>();
   /** Selects the agent, going to its project first when it's on another. */
   const show = (id: string, tab: 'terminal' | 'changes') => home.select(id, tab);
