@@ -12,7 +12,6 @@ import { looksLikePermission, readQuestion, type Question } from '../../shared/q
 import type { RosterEntry } from '../../shared/protocol';
 import type { Net } from '../net';
 import { h, toast } from '../ui/dom';
-import { answered } from './advance';
 import * as lazy from './lazy';
 import { home } from './state';
 import './question.css';
@@ -75,7 +74,7 @@ export function questionCard(net: Net): QuestionCard {
       return;
     }
     net.send({ t: 'term.input', workerId: id, data: key });
-    answered(id);
+    lazy.answered(id);
   };
 
   form.addEventListener('submit', (ev) => {
@@ -83,7 +82,7 @@ export function questionCard(net: Net): QuestionCard {
     const answer = input.value.trim();
     if (!answer || !workerId) return;
     net.send({ t: 'worker.prompt', workerId, prompt: answer });
-    answered(workerId);
+    lazy.answered(workerId);
     input.value = '';
   });
 

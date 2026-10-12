@@ -369,6 +369,8 @@ test('after an answer the pane moves on: the next that asks, then the next to re
   const second = (await title.innerText()).trim();
   assert.ok(second.includes(asks[1]) || second.includes('Clear the old build'), `the next one that asks opens, not ${second}`);
   await question.or(approval).waitFor({ timeout: 15_000 });
+  // The keyboard came along to the next card, so a keyboard or screen reader goes on from there.
+  await page.waitForFunction(() => !!document.activeElement?.closest('.pane .q-card, .pane .ap-card'), null, { timeout: 5_000 });
   if (SHOTS) await page.screenshot({ path: path.join(SHOTS, 'now-answer-advance-2-next.png') });
 
   // The second (a question or the Approval card): answered, on to the third.

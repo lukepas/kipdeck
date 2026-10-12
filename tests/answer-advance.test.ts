@@ -29,6 +29,8 @@ function office(roster: RosterEntry[], opts: { narrow?: boolean } = {}) {
     tab: 'terminal' as PaneTab,
     typing: false,
     selects: [] as { id: string; tab: PaneTab }[],
+    /** Whether each move went to one that asks (so the keyboard follows to its card). */
+    asks: [] as boolean[],
     listeners: [] as (() => void)[],
     timers: [] as { fn: () => void; ms: number; cleared: boolean }[],
   };
@@ -37,7 +39,8 @@ function office(roster: RosterEntry[], opts: { narrow?: boolean } = {}) {
     stillAsking: (id) => s.roster.find((e) => e.id === id)?.status === 'needs_input' || s.approvals.has(id),
     selected: () => s.selected,
     tab: () => s.tab,
-    select(id, tab) {
+    select(id, tab, asks) {
+      s.asks.push(!!asks);
       s.selected = id;
       s.tab = tab;
       s.selects.push({ id, tab });
@@ -73,6 +76,7 @@ test('two ask: once the first is back at work, the pane opens the second on its 
   o.status('a', 'working');
   assert.equal(o.s.selected, 'b');
   assert.equal(o.s.tab, 'terminal');
+  assert.deepEqual(o.s.asks, [true], 'the next one asks: the keyboard may follow to its card');
   // Once only: a later change leaves the pane alone.
   o.status('b', 'working');
   assert.deepEqual(o.s.selects, [{ id: 'b', tab: 'terminal' }]);
@@ -88,6 +92,7 @@ test('an approval: the pane moves once its request is gone, falling through to t
   o.s.approvals.delete('a');
   o.change();
   assert.deepEqual(o.s.selects, [{ id: 'd', tab: 'changes' }]);
+  assert.deepEqual(o.s.asks, [false], 'a review has no card to put the keyboard on');
 });
 
 test('nothing else waits: the one answered stays selected, on its terminal', () => {
