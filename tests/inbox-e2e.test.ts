@@ -126,6 +126,9 @@ async function signedIn(viewport: { width: number; height: number }) {
 const row = (page: Page, section: string, text: string) => page.locator(`.sec-${section} .row`, { hasText: text });
 
 async function deploy(page: Page, task: string) {
+  // N is heard once the inbox has drawn the office (its keys and the projects are in by then); pressed
+  // straight after the page loads, it would go nowhere.
+  await page.locator('.row, .first-run:not(.loading)').first().waitFor({ timeout: 30_000 });
   await page.keyboard.press('n');
   const sheet = page.locator('.modal.deploy');
   await sheet.waitFor();
