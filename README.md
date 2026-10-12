@@ -15,7 +15,7 @@ npx github:zbagdzevicius/kipdeck
 
 ![Kipdeck in 30 seconds: Codex's question opens by itself and is answered in one box, Claude Code's diff is reviewed and merged into Shipped today (the demo's scripted agents, no model)](docs/img/demo.gif)
 
-No agents yet? `npx github:zbagdzevicius/kipdeck --demo` plays five scripted ones on a throwaway repository, no CLI, sign-in or model needed ([the demo](docs/demo.md)).
+No agents yet? `npx github:zbagdzevicius/kipdeck --demo` plays five scripted ones on a throwaway repository, no CLI, sign-in or model needed ([the demo](docs/demo.md)). Or watch a recorded round in the browser, with nothing to install: https://kipdeck-demo.vercel.app
 
 Run it inside the repository you work in. It opens in your browser, signed in, with that repository as your first project. Claude Code, Codex and Cursor run side by side (OpenCode, Pi, Grok, Muse and DeepSeek Harness in beta), each on a branch of its own, and you answer, review and merge from one page, on your laptop or your phone. It runs on your machine or your team's dev box, and nothing leaves it.
 
@@ -221,7 +221,7 @@ Then, in the same release: set `NPM_PACKAGE` to that name and `ON_NPM` to `true`
 - [Spend and control](docs/spend.md): each agent's permission mode badge, spend on rows and in the pulse, budget caps that pause an agent into Needs you, and Pause all, Resume all and Stop all
 - [Push to your devices](docs/push.md): installing Kipdeck as an app, Web Push to your phone and laptop, who gets a push and when, and when Slack or Discord hears after it
 - [Signal](docs/signal.md): the project's status at one look over the inbox list (On track, At risk, Off track or No goal), the rules behind it, and Copy as text for Slack
-- [The demo](docs/demo.md): `npx github:zbagdzevicius/kipdeck --demo` with five scripted agents, the hosted read-only demo, and the scripts that make the video, the GIF and the deck's screenshots
+- [The demo](docs/demo.md): `npx github:zbagdzevicius/kipdeck --demo` with five scripted agents, the hosted read-only demo, the replay demo at https://kipdeck-demo.vercel.app, and the scripts that make the video, the GIF and the deck's screenshots
 - [Metrics for the deck](docs/metrics.md): what each number means, where it comes from, and what not to show
 - [The landing page](docs/landing.md): `site/landing/` (`npm run build:site`, then `npm run preview:site`), what each section's motion shows, the one file that holds the product's name, its speed budgets (`npm run perf:site`), accessibility and search tags, the design-partner ask, and how to deploy it to Cloudflare Pages ([site/landing/README.md](site/landing/README.md))
 - [Features](docs/features.md): the inbox first, then the whole office in detail
