@@ -5,7 +5,7 @@
 import path from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { cleanGrant, grantFor } from '../../shared/gate-rules.js';
-import { GATE_ACTIONS, GATE_ACTIVITY_MAX, type GateAction, type GateActivity, type GateOutcome, type GateState, type Grant, type Proposal } from '../../shared/gate.js';
+import { GATE_ACTIONS, GATE_ACTIVITY_MAX, GATE_PENDING_MAX, type GateAction, type GateActivity, type GateOutcome, type GateState, type Grant, type Proposal } from '../../shared/gate.js';
 import { readStateJson, writeState } from '../safefs.js';
 import type { GateRequest } from './actions.js';
 
@@ -22,6 +22,8 @@ interface Saved {
   grants: Grant[];
   hired: Record<string, string[]>;
   activity: GateActivity[];
+  /** Outcomes not yet told to an agent that had stopped, by worker id. */
+  held?: Record<string, string[]>;
 }
 
 const newId = () => randomBytes(5).toString('hex');
@@ -33,6 +35,8 @@ export class AgentGate {
   /** Hires a grant let through that haven't started yet, per floor: they count towards its limit too. */
   private starting = new Map<string, number>();
   private activity: GateActivity[] = [];
+  /** Outcomes waiting for an agent that had stopped when its request was decided, by worker id. */
+  private held = new Map<string, string[]>();
   private readonly file?: string;
 
   /** `dataDir` undefined keeps nothing on disk (tests). `onState` hears every change. */
@@ -136,6 +140,27 @@ export class AgentGate {
     return line;
   }
 
+  /** Keeps an outcome for agent `workerId` until it runs again (see flow.ts, deliverHeld). */
+  hold(workerId: string, text: string) {
+    const list = [...(this.held.get(workerId) ?? []), text].slice(-GATE_PENDING_MAX);
+    this.held.set(workerId, list);
+    this.changed(false);
+  }
+
+  /** The outcomes held for `workerId`, taken off the list. */
+  takeHeld(workerId: string): string[] {
+    const list = this.held.get(workerId);
+    if (!list) return [];
+    this.held.delete(workerId);
+    this.changed(false);
+    return list;
+  }
+
+  /** An agent went home: nothing held for it will ever be heard. */
+  forget(workerId: string) {
+    if (this.held.delete(workerId)) this.changed(false);
+  }
+
   /** Lets agents on `floor` do `action` without asking; it replaces one for the same two. */
   grant(floor: string, action: GateAction, limit: number | undefined, by: string): Grant {
     const g = cleanGrant({ id: newId(), floor, action, limit, by, at: Date.now() })!;
@@ -162,7 +187,7 @@ export class AgentGate {
 
   private changed(tell = true) {
     if (this.file) {
-      const saved: Saved = { v: 1, pending: this.pending, grants: this.grants, hired: Object.fromEntries([...this.hired].map(([f, ids]) => [f, [...ids]])), activity: this.activity };
+      const saved: Saved = { v: 1, pending: this.pending, grants: this.grants, hired: Object.fromEntries([...this.hired].map(([f, ids]) => [f, [...ids]])), activity: this.activity, held: Object.fromEntries(this.held) };
       try {
         writeState(this.file, JSON.stringify(saved));
       } catch {
@@ -184,6 +209,10 @@ export class AgentGate {
     this.grants = (Array.isArray(raw.grants) ? raw.grants : []).map(cleanGrant).filter((g): g is Grant => !!g);
     this.pending = (Array.isArray(raw.pending) ? raw.pending : []).filter((p) => p && typeof p.id === 'string' && GATE_ACTIONS.includes(p.action) && p.req && p.req.action === p.action);
     this.activity = (Array.isArray(raw.activity) ? raw.activity : []).filter((a) => a && typeof a.id === 'string' && GATE_ACTIONS.includes(a.action)).slice(0, GATE_ACTIVITY_MAX);
+    for (const [id, list] of Object.entries(raw.held ?? {})) {
+      const texts = Array.isArray(list) ? list.filter((x): x is string => typeof x === 'string') : [];
+      if (texts.length) this.held.set(id, texts.slice(-GATE_PENDING_MAX));
+    }
     for (const [f, ids] of Object.entries(raw.hired ?? {})) if (Array.isArray(ids)) this.hired.set(f, new Set(ids.filter((x) => typeof x === 'string')));
   }
 }
