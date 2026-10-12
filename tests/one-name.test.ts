@@ -41,6 +41,7 @@ export const SURFACES: readonly string[] = [
   ...tsFiles('src/client/ui/rundown'),
   'src/shared/agentname.ts',
   'src/shared/attention.ts',
+  'src/shared/warm.ts',
   'src/shared/digest.ts',
   'src/shared/metrics.ts',
   'src/shared/review.ts',
@@ -128,9 +129,15 @@ test('the surfaces list only names files that exist', () => {
   assert.ok(SURFACES.length > 30);
 });
 
+/**
+ * "The crew" is the whole group (you, your team, your agents and Kip), said only in greetings, empty
+ * states and celebrations (docs/voice.md). It is never one agent, so "a crew" or "crewmate" still fail.
+ */
+const THE_CREW = /\b(the|tight) crew\b/gi;
+
 test('user-facing copy speaks the glossary: no worker, floor, desk, unit, crew or office for agents and projects', () => {
   const bad = copyOf(SURFACES)
-    .map((l) => ({ ...l, m: OLD_WORDS.exec(l.text.replace(IDENTIFIERS, '')) }))
+    .map((l) => ({ ...l, m: OLD_WORDS.exec(l.text.replace(IDENTIFIERS, '').replace(THE_CREW, '')) }))
     .filter((l) => l.m)
     .map((l) => `${l.at}: "${l.m![0]}" in ${JSON.stringify(l.text.slice(0, 90))}`);
   assert.deepEqual(bad, []);

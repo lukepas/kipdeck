@@ -18,8 +18,8 @@ import { SPACE_COLORS } from '../space/logic';
  */
 export const HAZE = { density: 0.03, height: 0.55, most: 0.22, outside: 55 } as const;
 
-/** The haze's colour by mode, before the sky's tint: a cool slate lit from above by Night, a pale blue-grey by Day. */
-export const HAZE_COLOR: Record<LightMode, string> = { night: '#141A2E', day: '#9DB0C6' };
+/** The haze's colour by mode, before the sky's tint: warm graphite lit by the cabin's lamps by Night, a pale warm grey by Day. */
+export const HAZE_COLOR: Record<LightMode, string> = { night: '#1A1612', day: '#B0A89C' };
 
 const f = (n: number) => n.toFixed(4);
 

@@ -2,7 +2,7 @@
 // "Starting Kipdeck..." before anything else, and every command it prints for itself works when
 // typed into a shell: the banner's `open` (with --home, since the office is not in ~/agent-office)
 // gets a new sign-in link, and once it stops, `open` says the command that starts it again, which
-// runs. A used or made-up sign-in link opens the sign-in page with the command on it, not a
+// runs, after the plain line it stops on. A used or made-up sign-in link opens the sign-in page with the command on it, not a
 // password form. Skipped (not failed) when the build is missing or older than its sources.
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -151,6 +151,10 @@ test('once it stops, open says how to start it again, and that command runs', as
   const cmd = openCmd();
   office!.kill('SIGINT');
   await until('it to stop', () => office!.exitCode !== null, 20_000);
+  // Piped, not a terminal: no warm clause at ready, no colour, and the plain goodbye with nothing merged.
+  assert.match(out, /\n {2}Kipdeck stopped, and its agents with it\.\n/);
+  assert.doesNotMatch(out, /Kip's on watch/);
+  assert.doesNotMatch(out, /\x1b\[/);
   const r = await sh(cmd);
   assert.equal(r.code, 1);
   const start = /Start it with `([^`]+)`/.exec(r.stderr)?.[1] ?? '';

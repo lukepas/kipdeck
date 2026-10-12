@@ -1,15 +1,16 @@
-// Bridge lights, as far as the page's colors go: Night is the slate set (tokens.css :root), Day the
+// Bridge lights, as far as the page's colors go: Night is the warm graphite set (tokens.css :root), Day the
 // light whiteprint ([data-theme=print]), and Auto follows the system's dark or light setting. One
 // setting (Settings > Deck, kept with the rest in this browser) sets the 3D bridge's light rig
 // (features/lights), its HUD, the 2D view and the sign-in pages alike. Three.js-free, for every page.
 
 import { loadSettings, saveSettings, type Lighting } from './state/persist';
+import { DAY, NIGHT } from '../shared/tones';
 
 /** What the lights are now, once Auto has asked the system. */
 export type LightMode = 'night' | 'day';
 
 /** The page's background in each mode, for the browser's own chrome (meta theme-color). */
-const THEME_COLOR: Record<LightMode, string> = { night: '#0d131a', day: '#f4f6f8' };
+const THEME_COLOR: Record<LightMode, string> = { night: NIGHT.void, day: DAY.void };
 
 const LIGHT_QUERY = '(prefers-color-scheme: light)';
 

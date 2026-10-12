@@ -10,7 +10,7 @@ import { podWake } from '../src/client/features/alert/logic.js';
 
 test("the captain's log reads like a log, in the timeline's length", () => {
   const log = captainsLog({ day: 14, yesterday: { merges: 9, issues: 14, bounties: 3 }, mission: true, waypoint: { n: 3, title: 'Billing v2', pct: 60 }, units: { review: 0, idle: 2, aboard: 6 } });
-  assert.equal(log, 'Day 14 of the mission. Yesterday the fleet merged 9 pull requests, closed 14 issues and paid 3 bounties on devnet. Waypoint 3, Billing v2, is 60% done. Two units await orders.');
+  assert.equal(log, 'Day 14 of the mission. Yesterday the fleet merged 9 pull requests, closed 14 issues and paid 3 bounties on devnet. Waypoint 3, Billing v2, is 60% done. Two agents are ready for a job.');
   assert.ok(log.length <= TIMELINE_TEXT);
   const long = captainsLog({ day: 140, yesterday: { merges: 19, issues: 140, bounties: 13 }, mission: true, waypoint: { n: 3, title: 'A very long waypoint title that goes on and on about billing and invoices and receipts', pct: 6 }, units: { review: 4, idle: 7, aboard: 12 } });
   assert.ok(long.length <= TIMELINE_TEXT, `${long.length} characters`);
@@ -20,9 +20,9 @@ test("the captain's log reads like a log, in the timeline's length", () => {
 test('quiet days, no mission, an empty deck and a waypoint with no issues are said plainly', () => {
   assert.equal(yesterdayLine({ merges: 0, issues: 0, bounties: 0 }), 'Yesterday was quiet: nothing merged and no issues closed.');
   assert.equal(yesterdayLine({ merges: 1, issues: 0, bounties: 0 }), 'Yesterday the fleet merged 1 pull request.');
-  assert.equal(crewLine({ review: 0, idle: 0, aboard: 0 }), 'No units aboard yet.');
-  assert.equal(crewLine({ review: 1, idle: 0, aboard: 3 }), 'One unit waits for your review.');
-  assert.equal(crewLine({ review: 0, idle: 0, aboard: 3 }), 'Every unit is at work.');
+  assert.equal(crewLine({ review: 0, idle: 0, aboard: 0 }), 'No agents aboard yet. Give one a job when you are ready.');
+  assert.equal(crewLine({ review: 1, idle: 0, aboard: 3 }), 'One agent waits for your review.');
+  assert.equal(crewLine({ review: 0, idle: 0, aboard: 3 }), 'The crew is at work.');
   assert.match(captainsLog({ day: 1, yesterday: { merges: 0, issues: 0, bounties: 0 }, mission: false, units: { review: 0, idle: 0, aboard: 0 } }), /No mission is set yet\./);
   assert.match(captainsLog({ day: 2, yesterday: { merges: 0, issues: 0, bounties: 0 }, mission: true, waypoint: { n: 1, title: 'Auth' }, units: { review: 0, idle: 0, aboard: 1 } }), /Waypoint 1, Auth, is under way\./);
 });
@@ -38,7 +38,7 @@ test('the debrief: who waits first in plain words, then what landed, then one cl
   const d = debriefOf({ ...away, waiting: [{ id: 'w1', sign: 'B-03', level: 'stuck', label: 'Tests or build failing' }] }, 'on', 'seed');
   assert.equal(d.title, 'SINCE YOU LEFT - 42 MIN');
   assert.deepEqual(d.waiting, [{ id: 'w1', level: 'stuck', line: 'B-03 is stuck: tests or build failing. It needs you.' }]);
-  assert.deepEqual(d.lines, ['3 pull requests merged.', '12.00 USDC paid on devnet.', '2 merges attested on Base Sepolia.', 'Waypoint reached: Auth rewrite.', 'Billing v2: 3 of 7 issues closed, now 5.', '1 unit came back from stuck and landed its work.']);
+  assert.deepEqual(d.lines, ['3 pull requests merged.', '12.00 USDC paid on devnet.', '2 merges attested on Base Sepolia.', 'Waypoint reached: Auth rewrite.', 'Billing v2: 3 of 7 issues closed, now 5.', '1 agent came back from stuck and landed its work.']);
   assert.equal(d.closing, 'The rest can wait until they are answered.', 'no humour while anyone waits');
   const happy = debriefOf(away, 'on', 'seed');
   assert.ok(happy.closing && !/!/.test(happy.closing));

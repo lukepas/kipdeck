@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { DECK } from '../../world/office/materials';
 
 // What the beats draw in the room, each one instanced draw shown only while it plays (no draw at rest):
 //
@@ -203,7 +204,7 @@ export class SignPlate {
     g.font = '700 44px "JetBrains Mono", ui-monospace, monospace';
     g.textBaseline = 'middle';
     g.textAlign = 'center';
-    g.fillStyle = '#E8ECEF';
+    g.fillStyle = DECK.text;
     g.fillText(text, 132, 38, 230);
     this.tex.needsUpdate = true;
   }

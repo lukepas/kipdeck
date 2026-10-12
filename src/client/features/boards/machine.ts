@@ -67,7 +67,7 @@ export class MachineTexture {
     g.textAlign = 'left';
     g.font = MONO_FONT(30, 600);
     g.fillStyle = INK.text;
-    const label = s.limit === undefined ? `${s.workers} unit${s.workers === 1 ? '' : 's'}  no limit` : `${s.workers}/${s.limit} units`;
+    const label = s.limit === undefined ? `${s.workers} agent${s.workers === 1 ? '' : 's'}  no limit` : `${s.workers}/${s.limit} agents`;
     g.fillText(label, 30, y + 12);
     if (s.limit !== undefined) {
       const x0 = 30 + g.measureText(label).width + 28;
@@ -139,7 +139,7 @@ export class MachineTexture {
     g.textAlign = 'right';
     g.fillStyle = INK.text;
     g.font = MONO_FONT(40, 600);
-    const label = s.limit === undefined ? `${s.workers} units  no limit` : `${s.workers}/${s.limit} units`;
+    const label = s.limit === undefined ? `${s.workers} agents  no limit` : `${s.workers}/${s.limit} agents`;
     g.fillText(label, W - 26, mid + 2);
     if (s.limit !== undefined) {
       const x1 = W - 26 - g.measureText(label).width - 24;

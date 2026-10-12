@@ -9,23 +9,23 @@ import { h } from './dom';
 import { choiceRow } from './settings-rows';
 
 const NOTE: Record<LifeLevel, string> = {
-  full: 'The bridge lives with the work: the destination ahead grows with real progress, sister decks fly in formation and salute their waypoints, and a fighter patrols for each unit at work.',
+  full: 'The bridge lives with the work: the destination ahead grows with real progress, sister decks fly in formation and salute their waypoints, and a fighter patrols for each agent at work.',
   calm: 'The same world with no gestures: no salutes, no hail lines, no patrols, no droid rounds. The picket of open pull requests, the beacons and the droid\'s errands stay.',
-  silent: 'Silent running: no ambient life at all, the stars at a crawl, the ticker paused, the droid docked and the ship\'s voice plain. Units that need you or are stuck still show at full strength.',
+  silent: 'Silent running: no ambient life at all, the stars at a crawl, the ticker paused, the droid docked and the ship\'s voice plain. Agents that need you or are stuck still show at full strength.',
 };
 
 const PARTS: Record<LifePart, [label: string, note: string]> = {
   destination: ['Destination ahead', 'The mission as a world dead ahead, growing with each waypoint and issue closed.'],
   fleet: ['Fleet in formation', 'Every other deck as an escort ship off the side ports, with a beacon when it needs you.'],
-  sorties: ['Squadron sorties', 'A fighter for each working unit, and open pull requests holding on the picket ahead.'],
-  epithets: ['Crew epithets', 'Titles and chevrons units earn from their real record (the Mechanic, the Night Owl), the Crew tab and the unit of the watch on the Proof plinth. Words only, never a ranking of people.'],
-  droid: ['Bridge droid', 'Bolt, a hovering tool-drone that carries finished work to the Review bay in its arm and waits by a unit that needs you. Docks itself with Ship motion Off or Silent running.'],
-  mascot: ['Bridge mascot', 'Kip, a small furry stowaway with a glowing toy wand, who runs laps while the crew works, twirls for a merge and sits quietly by a unit that needs you. Naps in his nest with Ship motion Off or Silent running.'],
-  relay: ['Relay beacon', 'The fleet\'s relay station off the starboard bow: a lattice spire in three turning rings, a node-star on them for each unit at work, the crown flaring on a merge.'],
+  sorties: ['Squadron sorties', 'A fighter for each working agent, and open pull requests holding on the picket ahead.'],
+  epithets: ['Crew epithets', 'Titles and chevrons agents earn from their real record (the Mechanic, the Night Owl), the Crew tab and the agent of the watch on the Proof plinth. Words only, never a ranking of people.'],
+  droid: ['Bridge droid', 'Bolt, a hovering tool-drone that carries finished work to the Review bay in its arm and waits by an agent that needs you. Docks itself with Ship motion Off or Silent running.'],
+  mascot: ['Bridge mascot', 'Kip, a small furry stowaway with a glowing toy wand, who runs laps while the crew works, twirls for a merge and sits quietly by an agent that needs you. Naps in his nest with Ship motion Off or Silent running.'],
+  relay: ['Relay beacon', 'The fleet\'s relay station off the starboard bow: a lattice spire in three turning rings, a node-star on them for each agent at work, the crown flaring on a merge.'],
 };
 
 const VOICE_NOTE: Record<VoiceMode, string> = {
-  on: 'VESPER, the ship\'s mind, says a dry line now and then about what the crew really did, on the ticker and under the top bar. When a unit needs you it says one plain sentence and goes quiet until that clears.',
+  on: 'VESPER, the ship\'s mind, says a dry line now and then about what the crew really did, on the ticker and under the top bar. When an agent needs you it says one plain sentence and goes quiet until that clears.',
   plain: 'VESPER keeps to plain status lines: merges, waypoints and who needs you, without the humour.',
   off: 'VESPER says nothing. The ticker still runs the deck\'s log.',
 };

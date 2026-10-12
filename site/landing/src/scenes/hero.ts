@@ -123,6 +123,8 @@ export function mountHero(section: HTMLElement) {
     // Nobody waits: the pill's clock and the longest wait have nothing to show.
     if (!state.asking) miniLongest.textContent = '-';
     document.documentElement.classList.toggle('agent-waiting', state.asking);
+    // Nobody waits: the sunset behind Kip comes up (story.css). It goes back down when one asks.
+    section.classList.toggle('quiet', !state.asking);
     field?.blocked(state.asking);
   }
 

@@ -1,0 +1,30 @@
+/* Kip in the inbox's quiet moments (kip-moments.ts): over All clear, in the setup card's corner and in a
+   toast's icon slot. His colours are the landing's and the sign-in card's (styles/kip.css). Beats last
+   --t-beat and play once; Kip alone uses --ease-soft. Reduced motion and Ship motion Off make every one
+   a cut and Kip a still pose (styles/tokens.css). Tokens only, no hex. */
+@import '../styles/kip.css';
+
+.kip svg { display: block; width: 100%; height: 100%; overflow: visible; }
+
+/* The all-clear pane: Kip over the heading, in his drawing's own shape (100 by 130). */
+.pe-kip { display: block; width: 68px; height: 88px; }
+/* A slow breath, 6s, far from any state's cadence. */
+.pe-kip svg { transform-origin: 50% 98%; animation: kip-breathe 6s var(--ease-soft) infinite alternate; }
+@keyframes kip-breathe { to { transform: scaleY(1.015); } }
+
+/* Kip in a toast's icon slot (the merge's cheer, the first job's wave): a wider slot, one hop. */
+.toast.kip-toast { grid-template-columns: 30px minmax(0, 1fr) auto; }
+.toast.kip-toast .toast-icon { width: 30px; height: 39px; padding-top: 0; }
+.toast.kip-toast .toast-icon svg { animation: kip-hop var(--t-beat) var(--ease-soft) 1 both; transform-origin: 50% 100%; }
+@keyframes kip-hop { 0% { transform: translateY(4px) scale(.96); opacity: 0; } 45% { transform: translateY(-3px); opacity: 1; } 100% { transform: none; } }
+
+/* The tuft on the top bar's mark hops once on a merge. */
+.brand-mark.tuft-hop .signal { transform-box: fill-box; transform-origin: center; animation: tuft-hop var(--t-beat) var(--ease-soft) 1; }
+@keyframes tuft-hop { 0%, 100% { transform: none; } 40% { transform: translateY(-3px); } 70% { transform: translateY(.5px); } }
+
+/* The setup card's wave, in its corner, only where the card is wide enough that he sits clear of the
+   heading and the line under it (46ch, about 322px of its 400px or more inside the padding). In a narrow
+   list column or on a phone the words get the room. */
+.setup-card { container-type: inline-size; }
+.su-kip { position: absolute; top: 12px; right: 20px; width: 50px; height: 65px; }
+@container (max-width: 399px) { .su-kip { display: none; } }
