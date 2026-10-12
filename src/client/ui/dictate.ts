@@ -28,7 +28,7 @@ export interface Dictation {
   drop(): void;
 }
 
-const TITLE = 'Dictate: hold to talk (or hold Ctrl+Space) and let go, and what you said is typed in. A quick click leaves it listening until you click again. Your browser does the listening: the office never gets the audio, but Chrome and Edge send it to their speech service unless they have an on-device model for your language';
+const TITLE = 'Dictate: hold to talk (or hold Ctrl+Space) and let go, and what you said is typed in. A quick click leaves it listening until you click again. Your browser does the listening: Kipdeck never gets the audio, but Chrome and Edge send it to their speech service unless they have an on-device model for your language';
 
 /** The one that's listening now: there's one microphone, so a second cuts off the first. */
 let active: { button: HTMLElement; abort(): void } | null = null;
@@ -67,7 +67,7 @@ export function dictation(target: DictateTarget, opts: { label?: string } = {}):
     if (listening || target.off?.()) return;
     checkOnDevice();
     if (speechSupport() === 'insecure') {
-      toast('Dictation needs HTTPS (or localhost), like voice. Ask whoever runs the office to enable TLS.', 'warn');
+      toast('Dictation needs HTTPS (or localhost), like voice. Ask whoever runs Kipdeck to enable TLS.', 'warn');
       return;
     }
     active?.abort();

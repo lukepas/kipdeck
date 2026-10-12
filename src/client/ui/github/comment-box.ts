@@ -30,7 +30,7 @@ export function commentBox(kind: 'issue' | 'pull', number: number, itemUrl: stri
   const shown = h('div.gh-compose-preview.hidden');
   const write = h('button.btn.on', { type: 'button' }, 'Write');
   const preview = h('button.btn', { type: 'button' }, 'Preview');
-  const who = h('span.grow', {}, "Posts to GitHub as the office's gh account");
+  const who = h('span.grow', {}, "Posts to GitHub as this Kipdeck's gh account");
   const post = h('button.btn.primary', { type: 'button' }, 'Comment');
   const result = h('div.gh-merge-result.error.hidden');
   const el = h(
@@ -92,7 +92,7 @@ export function commentBox(kind: 'issue' | 'pull', number: number, itemUrl: stri
     // The office drops messages while it's disconnected, and then no answer comes.
     timer = window.setTimeout(() => {
       settle();
-      fail('No answer from the office. Reload the conversation to see whether the comment went through before posting it again.');
+      fail('No answer from Kipdeck. Reload the conversation to see whether the comment went through before posting it again.');
       sync();
     }, 45_000);
     net.send({ t: 'gh.comment', kind, number, body });

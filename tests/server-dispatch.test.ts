@@ -199,7 +199,7 @@ test('answers the open routes before anyone signs in', async () => {
   const put = await fetch(base + '/api/login', { method: 'PUT' });
   assert.equal(put.status, 401);
   assert.deepEqual(await put.json(), { error: 'Not logged in' });
-  assert.deepEqual(await (await post('/api/claim', { token: 'nope' })).json(), { error: 'This office has already been claimed. Sign in with the password you saved.' });
+  assert.deepEqual(await (await post('/api/claim', { token: 'nope' })).json(), { error: 'This Kipdeck has already been claimed. Sign in with the password you saved.' });
   assert.equal((await post('/api/link', { key: 'nope' })).status, 410);
   assert.equal((await post('/api/join', { token: 'nope' })).status, 410);
 });

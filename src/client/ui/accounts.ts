@@ -49,7 +49,7 @@ export function openAccounts(net: Net) {
   const render = () => {
     const s = store.accounts;
     const me = store.me;
-    signedInAs.textContent = me.account ? `You're signed in as ${me.account.name} (${me.account.role}).` : "You're signed in with the shared office password.";
+    signedInAs.textContent = me.account ? `You're signed in as ${me.account.name} (${me.account.role}).` : "You're signed in with the shared password.";
     const typing = document.activeElement === nameInput;
     body.replaceChildren();
     if (!s) return body.append(h('p.empty', {}, 'Loading...'));
@@ -64,12 +64,12 @@ export function openAccounts(net: Net) {
       const v = fresh;
       body.append(h('div.cmd', {}, h('pre', {}, inviteLink(v)), copyButton('Copy', () => inviteLink(v))));
     }
-    if (store.invites) body.append(h('p.note', {}, 'On this office they also need a way in first: see Invite teammates.'));
+    if (store.invites) body.append(h('p.note', {}, 'On this Kipdeck they also need a way in first: see Invite teammates.'));
 
     const list = h('ul.team-list');
     for (const a of s.accounts) {
       const you = me.account?.name === a.name;
-      const seen = a.online ? 'in the office' : a.lastSeenAt ? `seen ${timeAgo(a.lastSeenAt)}` : 'never came in';
+      const seen = a.online ? 'here now' : a.lastSeenAt ? `seen ${timeAgo(a.lastSeenAt)}` : 'never came in';
       const role = h('button.btn', { type: 'button', title: a.role === 'admin' ? 'Take away admin rights' : 'Let them manage accounts too' }, a.role === 'admin' ? 'Make member' : 'Make admin');
       role.addEventListener('click', () => net.send({ t: 'accounts.role', accountId: a.id, role: a.role === 'admin' ? 'member' : 'admin' }));
       const revoke = h('button.btn.danger', { type: 'button', title: `Delete ${a.name}'s account` }, 'Revoke');
@@ -134,13 +134,13 @@ export function openAccounts(net: Net) {
       );
     });
     body.append(
-      h('div.team-head', {}, h('h4', {}, 'Shared office password'), toggle),
+      h('div.team-head', {}, h('h4', {}, 'Shared password'), toggle),
       h(
         'p.note',
         {},
         s.sharedPassword
           ? 'On. Anyone who knows it gets in as an admin and picks any name they like. Once everyone has an account, switch it off, so that revoking someone really locks them out.'
-          : 'Off: only accounts can sign in. If every admin is ever locked out, run kipdeck accounts password on on the office\'s machine.',
+          : 'Off: only accounts can sign in. If every admin is ever locked out, run kipdeck accounts password on on the machine Kipdeck runs on.',
         s.sharedPassword && !canSwitchOff ? h('b', {}, ' Make yourself an admin account and sign in with it before you switch it off.') : null,
       ),
     );

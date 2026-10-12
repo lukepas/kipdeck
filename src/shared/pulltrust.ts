@@ -22,7 +22,7 @@ export interface GhPullTrust {
 export function pullTrust(fork: boolean, author: string, permission: string | undefined): GhPullTrust {
   const who = author ? `@${author}` : 'its author';
   if (fork) return { trusted: false, fork, permission, reason: `This pull request comes from a fork, so its code is ${who}'s, not the repository's.` };
-  if (permission === undefined) return { trusted: false, fork, reason: `The office couldn't check whether ${who} can push to this repository.` };
+  if (permission === undefined) return { trusted: false, fork, reason: `Kipdeck couldn't check whether ${who} can push to this repository.` };
   if (!WRITE.has(permission)) return { trusted: false, fork, permission, reason: `${who} can't push to this repository (their access is ${permission || 'none'}).` };
   return { trusted: true, fork, permission };
 }

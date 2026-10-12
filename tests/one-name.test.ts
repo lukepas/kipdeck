@@ -1,14 +1,17 @@
 // One agent, one name. Every surface people read calls an agent by its task (src/shared/agentname.ts)
 // with its CLI as a badge: not the deck's nickname ("Byte"), not a seat code ("A-01"). And the copy
-// speaks the glossary in docs/inbox.md: agents and projects, never workers, floors, desks, units, crew
-// or an office. This test reads the string literals of the inbox's surfaces (its rows, toasts and
-// dialogs, notifications, Signal, Mission control, Rundown and the CLI) and fails when one brings
-// the old words or the nicknames back. The 3D Deck (src/client/features, world, core) keeps its own.
+// speaks the glossary, "Words we use" in docs/voice.md (docs/voice.md#words-we-use): agents and
+// projects, never workers, floors, desks, units, crew or an office. This test reads the string
+// literals of every file the inbox can load (its import graph from src/client/lite.ts and
+// src/client/home/index.ts, every window home/lazy.ts opens included), the HTML pages and the
+// server's CLI and errors, and fails when one brings the old words or the nicknames back. The 3D
+// Deck (src/client/features, world, core and the Deck-only files named in the glossary) keeps its own.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { literals } from './support/literals.ts';
+import { pageAttributes, pageText } from './support/pagetext.ts';
 import { agentBadge, agentHeading, agentName, agentRef, alertTitle, taskTitle } from '../src/shared/agentname.ts';
 import { NAMES } from '../src/server/workers/worker.ts';
 import { stoodDown } from '../src/shared/copy.ts';
@@ -23,8 +26,63 @@ function tsFiles(dir: string): string[] {
   });
 }
 
-/** The files whose strings people read in the inbox, its windows, its notifications and the CLI. */
-export const SURFACES: readonly string[] = [
+/** The pages the server sends before the inbox's script runs: sign-in, home, join and claim. */
+const PAGES = ['src/client/login.html', 'src/client/index.html', 'src/client/join.html', 'src/client/claim.html'];
+
+/** Each page's own script (<script type="module" src="./login.ts">). */
+function pageScripts(): string[] {
+  return PAGES.flatMap((p) => [...readFileSync(path.join(root, p), 'utf8').matchAll(/<script\b[^>]*\bsrc="\.\/([\w./-]+\.ts)"/g)].map((m) => `src/client/${m[1]}`));
+}
+
+/** Where the inbox starts: the home page's script, the inbox it installs, and the other pages' scripts. */
+const INBOX_ROOTS = [...new Set(['src/client/lite.ts', 'src/client/home/index.ts', ...pageScripts()])];
+
+/**
+ * The Deck's own words, kept out of the graph (the glossary's Deck-only list in docs/voice.md): the
+ * 3D scene and its features, the Deck's help, project switcher and floor menu, VESPER's phrasebook
+ * and the plinth's plaque.
+ */
+export const DECK_ONLY: readonly RegExp[] = [
+  /^src\/client\/(features|world|core|player|showcase)\//,
+  /^src\/client\/ui\/(help|elevator|floormenu)\.ts$/,
+  /^src\/shared\/(shipvoice|commendations)\.ts$/,
+];
+
+/** The .ts file a relative import specifier names, if it is one. */
+function resolveImport(from: string, spec: string): string | undefined {
+  if (!spec.startsWith('.')) return undefined;
+  const base = path.posix.normalize(path.posix.join(path.posix.dirname(from), spec)).replace(/\.js$/, '');
+  return [`${base}.ts`, `${base}/index.ts`, base].find((c) => c.endsWith('.ts') && existsSync(path.join(root, c)) && statSync(path.join(root, c)).isFile());
+}
+
+/** Every static import, re-export and dynamic import() specifier of a source. */
+function specifiers(src: string): string[] {
+  return [...src.matchAll(/(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)['"]([^'"]+)['"]/g)].map((m) => m[1]);
+}
+
+/** The files the inbox can load, following imports from `roots` inside src/client and src/shared. */
+export function inboxGraph(roots: readonly string[] = INBOX_ROOTS): string[] {
+  const seen = new Set<string>();
+  const todo = [...roots];
+  while (todo.length) {
+    const f = todo.pop()!;
+    if (seen.has(f)) continue;
+    seen.add(f);
+    for (const spec of specifiers(readFileSync(path.join(root, f), 'utf8'))) {
+      const next = resolveImport(f, spec);
+      if (next && /^src\/(client|shared)\//.test(next) && !DECK_ONLY.some((d) => d.test(next))) todo.push(next);
+    }
+  }
+  return [...seen].sort();
+}
+
+/**
+ * The surfaces held to one name for an agent (its task, never a nickname or seat code): the inbox, the
+ * windows it docks or opens over its list, the shared rules and the server's CLI. The rest of the
+ * graph still shows a nickname here and there (bounty and wallet lines, the plot) and moves to
+ * agentname.ts in a story of its own.
+ */
+export const NAMED: readonly string[] = [
   ...tsFiles('src/client/home'),
   'src/client/notify.ts',
   'src/client/ui/agentbadge.ts',
@@ -78,15 +136,25 @@ export const SURFACES: readonly string[] = [
   'src/server/rundown/service.ts',
 ];
 
+/**
+ * Files the graph doesn't reach whose strings people read in the inbox's words, beyond the server
+ * files above: every error the HTTP routes send back to a page, and the two 2D windows the Deck
+ * opens over the same vocabulary (its palette and Upgrade).
+ */
+const LISTED: readonly string[] = ['src/client/ui/palette.ts', 'src/client/ui/upgrade.ts', ...tsFiles('src/server/http/routes')];
+
+/** The files whose strings people read in the inbox, its windows, its notifications and the CLI. */
+export const SURFACES: readonly string[] = [...new Set([...inboxGraph(), ...NAMED, ...LISTED])];
+
 /** The old vocabulary, as a whole word. */
 const OLD_WORDS = /\b(workers?|floors?|desks?|offices?|units?|elevators?|crew)\b/i;
 
 /**
  * Names that are identifiers, not copy: the data folder and env vars upstream named (.agent-office,
- * AGENT_OFFICE_HOME), the office/* branches, the hook scripts' names. They are stripped before the
- * old words are looked for.
+ * AGENT_OFFICE_HOME), the office/* branches, the hook scripts' names (office-queue, office-workers),
+ * --flags and the plot's p-unit class. They are stripped before the old words are looked for.
  */
-const IDENTIFIERS = /\.?agent-office\b|\bAGENT_OFFICE_\w+|\boffice\/[\w*<>-]*|\boffice-(workers|queue)\b|\boffice@|(^|\s)--[\w-]+/g;
+const IDENTIFIERS = /\bp-unit\b|\.?agent-office\b|\bAGENT_OFFICE_\w+|\boffice\/[\w*<>-]*|\boffice-(workers|queue)\b|\boffice@|(^|\s)--[\w-]+/g;
 
 /** A template literal's text without its ${...} parts (code, not copy). */
 function textOf(literal: string): string {
@@ -125,8 +193,33 @@ function copyOf(files: readonly string[]): { at: string; text: string }[] {
 }
 
 test('the surfaces list only names files that exist', () => {
-  for (const f of SURFACES) assert.ok(statSync(path.join(root, f)).isFile(), f);
-  assert.ok(SURFACES.length > 30);
+  for (const f of [...SURFACES, ...PAGES]) assert.ok(statSync(path.join(root, f)).isFile(), f);
+  assert.ok(SURFACES.length > 100);
+});
+
+test("the inbox's graph reaches the windows it opens and leaves the 3D Deck out", () => {
+  const graph = inboxGraph();
+  // Settings and its panes, the sign-ins window, the inbox's palette and every window lazy.ts loads.
+  for (const f of ['src/client/home/settings.ts', 'src/client/ui/settings-core.ts', 'src/client/ui/signins.ts', 'src/client/home/palette.ts', 'src/client/ui/provider.ts', 'src/client/ui/accounts.ts', 'src/client/ui/team.ts', 'src/client/ui/usage.ts', 'src/client/ui/labs.ts', 'src/client/ui/pair.ts', 'src/client/ui/meeting.ts', 'src/client/pwa/index.ts', 'src/client/login.ts', 'src/client/join.ts', 'src/client/claim.ts']) {
+    assert.ok(graph.includes(f), `${f} is reachable from the inbox`);
+  }
+  // The Deck's palette window is checked too, from the hand list.
+  assert.ok(SURFACES.includes('src/client/ui/palette.ts'));
+  for (const f of graph) assert.ok(!DECK_ONLY.some((d) => d.test(f)), `${f} is the Deck's`);
+  assert.ok(!graph.some((f) => f.startsWith('src/client/features/')));
+  // The glossary names every Deck-only file the graph leaves out.
+  const words = readFileSync(path.join(root, 'docs/voice.md'), 'utf8');
+  for (const f of ['src/client/features/', 'src/client/world/', 'src/client/core/', 'src/client/ui/help.ts', 'src/client/ui/elevator.ts', 'src/client/ui/floormenu.ts', 'src/shared/shipvoice.ts', 'src/shared/commendations.ts']) {
+    assert.ok(words.includes(`\`${f}\``), `docs/voice.md names ${f} as Deck-only`);
+    assert.ok(DECK_ONLY.some((d) => d.test(f.endsWith('/') ? `${f}x.ts` : f)), `${f} is left out of the graph`);
+  }
+  // Static, re-exported and dynamic imports are all followed.
+  assert.deepEqual(specifiers(`import a from './a';\nexport { b } from "../b";\nconst c = () => import('./c');\nimport './d.css';`), ['./a', '../b', './c', './d.css']);
+  // Every window home/lazy.ts opens is in it.
+  for (const spec of specifiers(readFileSync(path.join(root, 'src/client/home/lazy.ts'), 'utf8'))) {
+    const f = resolveImport('src/client/home/lazy.ts', spec);
+    if (f) assert.ok(graph.includes(f), `lazy.ts opens ${f}`);
+  }
 });
 
 /**
@@ -143,6 +236,31 @@ test('user-facing copy speaks the glossary: no worker, floor, desk, unit, crew o
   assert.deepEqual(bad, []);
 });
 
+test('the HTML pages speak the glossary: their text and their title, alt, aria-label and placeholder', () => {
+  const bad: string[] = [];
+  for (const f of PAGES) {
+    const html = readFileSync(path.join(root, f), 'utf8');
+    for (const text of [pageText(html), ...pageAttributes(html)]) {
+      const m = OLD_WORDS.exec(text.replace(IDENTIFIERS, '').replace(THE_CREW, ''));
+      if (m) bad.push(`${f}: "${m[0]}" in ${JSON.stringify(text.replace(/\s+/g, ' ').trim().slice(0, 90))}`);
+    }
+  }
+  assert.deepEqual(bad, []);
+});
+
+test("the client's title, alt, aria-label and placeholder text speaks the glossary, one word or many", () => {
+  const attr = /(?:\btitle|\balt|'aria-label'|\bplaceholder)\s*[:=]\s*(['"`])((?:(?!\1)[^\\]|\\.)*)\1/g;
+  const bad: string[] = [];
+  for (const f of SURFACES.filter((s) => s.startsWith('src/client/'))) {
+    const src = readFileSync(path.join(root, f), 'utf8');
+    for (const m of src.matchAll(attr)) {
+      const hit = OLD_WORDS.exec(textOf(m[2]).replace(IDENTIFIERS, '').replace(THE_CREW, ''));
+      if (hit) bad.push(`${f}:${src.slice(0, m.index).split('\n').length}: "${hit[0]}" in ${m[0].slice(0, 90)}`);
+    }
+  }
+  assert.deepEqual(bad, []);
+});
+
 test('counted nouns speak the glossary too: plural(n, "agent"), never plural(n, "worker")', () => {
   const counted = /\b(?:n|plural)\(\s*[^,()]+,\s*'(workers?|floors?|desks?|offices?|units?|crew)'/;
   const bad: string[] = [];
@@ -156,7 +274,7 @@ test('counted nouns speak the glossary too: plural(n, "agent"), never plural(n, 
 
 test("user-facing copy never names an agent by the deck's nicknames", () => {
   const nick = new RegExp(`\\b(${NAMES.join('|')})\\b`);
-  const bad = copyOf(SURFACES)
+  const bad = copyOf(NAMED)
     .filter((l) => nick.test(l.text))
     .map((l) => `${l.at}: ${JSON.stringify(l.text.slice(0, 90))}`);
   assert.deepEqual(bad, []);
@@ -167,7 +285,7 @@ test("no surface puts an agent's nickname or seat code into a string: it names i
   // floorName) and a milestone's are fine.
   const persona = /\$\{\s*(?:e|w|o|r\.entry|entry|info|worker|w\.info|r\.info|asking\.entry|stuck\[0\]\.entry|waiting\[0\]\.entry)\.name\s*\}/;
   const bad: string[] = [];
-  for (const f of SURFACES) {
+  for (const f of NAMED) {
     const src = readFileSync(path.join(root, f), 'utf8');
     for (const { line, text } of literals(src)) if (persona.test(text)) bad.push(`${f}:${line}: ${text.slice(0, 90)}`);
     src.split('\n').forEach((l, i) => {

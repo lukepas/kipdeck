@@ -13,7 +13,7 @@ async function post(path: string, body: unknown): Promise<string | undefined> {
   try {
     const res = await fetch(path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
     if (res.ok) return undefined;
-    return ((await res.json().catch(() => ({}))) as { error?: string }).error ?? `The office answered ${res.status}`;
+    return ((await res.json().catch(() => ({}))) as { error?: string }).error ?? `Kipdeck answered ${res.status}`;
   } catch {
     return "Can't reach Kipdeck. Is it still running in your terminal?";
   }

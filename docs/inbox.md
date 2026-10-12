@@ -28,7 +28,7 @@ The list moves only when something changes for you (`src/client/home/motion.ts`)
 
 An agent has one name on every surface you read: its task. The row, the pane's header, a toast (*Fix the flaky checkout test is back at work.*), a dialog (*Stop "Fix the flaky checkout test"?*), a browser or Slack notification (*Fix the flaky checkout test: needs you*), Signal's next step (*Answer "Fix the flaky checkout test"*), Mission control, Rundown's worktree lanes, the timeline and the CLI all call it that. The agent CLI it runs is a badge beside the name, never the name: the two-letter mark on an inbox row (CC, Cx, Cu) and a small *Claude Code* or *Codex* chip in Mission control. With no task yet, the name is its first prompt's first line, else what it is doing (*Waiting for a task*, *Getting started*), and a sentence falls back to its CLI (*the Codex agent*). The deck's nicknames and seat codes (*Byte*, *A-01*) stay on the 3D Deck. The rules are `src/shared/agentname.ts` (`agentName` for a row, `agentRef` for a sentence, `agentBadge` for the chip, `alertTitle` for a notification), and the client's badge is `src/client/ui/agentbadge.ts`.
 
-The words the inbox, its windows, its notifications and the CLI use:
+The words the inbox, its windows, its notifications and the CLI use (the full glossary, with the Deck-only exemptions, is [Words we use](voice.md#words-we-use) in docs/voice.md):
 
 | Say | Not | What it is |
 | --- | --- | --- |
@@ -40,7 +40,7 @@ The words the inbox, its windows, its notifications and the CLI use:
 | Idle | Ready | An agent with nothing to do: waiting for a task, asleep, merged or snoozed |
 | Stop, Archive | send home, stand down | Ending an agent's session (Archive once its work is merged) |
 
-`tests/one-name.test.ts` holds this: it reads every string of those surfaces (`src/client/home/`, `notify.ts`, Mission control, Signal and Rundown's windows, the Changes, queue, GitHub and stop dialogs the inbox opens, the shared ranking, Signal and reminder rules, and the server's CLI help, setup, project list, webhook, timeline, toasts and errors) and fails when one says worker, floor, desk, unit, crew, office or elevator, uses a nickname, or puts an agent's nickname or seat code into a string instead of going through `agentname.ts`. *The crew* is allowed as the whole group (you, your team, your agents and Kip) in greetings, empty states and celebrations, never for one agent ([docs/voice.md](voice.md)). Identifiers are not copy and stay: the `.agent-office` data folder, the `AGENT_OFFICE_*` variables, `office/*` branches and flags such as `--max-workers`.
+`tests/one-name.test.ts` holds this: it reads every string of every file the inbox can load (the import graph from `src/client/lite.ts` and `src/client/home/index.ts`, so Settings, the palette, sign-ins and every other window `home/lazy.ts` opens), the sign-in, join and claim pages and their scripts, and the server's CLI help, setup, project list, webhook, timeline, toasts and HTTP route errors, and fails when one says worker, floor, desk, unit, crew, office or elevator, uses a nickname, or puts an agent's nickname or seat code into a string instead of going through `agentname.ts`. *The crew* is allowed as the whole group (you, your team, your agents and Kip) in greetings, empty states and celebrations, never for one agent ([docs/voice.md](voice.md)). Identifiers are not copy and stay: the `.agent-office` data folder, the `AGENT_OFFICE_*` variables, `office/*` branches and flags such as `--max-workers`.
 
 ### Warm moments
 

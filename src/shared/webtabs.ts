@@ -27,6 +27,6 @@ export function webTabUrl(raw: string, office: string): URL | string {
     own = undefined;
   }
   // The office itself would run in the frame signed in as you, with nothing between it and this page.
-  if (own && url.origin === own.origin) return "The office's own pages can't open in a tab";
+  if (own && url.origin === own.origin) return "Kipdeck's own pages can't open in a tab";
   return url;
 }

@@ -38,7 +38,7 @@ export function baseOf(ctx: Ctx, r: RouteRequest): string {
   return `${https ? 'https' : 'http'}://${host}`;
 }
 
-const off = (r: RouteRequest) => send(r.res, 404, { error: 'This office keeps no agent reputation' });
+const off = (r: RouteRequest) => send(r.res, 404, { error: 'This Kipdeck keeps no agent reputation' });
 const nowS = () => Math.floor(Date.now() / 1000);
 
 export const reputationRoutes = {
@@ -86,7 +86,7 @@ export const reputationRoutes = {
         // What onchain/indexer rebuilt from the chain alone, last time it ran.
         const built = ctx.reputationIndex?.read('leaderboard.json') as { asOf?: number; boards?: { window: string; by: string; rows: unknown[] }[] } | undefined;
         const board = built?.boards?.find((b) => b.window === window && b.by === by);
-        if (!board) return send(r.res, 404, { error: ctx.reputationIndex ? 'The indexer has no such board (yet): windows 30d and all' : 'This office does not rebuild the board from the chain (--reputation-index)' });
+        if (!board) return send(r.res, 404, { error: ctx.reputationIndex ? 'The indexer has no such board (yet): windows 30d and all' : 'This Kipdeck does not rebuild the board from the chain (--reputation-index)' });
         return sendPublic(r, { source: 'chain', by, window, asOf: built?.asOf, rows: board.rows });
       }
       const now = nowS();

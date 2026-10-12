@@ -11,6 +11,35 @@ Kipdeck should feel like a small, scrappy crew that is very good at its job, wit
 - **The crew** is the group as a whole: you, your team, your agents and Kip. Use it only in greetings, empty states and celebrations, never for one agent.
 - **Kip** is the crew's mascot and lookout. He is "he". He never speaks in a dialog, never asks you for anything and never blocks input.
 
+## Words we use
+
+One vocabulary everywhere the inbox reaches: its rows and panes, every window it opens (Settings, the palette, sign-ins, Accounts, Team, Labs, Usage, Pair a phone, the meeting room, the GitHub windows), its notifications, the sign-in, join and claim pages, the CLI and the errors the server sends back to a page.
+
+| Say | Not | What it is |
+| --- | --- | --- |
+| agent | worker, unit, persona, crewmate | One coding agent working on a task, on a branch of its own. Named by its task, with its CLI as a badge |
+| project | floor | A git checkout Kipdeck works on |
+| Kipdeck, this Kipdeck | the office, this office | The app, and one running copy of it (*This Kipdeck takes no paid tasks*) |
+| the shared password | the office password | The one password a Kipdeck can be signed in with when it has no accounts |
+| branch, worktree, next to an agent | desk, console, seat | Where an agent's work lives |
+| the project list | elevator | Where you pick a project |
+| task | | What an agent was asked to do, and its name |
+| Needs you, To review, Working, Idle | Ready, busy | The inbox's sections, word for word (rule 10 below) |
+| Shipped | | What merged today, under the list |
+| Deck | the office, the building | The 3D starship bridge, a lab that is off by default (`/deck`) |
+| the crew | a crew, the crew (for one agent) | The whole group: you, your team, your agents and Kip. Only in greetings, empty states and celebrations |
+
+Identifiers are not copy and keep their names: the `.agent-office` data folder, the `AGENT_OFFICE_*` variables, `office/*` branches, the `office-queue` and `office-workers` commands, flags such as `--max-workers`, settings scope ids (`floor`, `office`), protocol fields and CSS classes.
+
+The 3D Deck keeps its own words, because they name things you see on the ship. These are Deck-only and are not checked:
+
+- `src/client/features/`, `src/client/world/`, `src/client/core/`, `src/client/player/` and `src/client/showcase/`
+- `src/client/ui/help.ts` (the Deck's help), `src/client/ui/elevator.ts` (its project switcher) and `src/client/ui/floormenu.ts`
+- `src/shared/shipvoice.ts` (VESPER's phrasebook) and `src/shared/commendations.ts` (the plinth's plaque)
+- the counters in `src/client/bridge.html`
+
+`tests/one-name.test.ts` holds this table. It follows the import graph from `src/client/lite.ts`, `src/client/home/index.ts` and the scripts of the sign-in, join and claim pages, through every static and dynamic `import()` in `src/client` and `src/shared` and so every window `src/client/home/lazy.ts` opens, leaves out the Deck-only files above, adds the server's CLI, setup and HTTP route errors, and fails when a string, an HTML page or a `title`, `alt`, `aria-label` or `placeholder` says worker, floor, desk, unit, office or elevator. A new file the inbox imports is checked from the day it lands.
+
 ## The rules
 
 1. **Fact first.** The first clause says what happened and makes sense alone. Personality, if any, is one short clause after it. Screen readers get the fact first; put the flourish in its own span.

@@ -84,7 +84,7 @@ async function join(ctx: Ctx, req: http.IncomingMessage, res: http.ServerRespons
   if (guess.body.peek === true) return send(res, 200, { name: invite.name, role: invite.role, by: invite.createdBy, project: ctx.officeName });
   const r = await accounts.join(token, str(guess.body.name, 64), str(guess.body.password, 1024));
   if (typeof r === 'string') return send(res, 400, { error: r });
-  console.log(`  ${r.name} joined the office with an invite from ${r.createdBy}`);
+  console.log(`  ${r.name} joined Kipdeck with an invite from ${r.createdBy}`);
   ctx.accountsChanged();
   return send(res, 200, { ok: true, name: r.name }, signedIn(ctx, req, r.id));
 }
@@ -105,12 +105,12 @@ export const authRoutes = {
       const { cfg, auth } = ctx;
       const guess = await readGuess(ctx, req, res);
       if (!guess) return;
-      if (!claimable(ctx)) return send(res, 410, { error: 'This office has already been claimed. Sign in with the password you saved.' });
+      if (!claimable(ctx)) return send(res, 410, { error: 'This Kipdeck has already been claimed. Sign in with the password you saved.' });
       if (!auth.checkToken(str(guess.body.token, 256), cfg.claimToken!)) return send(res, 403, { error: 'That claim link is not valid.' });
       const password = cfg.password!;
       cfg.markClaimed();
       auth.recordSuccess(guess.ip);
-      console.log('  the office password was claimed - it will not be shown again');
+      console.log('  the shared password was claimed - it will not be shown again');
       return send(res, 200, { password }, signedIn(ctx, req));
     },
   },
@@ -121,7 +121,7 @@ export const authRoutes = {
     path: '/api/link',
     auth: 'public',
     async handle(ctx, { req, res }) {
-      if (!localRequest(req)) return send(res, 403, { error: 'Sign-in links only work on the computer the office runs on. Sign in with the office password.' });
+      if (!localRequest(req)) return send(res, 403, { error: 'Sign-in links only work on the computer Kipdeck runs on. Sign in with the shared password.' });
       const guess = await readGuess(ctx, req, res);
       if (!guess) return;
       const key = str(guess.body.key, 128);

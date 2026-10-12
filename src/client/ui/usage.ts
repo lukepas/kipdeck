@@ -144,7 +144,7 @@ export function renderUsage() {
   }
   const head = $('workers-cost');
   head.textContent = now > 0 ? fmtCost(now) : '';
-  head.title = 'Current desks: tracked Claude Code costs plus reported OpenCode and DeepSeek Harness estimates; Codex root-session tokens appear below; sessions with unavailable cost or partial history are excluded.';
+  head.title = 'Current agents: tracked Claude Code costs plus reported OpenCode and DeepSeek Harness estimates; Codex root-session tokens appear below; sessions with unavailable cost or partial history are excluded.';
 
   const el = $('usage');
   const any = s.total.calls > 0 || s.budget !== undefined || untracked || currentOpenCodeReports > 0 || openCodeWaiting || currentCodexReports > 0 || codexWaiting || currentDshReports > 0 || dshWaiting;
@@ -177,7 +177,7 @@ export function renderUsage() {
         'div.row.muted',
         {
           title: [
-            'OpenCode current-desk metrics are model/provider estimates, not billing.',
+            'OpenCode current-agent metrics are model/provider estimates, not billing.',
             `input ${fmtTokens(currentOpenCodeInput)} · output ${fmtTokens(currentOpenCodeOutput)}`,
             `reasoning ${fmtTokens(currentOpenCodeReasoning)}`,
             `cache write ${fmtTokens(currentOpenCodeCacheWrite)} · cache read ${fmtTokens(currentOpenCodeCacheRead)}`,
@@ -195,7 +195,7 @@ export function renderUsage() {
         'div.row.muted',
         {
           title: [
-            'Codex current-desk metrics cover the root session only; subagent usage is not included; cost is unavailable.',
+            'Codex current-agent metrics cover the root session only; subagent usage is not included; cost is unavailable.',
             `input ${fmtTokens(currentCodexInput)} · output ${fmtTokens(currentCodexOutput)}`,
             `reasoning ${fmtTokens(currentCodexReasoning)}`,
             `cache write ${fmtTokens(currentCodexCacheWrite)} · cache read ${fmtTokens(currentCodexCacheRead)}`,
@@ -215,16 +215,16 @@ export function renderUsage() {
         {
           title: [
             'DeepSeek Harness reports what is in each session\u2019s context window over ACP after a turn; cost appears only when the harness supplies it, and is never billing.',
-            `${currentDshReports} worker${currentDshReports === 1 ? '' : 's'} · ${fmtTokens(currentDshTokens)}${context} context tokens`,
+            `${currentDshReports} agent${currentDshReports === 1 ? '' : 's'} · ${fmtTokens(currentDshTokens)}${context} context tokens`,
           ].join('\n'),
         },
-        `DeepSeek Harness current desks ${spend}${fmtTokens(currentDshTokens)}${context} context`,
+        `DeepSeek Harness current agents ${spend}${fmtTokens(currentDshTokens)}${context} context`,
       ),
     );
   }
   if (dshWaiting) rows.push(h('div.row.muted', { title: 'DeepSeek Harness usage appears after its first ACP usage update.' }, 'DeepSeek Harness metrics waiting for first report'));
   if (untracked) {
-    rows.push(h('div.row.muted', { title: 'Custom provider usage is not reported by the office.' }, 'Custom usage untracked · budget and totals cover Claude Code only'));
+    rows.push(h('div.row.muted', { title: 'Custom provider usage is not reported to Kipdeck.' }, 'Custom usage untracked · budget and totals cover Claude Code only'));
   }
   el.replaceChildren(...rows);
 }
