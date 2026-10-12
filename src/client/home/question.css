@@ -4,6 +4,9 @@
 .q-text p { margin: 0; font-size: 15px; line-height: 1.45; color: var(--text); }
 .q-text p + p { margin-top: 2px; }
 .q-text .q-none { color: var(--muted); font-size: 14px; }
+/* A row's risk tags while it waits on an approval (approval.ts), dotted like its owner. */
+.row-sub .row-risk { color: var(--bad); }
+.q-src { margin: 0; font-size: 12px; color: var(--muted); }
 .q-choices { display: flex; flex-wrap: wrap; gap: 8px; }
 .q-choice { height: auto; min-height: 34px; padding: 6px 12px 6px 6px; gap: 8px; font-size: 13px; text-align: left; white-space: normal; }
 .q-choice kbd { display: inline-grid; place-items: center; min-width: 20px; height: 20px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); background: var(--surface-2); font: 600 11px var(--font-mono); }

@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { agentRef } from '../shared/agentname.js';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { isAgentProvider, type AgentChoice, type AgentEffort, type AgentProvider, type GhPull, type QueuePayment, type QueueState, type QueueTask, type WorkerInfo, type WorkerStatus } from '../shared/protocol.js';
@@ -140,7 +141,7 @@ export class TaskQueue {
   remove(taskId: string): string | undefined {
     const t = this.tasks.find((x) => x.id === taskId);
     if (!t) return 'No such task';
-    if (t.status === 'running') return `${t.workerName ?? 'Its worker'} is on it - send the worker home to stop it`;
+    if (t.status === 'running') return 'An agent is on it - stop that agent to stop it';
     if (t.paid && t.held) return 'Someone paid for that task: an admin approves it or turns it down';
     if (t.paid && t.outcome === 'rejected' && !t.paid.refundTx) return 'Record its refund first';
     this.tasks.splice(this.tasks.indexOf(t), 1);
@@ -354,7 +355,7 @@ export class TaskQueue {
     t.status = 'done';
     t.outcome = outcome;
     t.finishedAt = Date.now();
-    const who = t.workerName ?? 'Its worker';
+    const who = 'The agent';
     if (outcome === 'done') {
       this.events.toast(`${who} finished ${label(t)}`, 'info');
       // The worker most likely just opened the PR; go and link it.
@@ -389,7 +390,7 @@ export class TaskQueue {
     const pick = this.recyclable();
     if (!pick) return undefined;
     const done = this.workers.kill(pick.w.id);
-    this.events.toast(`${pick.w.name} stood down after ${label(pick.t)} to make room for the next task`, 'info');
+    this.events.toast(`${agentRef(pick.w, { start: true })} stopped after ${label(pick.t)} to make room for the next task`, 'info');
     void done.then(({ note, error }) => {
       if (note) this.events.toast(note, 'info');
       if (error) this.events.toast(error, 'warn');
@@ -512,7 +513,7 @@ export class TaskQueue {
           t.status = 'done';
           t.outcome = 'exited';
           t.finishedAt = Date.now();
-          t.error = 'The office restarted while it was running';
+          t.error = 'Kipdeck restarted while it was running';
         }
         this.tasks.push(t);
       }

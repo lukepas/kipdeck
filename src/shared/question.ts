@@ -69,3 +69,15 @@ export function readQuestion(screen: readonly string[]): Question | undefined {
   if (!text.length && !choices.length) return undefined;
   return { text: text.slice(-MAX_LINES), choices: choices.length >= 2 ? choices : [] };
 }
+
+/** Words of a Yes / No menu asking to go ahead. */
+const PERMISSION_WORDS = /\b(?:do you want to|allow|permission|proceed|approve|make this edit|run this command)\b/i;
+
+/**
+ * Whether what was read off the screen is a permission prompt (Claude Code's "Do you want to proceed?
+ * 1. Yes 2. No") rather than a question, for an agent whose request didn't come through a hook: the
+ * card then says so.
+ */
+export function looksLikePermission(q: Question | undefined): boolean {
+  return !!q && q.choices.some((c) => /^yes\b/i.test(c.label)) && PERMISSION_WORDS.test(q.text.join(' '));
+}

@@ -3,7 +3,7 @@
 import { PRODUCT } from '../../shared/copy.js';
 import { accessSync, chmodSync, constants, existsSync, mkdirSync } from 'node:fs';
 import { writeState } from '../safefs.js';
-import { execFile, execFileSync } from 'node:child_process';
+import { execFile, execFileSync, spawn } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -30,7 +30,8 @@ export function shellRun(line: string): string[] {
   return WIN && !process.env.SHELL ? ['/d', '/s', '/c', line] : ['-l', '-i', '-c', line];
 }
 
-export function resolveCommand(cmd: string): string | null {
+/** Where a command is, from the PATH alone (no shell is asked), or null. */
+export function findOnPath(cmd: string): string | null {
   // Windows runs files by extension: `claude` is really claude.exe / claude.cmd. An npm shim with
   // no extension is a sh script the console can't run, so only take it when asked for by name.
   const exts = WIN && !path.extname(cmd) ? (process.env.PATHEXT || '.COM;.EXE;.BAT;.CMD').split(';').filter(Boolean) : [''];
@@ -54,17 +55,46 @@ export function resolveCommand(cmd: string): string | null {
     const found = usable(path.join(dir, cmd));
     if (found) return found;
   }
-  if (WIN && !process.env.SHELL) return null;
-  try {
-    const found = execFileSync(defaultShell(), ['-l', '-i', '-c', `command -v ${shq(cmd)}`], { encoding: 'utf8', timeout: 5000, stdio: ['ignore', 'pipe', 'ignore'] })
-      .trim()
-      .split('\n')
-      .pop();
-    if (found && found.startsWith('/')) return found;
-  } catch {
-    // fall through
-  }
   return null;
+}
+
+/** The login shell's answer to `command -v`, for a command only its rc files put on the PATH. */
+const shellLookup = (cmd: string): [string, string[]] => [defaultShell(), ['-l', '-i', '-c', `command -v ${shq(cmd)}`]];
+const lastPath = (out: string): string | null => {
+  const found = out.trim().split('\n').pop();
+  return found && found.startsWith('/') ? found : null;
+};
+const noShell = (cmd: string) => cmd.includes('/') || (WIN && (cmd.includes('\\') || !process.env.SHELL));
+
+export function resolveCommand(cmd: string): string | null {
+  const found = findOnPath(cmd);
+  if (found || noShell(cmd)) return found;
+  try {
+    const [shell, args] = shellLookup(cmd);
+    return lastPath(execFileSync(shell, args, { encoding: 'utf8', timeout: 5000, stdio: ['ignore', 'pipe', 'ignore'] }));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * resolveCommand without blocking the office while a login shell starts, so several can run at
+ * once. Each shell gets a session of its own (detached), away from the terminal: an interactive
+ * shell takes over the terminal it finds, and several racing to hand it back could leave the
+ * office in the background, where Ctrl+C never reaches it.
+ */
+export function resolveCommandAsync(cmd: string): Promise<string | null> {
+  const found = findOnPath(cmd);
+  if (found || noShell(cmd)) return Promise.resolve(found);
+  const [shell, args] = shellLookup(cmd);
+  return new Promise((resolve) => {
+    const child = spawn(shell, args, { detached: true, stdio: ['ignore', 'pipe', 'ignore'] });
+    let out = '';
+    const timer = setTimeout(() => child.kill(), 5000);
+    child.stdout.on('data', (d: Buffer) => (out += d.toString()));
+    child.once('error', () => (clearTimeout(timer), resolve(null)));
+    child.once('close', (code) => (clearTimeout(timer), resolve(code === 0 ? lastPath(out) : null)));
+  });
 }
 
 /** Runs a command without blocking the office (with `env`: as someone else); rejects with the last lines of its stderr. */

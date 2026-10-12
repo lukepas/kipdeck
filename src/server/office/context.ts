@@ -15,6 +15,7 @@ import type { Services } from '../services.js';
 import type { Ledger } from '../usage.js';
 import type { PlanLimitsReader } from '../limits.js';
 import type { Webhook } from '../webhook.js';
+import type { PushParts } from '../push/index.js';
 import type { Machine } from '../machine.js';
 import type { Building, FloorDef } from '../building.js';
 import type { Floor } from '../floor.js';
@@ -28,10 +29,14 @@ import type { ReputationIndex } from '../chain/rep-index.js';
 import type { MergeProofs } from '../chain/attest.js';
 import type { Showcase } from '../showcase/service.js';
 import type { Labs } from '../labs.js';
+import type { Spend } from '../spend/service.js';
 import type { Telemetry } from '../telemetry.js';
 import type { ShipLog } from '../shiplog.js';
 import type { DemoDirector } from '../demo/director.js';
 import type { RundownService } from '../rundown/service.js';
+import type { BriefLog } from '../brief/log.js';
+import type { ApprovalDesk } from '../approvals.js';
+import type { AgentGate } from '../gate/store.js';
 import type { AgentProvider, FloorInfo, Me, Reminder, ReminderSnooze, ReviewPull, RosterEntry, ServerMsg, ServiceInfo, ServicesState, SignInKind } from '../../shared/protocol.js';
 import type { Client } from './client.js';
 import type { Spot } from './input.js';
@@ -58,12 +63,16 @@ export interface Core {
   /** The building: a floor per project, each with its own workers, boards and queue. */
   building: Building;
   floors: Map<string, Floor>;
-  /** Which labs are on: the parts beyond the inbox, all on by default, an admin switches any off (see labs.ts). */
+  /** Which labs are on: the parts beyond the inbox, all off by default, an admin switches any on (see labs.ts). */
   labs: Labs;
   /** The shipped log: every review the inbox ended, merged or sent back, signed (see shiplog.ts). */
   shipped: ShipLog;
   /** Anonymous usage numbers, off unless someone turns them on (see telemetry.ts). */
   telemetry: Telemetry;
+  /** Each agent's journal for its review brief, from its hooks (see brief/log.ts). */
+  briefs: BriefLog;
+  /** Permission requests held open while someone decides in the inbox (see approvals.ts). */
+  approvals: ApprovalDesk;
 }
 
 /** Made once the hook server listens, before any floor opens (office/services.ts). */
@@ -77,11 +86,17 @@ export interface BuildingServices {
   /** Each account's own, once it runs on a Claude sign-in of its own. */
   accountLimits: Map<string, { key: string; reader: PlanLimitsReader }>;
   webhook: Webhook;
+  /** Push notifications: devices, who is at a desk, and when an agent that waits reaches whom (see push/alerts.ts). */
+  push: PushParts;
   machine: Machine;
   /** Whose plan `c` sees: their own, on an account with its own Claude sign-in; else the office's. */
   limitsOf(c: Client): PlanLimitsReader;
   /** Queues everywhere may be waiting for room under the worker limit: let them look again. */
   pumpQueues(except?: Floor): void;
+  /** Agents acting on other agents: proposals for a person, standing grants, the record (see gate/). */
+  gate: AgentGate;
+  /** Spend today, the budget caps, each project's default permission mode, and pausing agents in bulk (see spend/service.ts). */
+  spend: Spend;
 }
 
 /** Made as the floors open (office/floors.ts). */

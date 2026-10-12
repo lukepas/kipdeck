@@ -50,8 +50,11 @@ export const NAV = {
 /** Taking a unit off its console, in the deck's words. */
 export const STAND_DOWN = { verb: 'stand down', past: 'stood down', label: 'Stand down' } as const;
 
-/** "Ana stood Pixel down: its PR merged", "Pixel stood down: ...". */
+/**
+ * "Ana stopped "Fix the login": its PR merged", ""Fix the login" stopped: ...". `name` is the agent as a
+ * sentence names it (shared/agentname.ts agentRef; with `start` when there is no `by`).
+ */
 export function stoodDown(name: string, why?: string, by?: string): string {
-  const head = by ? `${by} stood ${name} down` : `${name} stood down`;
+  const head = by ? `${by} stopped ${name}` : `${name} stopped`;
   return why ? `${head}: ${why}` : head;
 }

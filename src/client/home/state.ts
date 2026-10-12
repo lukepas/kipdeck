@@ -57,6 +57,8 @@ export const home = {
   demo: false,
   /** The read-only demo (`--demo --read-only`): a visitor can look but change nothing. */
   readOnly: false,
+  /** The last selection was the pane opening one by itself (pane.ts), not you: the address follows without a history entry (route.ts). */
+  auto: false,
   /** Esc emptied the pane on purpose: nothing opens in it by itself until another agent needs you (pane.ts). */
   held: false,
   /** '' for All projects, else a floor id. */
@@ -79,8 +81,9 @@ export const home = {
     listeners.forEach((fn) => fn());
   },
 
-  select(id: string | undefined, tab?: PaneTab) {
+  select(id: string | undefined, tab?: PaneTab, auto = false) {
     this.selected = id;
+    this.auto = auto;
     if (id) this.held = false;
     if (tab) this.tab = tab;
     this.paneOpen = !!id;

@@ -4,7 +4,7 @@ Kipdeck's one-look project status for whoever leads the project: on track, at ri
 
 Back to the [README](../README.md).
 
-Signal sits at the head of the inbox list, over the sections, as one line: a glyph, a status word, the milestone with how far it got, and the rule that set the status. It reads the project picked in the top bar. Under All projects it reads the floor you're on, else the first, and with more than one project the chip names it first (*acme-shop - Auth rewrite 5/9*). A click opens the card. It's also **Signal** in the avatar menu and in Ctrl+K, next to Rundown. It's part of the inbox, not a lab, and still shows with every lab switched off.
+Once the project has a goal, Signal sits at the head of the inbox list, over the sections, as one line: a glyph, a status word, the milestone with how far it got, and the rule that set the status. It reads the project picked in the top bar. Under All projects it reads the floor you're on, else the first, and with more than one project the chip names it first (*acme-shop - Auth rewrite 5/9*). A click opens the card. With No goal there is no chip, so the list starts with the work; the card is still **Signal** in the avatar menu and in Ctrl+K. It's part of the inbox, not a lab, and still works with every lab switched off.
 
 ![Signal at risk over the inbox list, and its card (demo data)](../design/shots/signal/card-at-risk-dark-1440.png)
 
@@ -56,10 +56,10 @@ For a Goals milestone with a due date, the card says *due Oct 24, pace says ~Oct
 - **Milestone**: the title, done out of all, and where it came from. A milestone with no issues yet says so on the chip rather than 0/0.
 - **Pace, 7 days**: merges in the last 7 days from the signed shipped log, against the 7 before.
 - **Decisions**: the open ones in the last `/rundown`, the oldest one's age and its question (the gist carries the oldest few by name, whatever order `decisions.md` lists them in) (left out when the reason above already quotes it).
-- **Next**: the `/rundown` skill's next step and how old it is, else *Answer* the agent that has waited on you longest, else the next thing inferred from the office's map.
+- **Next**: the `/rundown` skill's next step and how old it is, else *Answer* the agent that has waited on you longest, named by its task (*Answer "Fix the flaky checkout test"*), else the next thing inferred from the office's map.
 - **Parts**: the map's parts by status in one line, and while the map is only inferred from the code, the line that says how to get Claude's read.
 - **Copy as text** puts one line on the clipboard, plain ASCII, ready for Slack: *acme-shop: At risk. Auth rewrite 5/9 issues, due Oct 30, pace says ~Oct 27 (rough). 1 decision open: "JWT or opaque tokens?". 12 merged this week (9 the week before). Next: Wire the refresh endpoint.*
-- **Open Rundown** while the Rundown lab is on, and **Open Goals** while Goals can be reached (the Goals and timeline lab and the GitHub boards and queue lab, which Mission control sits behind) and the card is about the floor you're on. With No goal, the chip and the card name the same thing to do: set a goal, run `/rundown`, or turn a lab on (the GitHub boards lab when only it is off). In the read-only demo they suggest nothing and offer neither window, since a visitor can't act on them.
+- **Open Rundown** while the Rundown lab is on, and **Open Goals** while Goals can be reached (the Goals and timeline lab and the GitHub boards and queue lab, which Mission control sits behind) and the card is about the floor you're on. With No goal, the card names the thing to do: set a goal, run `/rundown`, or turn a lab on (the GitHub boards lab when only it is off). In the read-only demo they suggest nothing and offer neither window, since a visitor can't act on them.
 
 The top-right ✕ and Esc close it.
 

@@ -1,12 +1,11 @@
 import { existsSync } from 'node:fs';
+import { alertTitle } from '../shared/agentname.js';
 import path from 'node:path';
 import type { NotifyState, Reminder, RosterEntry, WebhookKind, WorkerInfo, WorkerStatus } from '../shared/protocol.js';
 import { alertDetail } from '../shared/status.js';
 import { BlockedAddressError, guardedFetch, readLimited, type GuardOptions } from './netguard.js';
 import { readStateJson, writeState } from './safefs.js';
 
-/** A worker has to stay put this long before the channel hears about it, so a flicker never posts. */
-const SETTLE_MS = 5_000;
 /** Slack and Discord both throttle a webhook to about one message a second. */
 const GAP_MS = 1_100;
 const TIMEOUT_MS = 10_000;
@@ -49,32 +48,29 @@ const oneLine = (s: string, max: number) => {
 };
 
 /**
- * The office's Slack / Discord webhook. When an agent worker starts waiting on input or finishes its
- * turn, and is still that way a few seconds later with nobody at its terminal, the channel gets a
- * line about it. Set from Settings (or --webhook) and kept in .agent-office/webhook.json.
+ * The office's Slack / Discord webhook: the team's channel gets a line about an agent that waits on
+ * someone once push to their devices went unanswered (when and whether is push/alerts.ts's call).
+ * Set from Settings (or --webhook) and kept in .agent-office/webhook.json.
  */
 export class Webhook {
   private saved?: Saved;
   private error?: string;
   private lastSentAt?: number;
   private path: string;
-  /** Each worker's latest state, and the alert waiting out its settle time. */
-  private latest = new Map<string, WorkerInfo>();
-  private pending = new Map<string, { status: Alert; timer: NodeJS.Timeout }>();
-  /** Stuck workers waiting out their settle time (see onStuck). */
-  private stuckPending = new Map<string, NodeJS.Timeout>();
   private chain: Promise<unknown> = Promise.resolve();
   private backlog = 0;
+  /** A link that opens a worker in the inbox, when the office has a secure address to link to (see phone.ts). */
+  link?: (w: WorkerInfo) => string | undefined;
 
   constructor(
     dataDir: string,
     /** The project a worker works on (the floor it's on), or the office's name without one. */
     private project: (workerId?: string) => string,
     private onState: (state: NotifyState) => void,
+    /** A worker as it is now, for the plain JSON a non-Slack webhook gets. */
+    private worker: (workerId: string) => WorkerInfo | undefined = () => undefined,
     /** Tests only: see GuardOptions. */
     private guard: GuardOptions = {},
-    /** Tests only: how long a stuck worker has to stay stuck before it's posted. */
-    private stuckSettleMs = SETTLE_MS,
   ) {
     this.path = path.join(dataDir, 'webhook.json');
     this.restore();
@@ -110,79 +106,26 @@ export class Webhook {
     return undefined;
   }
 
-  /** Called with every worker update. */
-  onWorker(w: WorkerInfo) {
-    const prev = this.latest.get(w.id);
-    this.latest.set(w.id, w);
-    if (w.kind !== 'agent' || !prev || prev.status === w.status) return;
-    this.cancel(w.id);
-    if (w.status !== 'needs_input' && w.status !== 'done') return;
-    const status = w.status;
-    const timer = setTimeout(() => {
-      this.pending.delete(w.id);
-      const cur = this.latest.get(w.id);
-      // Someone opened its terminal (or it moved on) meanwhile: they've got it.
-      if (!cur || cur.status !== status || cur.acked || cur.viewers.length) return;
-      void this.alert(cur, status);
-    }, SETTLE_MS);
-    timer.unref();
-    this.pending.set(w.id, { status, timer });
+  /** An agent started waiting on input, or finished its turn, and nobody answered the push about it. */
+  alert(w: WorkerInfo, status: Alert): Promise<string | undefined> {
+    const detail = alertDetail(w);
+    return this.post({ kind: status, title: `${alertTitle(w, status === 'needs_input' ? 'needs-you' : 'done')} in ${this.project(w.id)}`, detail: detail ? oneLine(detail, 300) : undefined, worker: w });
   }
 
-  onWorkerGone(id: string) {
-    this.cancel(id);
-    this.latest.delete(id);
-    clearTimeout(this.stuckPending.get(id));
-    this.stuckPending.delete(id);
-  }
-
-  /**
-   * A worker just got stuck (see shared/attention.ts): silent while working, crashed, failing
-   * again and again... The channel hears about it once it's still that way a few seconds later
-   * (`still` says why, or undefined once it isn't, or someone has its terminal open).
-   */
-  onStuck(e: RosterEntry, reason: string, still: () => string | undefined) {
-    if (this.stuckPending.has(e.id) || e.kind !== 'agent') return;
-    const timer = setTimeout(() => {
-      this.stuckPending.delete(e.id);
-      const why = still();
-      if (!why) return;
-      const task = e.task?.name ? ` - ${oneLine(e.task.name, 80)}` : '';
-      void this.post({ kind: 'stuck', title: `${e.name} looks stuck in ${e.floorName}${task}`, detail: oneLine(why || reason, 300), worker: this.latest.get(e.id) });
-    }, this.stuckSettleMs);
-    timer.unref();
-    this.stuckPending.set(e.id, timer);
+  /** An agent got stuck (see shared/attention.ts): silent while working, crashed, failing again and again. */
+  stuck(e: RosterEntry, why: string, worker?: WorkerInfo): Promise<string | undefined> {
+    return this.post({ kind: 'stuck', title: `${alertTitle(e, 'stuck')} in ${e.floorName}`, detail: oneLine(why, 300), worker });
   }
 
   /** A reminder worth the channel hearing about once (see office/reminders.ts): a worker waiting on an answer for over an hour. */
   onReminder(r: Reminder) {
-    void this.post({ kind: 'reminder', title: `⏰ Reminder from ${r.floorName}`, detail: oneLine(r.text, 300), worker: r.worker ? this.latest.get(r.worker) : undefined });
+    void this.post({ kind: 'reminder', title: `⏰ Reminder from ${r.floorName}`, detail: oneLine(r.text, 300), worker: r.worker ? this.worker(r.worker) : undefined });
   }
 
   /** Posts a test message. Resolves to an error message if it didn't get through. */
   test(by: string): Promise<string | undefined> {
     if (!this.saved) return Promise.resolve('No webhook is set');
-    return this.post({ kind: 'test', title: `${by} connected ${this.project()} to this channel`, detail: 'Workers that need input, finish or get stuck will show up here.' });
-  }
-
-  stop() {
-    for (const id of [...this.pending.keys()]) this.cancel(id);
-    for (const t of this.stuckPending.values()) clearTimeout(t);
-    this.stuckPending.clear();
-  }
-
-  private cancel(id: string) {
-    const p = this.pending.get(id);
-    if (!p) return;
-    clearTimeout(p.timer);
-    this.pending.delete(id);
-  }
-
-  private alert(w: WorkerInfo, status: Alert) {
-    const what = status === 'needs_input' ? `${w.name} needs input` : `${w.name} is done`;
-    const task = w.task?.name ? ` - ${oneLine(w.task.name, 80)}` : '';
-    const detail = alertDetail(w);
-    return this.post({ kind: status, title: `${what} in ${this.project(w.id)}${task}`, detail: detail ? oneLine(detail, 300) : undefined, worker: w });
+    return this.post({ kind: 'test', title: `${by} connected ${this.project()} to this channel`, detail: 'Agents that need you, finish or get stuck will show up here.' });
   }
 
   private post(msg: { kind: PostKind; title: string; detail?: string; worker?: WorkerInfo }): Promise<string | undefined> {
@@ -205,18 +148,20 @@ export class Webhook {
   private async send(saved: Saved, msg: { kind: PostKind; title: string; detail?: string; worker?: WorkerInfo }): Promise<string | undefined> {
     const url = new URL(saved.url);
     const kind = webhookKind(url);
+    const link = msg.worker && this.link?.(msg.worker);
     let body: unknown;
     if (kind === 'slack') {
-      body = { text: `*${slackEscape(msg.title)}*${msg.detail ? `\n>${slackEscape(msg.detail)}` : ''}` };
+      body = { text: `*${slackEscape(msg.title)}*${msg.detail ? `\n>${slackEscape(msg.detail)}` : ''}${link ? `\n<${link}|Open it in Kipdeck>` : ''}` };
     } else if (kind === 'discord') {
       // No @everyone or role pings, whatever a worker's text says.
-      body = { content: `**${msg.title}**${msg.detail ? `\n> ${msg.detail}` : ''}`, username: 'Kipdeck', allowed_mentions: { parse: [] } };
+      body = { content: `**${msg.title}**${msg.detail ? `\n> ${msg.detail}` : ''}${link ? `\n${link}` : ''}`, username: 'Kipdeck', allowed_mentions: { parse: [] } };
     } else {
       const w = msg.worker;
       body = {
         text: msg.detail ? `${msg.title}\n${msg.detail}` : msg.title,
         event: msg.kind,
         project: this.project(w?.id),
+        ...(link ? { link } : {}),
         worker: w && { id: w.id, name: w.name, desk: w.deskId, status: w.status, task: w.task?.name, branch: w.worktree?.branch },
       };
     }

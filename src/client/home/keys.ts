@@ -1,7 +1,7 @@
 // The inbox's keys, six of them and D: Ctrl+K the command palette, N to deploy an agent, Enter for the
 // selected row's primary action (which is never Merge: that's the pane's, behind a hold), Esc to step
 // back (or, while a merge is held, to undo it; u does too), / to search and ? for Help (the loop and
-// these keys), and D to enter the Deck while it's on (home/deck-cta.ts). The arrow keys (and j and k) move the selection. None of them fire while you type in a box or the terminal, or
+// these keys), and D to enter the Deck while it's on (home/deck-link.ts). The arrow keys (and j and k) move the selection. None of them fire while you type in a box or the terminal, or
 // while a window is open; Esc in the pane's terminal steps back to the list instead of reaching the
 // agent (Ctrl+[ or the keypad's Esc sends one).
 
@@ -9,7 +9,7 @@ import { DOCS_URL, PRODUCT, UPSTREAM_CREDIT } from '../../shared/copy';
 import { rowAction } from '../../shared/inbox';
 import { h, modalOpen, openModal } from '../ui/dom';
 import type { Actions } from './actions';
-import { deckOn, goToDeck } from './deck-cta';
+import { deckOn, goToDeck } from './deck-link';
 import { listedOrder, rankOf } from './list';
 import { menuOpen } from './menu';
 import { latestHeld } from './merge-hold';
@@ -58,7 +58,8 @@ export function openHelp() {
   openModal(el);
 }
 
-const typing = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || !!t.closest('.xterm'));
+// An element marked data-own-keys handles its own (a diff's line number, home/brief/comments.ts).
+const typing = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || !!t.closest('.xterm, [data-own-keys]'));
 
 /** Puts the keyboard on the selected row in the list (after Esc, or a move). */
 export function focusSelected() {

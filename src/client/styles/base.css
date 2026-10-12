@@ -89,6 +89,7 @@ code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tab
 /* Status dots and pills, empty lists, key caps, toasts and the reconnecting banner: the office's HUD
    and windows show them, and so does the 2D view. A pill is a chip: its glyph, then the word. */
 .unit-sign { display: inline-block; flex: none; min-width: 34px; padding: 0 4px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); color: var(--muted); font: 500 11px/16px var(--font-mono); font-variant-numeric: tabular-nums; text-align: center; letter-spacing: .02em; }
+.agent-badge { display: inline-block; flex: none; max-width: 96px; padding: 0 5px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); color: var(--muted); font: 500 11px/16px var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgb(0 0 0 / .4); flex: none; }
 .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; line-height: 16px; padding: 1px 6px; border-radius: var(--radius-chip); border: 1px solid var(--line-strong); white-space: nowrap; color: var(--muted); background: var(--surface-2); --g: var(--g-parked); }
 .pill.starting, .pill.idle { color: var(--muted); }

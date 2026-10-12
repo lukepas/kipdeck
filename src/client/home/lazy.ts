@@ -1,6 +1,6 @@
 // The windows the inbox opens only now and then, loaded the first time they're wanted so the home page
 // draws without them: the terminal (xterm), the Changes window, the GitHub windows and boards, the task
-// queue, Mission control, Labs, the meeting room, sign-ins, Settings, Numbers, Rundown, Signal's card and Accounts. A module that reads server messages
+// queue, Mission control, Labs, the meeting room, sign-ins, Settings, Numbers, Rundown, Signal's card, Accounts, an agent's request, Pair a phone, the confirm and note dialogs (Stop, Send back, Give a task) and Mission control's actions for a notification's Look. A module that reads server messages
 // for its open window is handed every message from then on.
 
 import type { ServerMsg } from '../../shared/protocol';
@@ -31,6 +31,7 @@ export const terminal = once(() => import('../ui/terminal'), (m) => ((termLoaded
 export const changes = once(() => import('../ui/changes'), (m) => ((changesLoaded = true), m.routeChangesMessage));
 export const pull = once(() => import('../ui/pull'), (m) => m.routePullMessage);
 export const prompt = once(() => import('../ui/prompt'));
+export const missionAct = once(() => import('../ui/mission/act'));
 export const boards = once(() => import('../ui/boards'));
 export const queue = once(() => import('../ui/queue'));
 export const mission = once(() => import('../ui/mission'));
@@ -41,7 +42,10 @@ export const settings = once(() => import('./settings'));
 export const numbers = once(() => import('./numbers'));
 export const rundown = once(() => import('../ui/rundown'));
 export const signal = once(() => import('../ui/signal'));
+export const approval = once(() => import('./approval-card'));
 export const accounts = once(() => import('../ui/accounts'), (m) => m.routeAccountsMessage);
+export const proposal = once(() => import('./proposal-window'));
+export const pair = once(() => import('../ui/pair'));
 
 /** After a reconnect the office has forgotten which terminal and which changes this page follows: tell it again. */
 export async function rewatch(net: Net) {

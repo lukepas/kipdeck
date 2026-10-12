@@ -1,5 +1,5 @@
 import './labs.css';
-// The Labs window: the parts beyond the inbox, each with one switch, all on as the office ships.
+// The Labs window: the parts beyond the inbox, each with one switch, all off as the office ships.
 // Admins switch them for everyone; anyone else sees which are on. Shared by the home page and the
 // Deck, so it loads no three.js.
 import type { Net } from '../net';
@@ -7,9 +7,9 @@ import { store } from '../state';
 import { LAB_IDS, LAB_META, type LabId, type LabsState } from '../../shared/labs';
 import { h, openModal } from './dom';
 
-/** The line over the switches: every lab ships on. */
+/** The line over the switches: every lab ships off. */
 export const labsIntro = (admin: boolean): string =>
-  admin ? 'Everything here is on unless you switch it off. Switching changes it for everyone in this office.' : 'Everything here is on unless an admin switches it off.';
+  admin ? 'Everything here is off until you switch it on. Switching changes it for everyone in this office.' : 'Everything here is off until an admin switches it on.';
 
 /** Is this lab held from the command line, and which way? */
 export const labHeld = (state: LabsState | undefined, id: LabId): 'on' | 'off' | null =>

@@ -9,6 +9,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { CLI, PRODUCT } from '../shared/copy.js';
+import { officeCommand } from './runcmd.js';
 import { PROVIDER_META, type AgentProvider } from '../shared/providers.js';
 import { gitTop } from './checkouts.js';
 import { askOffice } from './opencmd.js';
@@ -30,7 +31,7 @@ Options:
                           \`cursor-agent ls\` lists them)
       --list              List this folder's sessions and exit
   -y, --yes               Don't stop to ask whether the agent was quit
-      --home <dir>        The office to attach to (default ~/agent-office)
+      --home <dir>        The Kipdeck to attach to (default ~/agent-office)
   -h, --help              Show this help
 `;
 
@@ -76,11 +77,12 @@ function typed(content: unknown): string | undefined {
 }
 
 /** Claude Code keeps a folder's sessions in ~/.claude/projects/<the folder's path, every other character a dash>/. */
-export function claudeSessions(dir: string, home = os.homedir(), env: NodeJS.ProcessEnv = process.env): FoundSession[] {
+export function claudeSessions(dir: string, home = os.homedir(), env: NodeJS.ProcessEnv = process.env, ids?: ReadonlySet<string>): FoundSession[] {
   const root = path.join(env.CLAUDE_CONFIG_DIR || path.join(home, '.claude'), 'projects', dir.replace(/[^A-Za-z0-9]/g, '-'));
   let names: string[] = [];
   try {
-    names = readdirSync(root).filter((n) => /^[0-9a-f-]{36}\.jsonl$/.test(n));
+    // `ids`: only those sessions, so a folder with hundreds of old ones isn't read for one title.
+    names = readdirSync(root).filter((n) => /^[0-9a-f-]{36}\.jsonl$/.test(n) && (!ids || ids.has(n.slice(0, -'.jsonl'.length))));
   } catch {
     return [];
   }
@@ -194,7 +196,7 @@ export async function attachCommand(argv: string[]): Promise<number> {
   let pick: FoundSession | undefined;
   if (session) pick = found.find((s) => s.id === session) ?? { provider: agent ?? 'claude', id: session, at: Date.now() };
   else if (agent === 'cursor') {
-    console.error(`${CLI} attach: Cursor keeps its chats where ${PRODUCT} can't read them. Run \`cursor-agent ls\`, then ${CLI} attach --agent cursor --session <chat id>`);
+    console.error(`${CLI} attach: Cursor keeps its chats where ${PRODUCT} can't read them. Run \`cursor-agent ls\`, then \`${officeCommand('attach --agent cursor --session <chat id>', home)}\``);
     return 2;
   } else pick = found[0];
   if (!pick) {

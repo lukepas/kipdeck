@@ -1,6 +1,6 @@
 # Proof of merge on Base Sepolia
 
-Kipdeck's Proof of Merge lab, testnet only. The lab is on as Kipdeck ships, but attestations stay off unless the office is started with `--attest`.
+Kipdeck's Proof of Merge lab, testnet only. The lab is off as Kipdeck ships, and attestations stay off unless the office is started with `--attest` (which holds the lab on). With the lab on but nothing set up, only the Bounties settings pane shows: the Proof corner, the ledger row and the payout counter wait until bounties or a chain flag are set up.
 
 Back to the [README](../README.md).
 

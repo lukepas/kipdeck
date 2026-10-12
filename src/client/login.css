@@ -14,7 +14,7 @@ body {
 :focus-visible { outline: 2px solid var(--act); outline-offset: 2px; }
 
 /* The card, one column in the middle, a little above centre. */
-body { align-content: center; padding-bottom: 12vh; }
+body { align-content: center; padding-bottom: 12vh; grid-template-columns: minmax(0, 1fr); }
 
 .card { position: relative; z-index: 2; width: min(360px, 100%); background: var(--surface-1); border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 28px 28px 24px; text-align: left; }
 .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; color: var(--text); }
@@ -48,3 +48,6 @@ label + label { margin-top: 12px; }
 .secret code#open-cmd span { white-space: nowrap; }
 button.link { width: auto; height: auto; margin: 14px 0 0; padding: 0; background: none; border: 0; color: var(--muted); font-weight: 500; font-size: 13px; text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 2px; }
 button.link:hover { background: none; color: var(--text); }
+/* The local card: why the link didn't work, above the command (node and a path can be long). */
+#local-why { margin: 0 0 12px; }
+#local .secret code { font-size: 14px; letter-spacing: 0; text-align: left; word-break: normal; overflow-wrap: anywhere; }

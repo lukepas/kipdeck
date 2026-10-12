@@ -1,6 +1,7 @@
 // A worker's own worktree, or its workspace across repositories: their folder names, what's kept
 // of them in workers.json, making them, keeping each worker's branch up to date, noticing one deleted
 // from under a worker and putting it back, and what becomes of them when the worker goes home.
+import { agentHeading, agentRef } from '../../shared/agentname.js';
 import { PRODUCT } from '../../shared/copy.js';
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, rmdirSync, unlinkSync } from 'node:fs';
@@ -65,7 +66,7 @@ export function originRepo(dir: string): string | undefined {
 
 /** What starting a worker whose worktree was deleted (see WorkerInfo.lost) says instead. */
 export function lostMessage(info: WorkerInfo): string {
-  return `${info.name}'s worktree ${workspaceOf(info)} was deleted outside ${PRODUCT} - rebuild it or stand ${info.name} down from its console`;
+  return `The worktree ${workspaceOf(info)} of ${agentRef(info)} was deleted outside ${PRODUCT} - rebuild it or stop the agent from the inbox`;
 }
 
 /** The worktrees of one floor's workers (see WorkerContext). */
@@ -82,8 +83,8 @@ export class WorkerTrees {
     // A branch can only be checked out once per repository, and two floors can be checkouts of the same one.
     const seen = new Map<string, string>();
     const own = this.ctx.trees.commonDir();
-    if (!own) return "This floor's project isn't a git checkout";
-    seen.set(own, "this floor's project");
+    if (!own) return "This project isn't a git checkout";
+    seen.set(own, 'this project');
     for (const r of repos) {
       const common = new Worktrees(r.dir).commonDir();
       if (!common) return `${r.name} isn't a git checkout`;
@@ -134,7 +135,7 @@ export class WorkerTrees {
     const brief = officePrompt(this.ctx.prompts, 'worker.repos', {
       branch: primary.branch,
       home,
-      repos: [line(path.basename(primary.path), home, primary.from, " (this floor's project)"), ...others.map((o) => line(o.name, o.project, o.from))].join('\n'),
+      repos: [line(path.basename(primary.path), home, primary.from, ' (this project)'), ...others.map((o) => line(o.name, o.project, o.from))].join('\n'),
     });
     for (const file of WORKSPACE_FILES) writeState(path.join(this.ctx.dir, path.dirname(primary.path), file), `${brief.trim()}\n`);
   }
@@ -142,23 +143,23 @@ export class WorkerTrees {
   /** Sending home a worker across repositories: what `kill` does with a worktree, for each of its worktrees, and then its workspace. */
   private async clearRepos(info: WorkerInfo, cleanup: WorktreeCleanup | undefined, landed?: string, landedRepos?: Record<string, string | undefined>): Promise<{ note?: string; error?: string }> {
     const trees = this.treesOf(info, landed, landedRepos);
-    const { name } = info;
+    const name = agentHeading(info);
     const branch = info.worktree!.branch;
     const where = trees.map((t) => t.name).join(', ');
     if (!cleanup) {
       const held = (await Promise.all(trees.map(async (t) => ({ name: t.name, work: describeWork(await t.trees.inspect(t.ref, t.landed)) })))).filter((t) => t.work);
-      if (held.length) return { note: `Kept ${name}'s worktrees and branch ${branch} in ${where} - ${held.map((t) => `${t.name} has ${t.work}`).join('; ')}` };
+      if (held.length) return { note: `${name}: kept its worktrees and branch ${branch} in ${where} - ${held.map((t) => `${t.name} has ${t.work}`).join('; ')}` };
       cleanup = 'all';
     }
-    if (cleanup === 'keep') return { note: `Kept ${name}'s worktrees and branch ${branch} in ${where}` };
+    if (cleanup === 'keep') return { note: `${name}: kept its worktrees and branch ${branch} in ${where}` };
     const how = cleanup;
     const errors = (await Promise.all(trees.map(async (t) => {
       const error = await t.trees.remove(t.ref, how);
       return error && `${t.name}: ${error}`;
     }))).filter(Boolean);
-    if (errors.length) return { error: `Couldn't delete all of ${name}'s worktrees: ${errors.join('; ')}` };
+    if (errors.length) return { error: `Couldn't delete all the worktrees of ${name}: ${errors.join('; ')}` };
     clearWorkspace(path.join(this.ctx.dir, workspaceOf(info)!));
-    return { note: how === 'all' ? `Deleted ${name}'s worktrees and branch ${branch} in ${where}` : `Deleted ${name}'s worktrees in ${where} and kept branch ${branch}` };
+    return { note: how === 'all' ? `${name}: deleted its worktrees and branch ${branch} in ${where}` : `${name}: deleted its worktrees in ${where} and kept branch ${branch}` };
   }
 
   /**
@@ -282,9 +283,9 @@ export class WorkerTrees {
    */
   async rebuild(id: string): Promise<{ rebuilt?: boolean; note?: string; error?: string }> {
     const w = this.ctx.workers.get(id);
-    if (!w) return { error: 'No such worker' };
+    if (!w) return { error: 'No such agent' };
     const { info } = w;
-    if (!info.worktree) return { error: `${info.name} works in the main checkout` };
+    if (!info.worktree) return { error: `${agentRef(info, { start: true })} works in the main checkout` };
     if (w.rebuilding) return {};
     const folder = this.ctx.cwd(info);
     // Whoever the folder was deleted from under: this worker, and the rest of its meeting's table.
@@ -298,7 +299,7 @@ export class WorkerTrees {
           if (t.ref.path && existsSync(path.resolve(t.dir, t.ref.path))) continue;
           const r = await t.trees.restore(t.ref);
           const which = across ? `${t.name}'s ` : '';
-          if ('error' in r) return { error: `Couldn't rebuild ${info.name}'s worktree${across ? ` of ${t.name}` : ''}: ${r.error}` };
+          if ('error' in r) return { error: `Couldn't rebuild the worktree of ${agentRef(info)}${across ? ` of ${t.name}` : ''}: ${r.error}` };
           if (r.from === 'origin') froms.push(`${which}${t.ref.branch} came back from origin`);
           if (r.from === 'gone') froms.push(`${which}${t.ref.branch} was deleted too, so it starts again from where it began`);
         }
@@ -316,7 +317,7 @@ export class WorkerTrees {
     for (const o of stranded) if (!this.checkLost(o)) this.restartIn(o);
     if (!stranded.length) {
       if (!w.pty && !w.dsh) this.ctx.resume(id);
-      return { note: `${info.name}'s worktree is already there` };
+      return { note: `The worktree of ${agentRef(info)} is already there` };
     }
     return { rebuilt: true, note: froms.join('; ') || undefined };
   }
@@ -353,14 +354,14 @@ export class WorkerTrees {
     if (!info.worktree || info.meeting) return {};
     // On the branch its work is on, should it have switched since it last came to rest.
     const wt = await this.current(info.worktree);
-    const name = info.name;
+    const name = agentHeading(info);
     if (info.repos?.length) return this.clearRepos(info, cleanup, landed, landedRepos);
     if (!cleanup) {
       const work = describeWork(await this.ctx.trees.inspect(wt, landed));
-      if (work) return { note: `Kept ${name}'s worktree and branch ${wt.branch} - it has ${work}` };
+      if (work) return { note: `${name}: kept its worktree and branch ${wt.branch} - it has ${work}` };
       cleanup = 'all';
     }
-    if (cleanup === 'keep') return { note: `Kept ${name}'s worktree and branch ${wt.branch}` };
+    if (cleanup === 'keep') return { note: `${name}: kept its worktree and branch ${wt.branch}` };
     let gone = wt;
     let kept = '';
     if (cleanup === 'all' && wt.made) {
@@ -380,8 +381,8 @@ export class WorkerTrees {
       }
     }
     const error = await this.ctx.trees.remove(gone, cleanup);
-    if (error) return { error: `Couldn't delete ${name}'s worktree: ${error}` };
-    if (cleanup === 'worktree') return { note: `Deleted ${name}'s worktree${kept || ` and kept branch ${wt.branch}`}` };
-    return { note: `Deleted ${name}'s worktree and branch ${gone.branch}${kept && `,${kept}`}` };
+    if (error) return { error: `Couldn't delete the worktree of ${name}: ${error}` };
+    if (cleanup === 'worktree') return { note: `${name}: deleted its worktree${kept || ` and kept branch ${wt.branch}`}` };
+    return { note: `${name}: deleted its worktree and branch ${gone.branch}${kept && `,${kept}`}` };
   }
 }

@@ -9,7 +9,10 @@ import { h } from '../ui/dom';
 import { corePanes, type CorePane } from '../ui/settings-core';
 import { openSettingsFrame, setting } from '../ui/settings-frame';
 import * as lazy from './lazy';
+import { home } from './state';
 import { setupState, usageSwitch } from './setup';
+import { devicesSetting } from '../ui/devices';
+import { openPair } from './phone';
 
 const LOOKS: [Lighting, string][] = [
   ['day', 'Light'],
@@ -73,7 +76,7 @@ export function openHomeSettings(d: HomeSettingsDeps, first?: CorePane) {
     },
     sample: () => d.notifier.sample(),
     signOut: () => void fetch('/api/logout', { method: 'POST' }).finally(() => location.assign('/login')),
-    extra: { account: [setting('Appearance', 'you', appearance()), ...(team ? [team] : []), ...(usage ? [usage] : []), labs(net)] },
+    extra: { account: [setting('Appearance', 'you', appearance()), ...(home.readOnly ? [] : [devicesSetting(openPair)]), ...(team ? [team] : []), ...(usage ? [usage] : []), labs(net)] },
   });
   openSettingsFrame(core.panes, first ?? lastPane, { onPick: (id) => (lastPane = id), onClose: core.off });
 }

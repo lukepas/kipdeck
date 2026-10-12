@@ -40,6 +40,6 @@ export function renderStrip(el: HTMLElement, open: (tab: 'goals') => void) {
       );
     }
   }
-  if (lost) parts.push(h('span.ms-unlinked', { title: 'Workers with no milestone and no issue' }, `${lost} not linked`));
+  if (lost) parts.push(h('span.ms-unlinked', { title: 'Agents with no milestone and no issue' }, `${lost} not linked`));
   el.replaceChildren(h('button.ms-strip', { type: 'button', class: empty ? 'empty' : '', title: empty ? 'Set what this deck is for: the mission and its milestones (I, then Goals)' : 'Mission control: the goals (I)', onclick: () => open('goals') }, ...parts));
 }

@@ -43,7 +43,7 @@ test('finished work is To review: Review changes, Fix checks, Merge, Send back',
   assert.deepEqual(rowAction(asked), { action: 'hand-back', label: 'Send back' });
 });
 
-test('working is Working with Open, and ready, asleep, merged and snoozed agents are Ready', () => {
+test('working is Working with Open, and ready, asleep, merged and snoozed agents are Idle', () => {
   const working = at(entry());
   assert.equal(sectionOf(working), 'working');
   assert.deepEqual(rowAction(working), { action: 'open', label: 'Open' });
@@ -75,7 +75,7 @@ test('the list keeps the ranking order in each section, filters by project and s
   assert.ok(matches(roster[0], 'claude'), 'by agent');
   assert.ok(!matches(roster[0], 'nothing like it'));
   assert.equal(ageLabel('needs-you', view.sections['needs-you'][0].att, NOW), 'waiting 20m');
-  assert.equal(ageLabel('idle', { since: NOW - 3 * 60 * MIN }, NOW), 'ready 3h');
+  assert.equal(ageLabel('idle', { since: NOW - 3 * 60 * MIN }, NOW), 'idle 3h');
   assert.equal(ageLabel('working', { since: NOW - 4 * MIN }, NOW), '4m');
   assert.equal(ageLabel('review', { since: NOW - 2 * MIN }, NOW), 'done 2m');
   // A wait on you counts in seconds at first, so its clock visibly moves; the rest by the minute.
@@ -83,7 +83,7 @@ test('the list keeps the ranking order in each section, filters by project and s
   assert.equal(ageLabel('needs-you', { since: NOW - 38_000 }, NOW), 'waiting 38s');
   assert.equal(ageLabel('review', { since: NOW - 38_000 }, NOW), 'done 38s');
   assert.equal(ageLabel('working', { since: NOW - 32_000 }, NOW), '<1m');
-  // Snoozed with a question still open: it sits under Ready, but it says snoozed, not ready.
+  // Snoozed with a question still open: it sits under Idle, but it says snoozed, not idle.
   assert.equal(ageLabel('idle', { since: NOW - 2 * 60 * MIN, snoozed: true }, NOW), 'snoozed 2h');
   assert.equal(changeSummary({ files: 1, additions: 3, deletions: 0, ahead: 1 } as RosterEntry['work']), '1 file, +3 -0');
   assert.equal(changeSummary(undefined), undefined);

@@ -7,6 +7,7 @@ import type { FloorInfo, FloorView, ProjectsDirState } from './floors.js';
 import type { LeaveOnMergeState, MachineState, NotifyState, PromptsState, UpgradeState } from './settings.js';
 import type { PlanLimits, UsageState } from './usage.js';
 import type { LabsState } from '../labs.js';
+import type { GateState } from '../gate.js';
 import type { DemoInfo } from '../demo.js';
 
 /** The issue on a card someone carries around the floor (see PeerInfo.carrying). */
@@ -118,6 +119,8 @@ export type PresenceServerMsg =
       leaveOnMerge: LeaveOnMergeState;
       /** Which labs are on (see shared/labs.ts). */
       labs: LabsState;
+      /** Agents' requests waiting for a person, the standing grants and the record (see shared/gate.ts). */
+      gate?: GateState;
       /** Every hired worker in the building, for the attention ranking (see RosterEntry). */
       roster: RosterEntry[];
       /** Pull requests waiting for a person that no worker on the roster stands for (see ReviewPull). */

@@ -13,6 +13,8 @@ import { pi } from './pi.js';
 import type { SomeAdapter } from './types.js';
 
 export type { LaunchPlan, ProviderAdapter, ProviderFloor, SomeAdapter } from './types.js';
+/** Every launch plan goes through it: the project's default permission mode, and the worker's badge (spend/launch.ts). */
+export { withMode } from '../spend/launch.js';
 
 export const PROVIDERS: Record<AgentProvider, SomeAdapter> = {
   claude,

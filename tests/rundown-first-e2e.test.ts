@@ -82,7 +82,7 @@ before(async () => {
   const log = console.log;
   console.log = () => {};
   try {
-    const cfg = loadConfig([repo, '--port', String(port), '--password', PASSWORD, '--no-open']);
+    const cfg = loadConfig([repo, '--port', String(port), '--password', PASSWORD, '--no-open', '--labs', 'rundown']);
     office = await startServer(cfg, { publicDir: BUNDLE });
   } finally {
     console.log = log;

@@ -4,6 +4,7 @@
 import { openBrowser } from './browser.js';
 import { CLI, PRODUCT } from '../shared/copy.js';
 import { LOCAL_KEY_HEADER, officeDataDir, readLocalFile } from './local.js';
+import { homeFlag, launchCommand } from './runcmd.js';
 
 const OPEN_HELP = `${CLI} open - open the running ${PRODUCT} in your browser, signed in
 
@@ -15,7 +16,7 @@ and opens it. --print prints the link instead.
 
 Options:
       --print             Print the link, don't open a browser
-      --home <dir>        The office to open (default ~/agent-office, env AGENT_OFFICE_HOME)
+      --home <dir>        The ${PRODUCT} to open (default ~/agent-office, env AGENT_OFFICE_HOME)
   -h, --help              Show this help
 `;
 
@@ -23,7 +24,8 @@ Options:
 export async function askOffice(home: string | undefined, route: string, body: unknown = {}): Promise<{ ok: true; url: string; data: Record<string, unknown> } | { ok: false; error: string }> {
   const dataDir = officeDataDir(home);
   const local = readLocalFile(dataDir);
-  const notRunning = `${PRODUCT} isn't running here. Start it with \`npx ${CLI}\`.`;
+  // Started the way this command was (npx, a linked `kipdeck`, or node and its path), for that office.
+  const notRunning = `${PRODUCT} isn't running here. Start it with \`${launchCommand()}${homeFlag(home)}\`.`;
   if (!local) return { ok: false, error: notRunning };
   let res: Response;
   try {
@@ -32,7 +34,7 @@ export async function askOffice(home: string | undefined, route: string, body: u
     return { ok: false, error: notRunning };
   }
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-  if (!res.ok) return { ok: false, error: typeof data.error === 'string' ? data.error : `The office answered ${res.status}` };
+  if (!res.ok) return { ok: false, error: typeof data.error === 'string' ? data.error : `${PRODUCT} answered ${res.status}` };
   return { ok: true, url: local.url, data };
 }
 

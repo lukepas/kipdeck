@@ -8,7 +8,7 @@
 # It installs the npm package `kipdeck` (built ahead: nothing is compiled on your machine) with
 # `npm install --global`, which puts a `kipdeck` command on your PATH. Run it again to update.
 # It never installs anything else: the agent CLIs (Claude Code, Codex, Cursor) are yours to install.
-# `npx kipdeck` does the same without installing anything.
+# `npx github:zbagdzevicius/kipdeck` does the same without installing anything, until it is on npm.
 #
 # Environment:
 #   KIPDECK_VERSION        install this version (e.g. 0.2.0) instead of the newest
@@ -50,10 +50,15 @@ if ($LASTEXITCODE -ne 0) {
     npm view kipdeck version *> $null
     if ($LASTEXITCODE -ne 0) {
       Write-Host ''
-      Write-Host 'Kipdeck is not on npm yet. Run it from source (Node.js 20+ and git):'
+      Write-Host 'Kipdeck is not on npm yet. In your repository, run it straight from GitHub'
+      Write-Host '(Node.js 20+ and git; the first run builds it, a few minutes):'
+      Write-Host ''
+      Write-Host '  cd ~\code\your-project; npx github:zbagdzevicius/kipdeck'
+      Write-Host ''
+      Write-Host 'Or from a clone, with a kipdeck command on your PATH:'
       Write-Host ''
       Write-Host '  git clone https://github.com/zbagdzevicius/kipdeck'
-      Write-Host '  cd kipdeck; npm install; npm run build; npm link'
+      Write-Host '  cd kipdeck; npm install; npm link'
       Write-Host '  cd ~\code\your-project; kipdeck'
       Write-Host ''
       Fail 'kipdeck is not on npm yet: run it from source with the steps above'

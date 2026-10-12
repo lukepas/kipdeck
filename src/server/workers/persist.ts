@@ -3,6 +3,7 @@ import { remapColor } from '../../shared/datacolors.js';
 import type { AgentProvider, Snooze, WorkerInfo, WorkerStatus, WorkerTask } from '../../shared/protocol.js';
 import { DESK_BY_ID } from '../../shared/layout.js';
 import { isAgentProvider, savedEffort, savedModel } from '../../shared/providers.js';
+import { isAutonomy } from '../../shared/autonomy.js';
 import { providerAdapter } from '../providers/index.js';
 import { reportedUsage } from '../reported-usage.js';
 import { restoreTracker, trackerUsage } from '../usage.js';
@@ -45,6 +46,7 @@ export function saveWorkers(file: string, workers: Iterable<Worker>, stopping: b
     issue: info.issue,
     goal: info.goal,
     snooze: info.snooze,
+    mode: info.mode,
     activityAt: info.activityAt,
     outputAt: info.outputAt,
     tracker: info.kind === 'agent' ? tracker : undefined,
@@ -128,6 +130,7 @@ export function restoreWorkers(file: string, dir: string, workers: Map<string, W
         issue: Number.isSafeInteger(s.issue) && (s.issue as number) > 0 ? s.issue : undefined,
         goal: typeof s.goal === 'string' && /^[a-z0-9]{1,16}$/.test(s.goal) ? s.goal : undefined,
         snooze: validSnooze(s.snooze),
+        mode: isAutonomy(s.mode) ? s.mode : undefined,
         activityAt: stamp(s.activityAt),
         outputAt: stamp(s.outputAt),
       };
