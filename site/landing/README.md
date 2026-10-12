@@ -47,7 +47,7 @@ npm run build:site
 | `KIPDECK_SITE_URL` | Canonical link, `og:url`, absolute share-card addresses, `sitemap.xml` | None of those (a relative one would be wrong wherever the page is copied) |
 | `KIPDECK_REPO_URL` | Replaces the brand's repository everywhere, the `npx github:owner/repo` commands too | The repository in `brand.ts` |
 | `KIPDECK_WAITLIST_URL` | Shows the Team waitlist form and lets it POST `{ email, source }` there (and nowhere else) | No form; the ask is the design-partner link, an email to the brand's contact address |
-| `KIPDECK_DEMO_URL` | **Try the demo** opens a hosted read-only demo | **Try the demo** copies the hero's demo command |
+| `KIPDECK_DEMO_URL` | **Try the demo** opens a hosted read-only demo (the root `vercel.json` sets it to the replay demo, https://kipdeck-demo.vercel.app/) | **Try the demo** copies the hero's demo command |
 | `KIPDECK_NPM_PUBLISHED=1` | `npx kipdeck` replaces the `npx github:` commands | The `npx github:` commands and the "Not on npm yet" line stay |
 | `KIPDECK_REPO_PUBLIC=0` | For a brand whose repository is private: the hero's command, the 06 terminal and the Source and Docs links are left out, and the hero leads with the film and the design-partner email | Public (github.com/zbagdzevicius/kipdeck is): all of them are shown |
 | `KIPDECK_BRAND` | Picks an entry in `brand.ts` | `kipdeck` |

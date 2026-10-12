@@ -144,7 +144,8 @@ test('the share card leads with Kip, his light lit in Signal, on the warm night 
 test('vercel.json builds the page and sends the same headers as public/_headers', () => {
   const vercel = JSON.parse(readFileSync(path.join(ROOT, 'vercel.json'), 'utf8'));
   assert.equal(vercel.installCommand, 'npm ci --ignore-scripts');
-  assert.equal(vercel.buildCommand, 'npm run build:site');
+  // The landing's Try the demo opens the replay demo (docs/demo.md#the-replay-demo).
+  assert.equal(vercel.buildCommand, 'KIPDECK_DEMO_URL=https://kipdeck-demo.vercel.app/ npm run build:site');
   assert.equal(vercel.outputDirectory, 'dist/site');
   // _headers: "/path/*" lines followed by indented "Key: value" lines.
   const fromHeaders: Record<string, Record<string, string>> = {};

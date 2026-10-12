@@ -10,7 +10,7 @@ Anyone who signs in to the office can drive its agents, and through them run com
 2. **Another website** open in the browser of someone who is signed in. It can make that browser send requests to the office (cross-site requests, login CSRF), or point a name of its own at the office's address (DNS rebinding) and talk to it as if it were the office's own page.
 3. **A link someone pastes** into the office: the team webhook, or a web page for a terminal's tab. The office posts to the webhook from its own machine, which can usually reach things nobody outside can: its own ports, the LAN, a cloud's metadata service.
 4. **A stolen cookie**, from a shared computer or a browser someone forgot to sign out of.
-5. **A prompt-injected agent.** A worker reads issues, pull requests and files written by others. Text there can talk it into running commands, so what it can reach (the office's environment, other people's PRs) is kept small.
+5. **A prompt-injected agent.** A worker reads issues, pull requests and files written by others. Text there can talk it into running commands, so what it can reach (the office's environment, other people's PRs) is kept small. **This is not defended yet.** Every worker runs as the office's own OS user, so until workers run as separate users with the office's state directory closed to them (B1 on the roadmap), a prompt-injected worker can read the office's `config.json`, mint itself an admin session, and read every other user's GitHub and Claude tokens from `homes/`. Until B1 lands, design-partner installs are on hold: run the office only for yourself, or for a team that shares one set of credentials and accepts that risk.
 
 Out of scope: anyone who is signed in. They can already open a shell at a desk. Per-person accounts keep work attributed and Claude plans separate, but every worker runs as the same OS user, so they don't keep teammates' secrets from each other (see [How it works](how-it-works.md#security-notes)).
 
@@ -160,6 +160,8 @@ The hosted demo (`kipdeck --demo --read-only`, [the demo](demo.md#the-hosted-dem
 - **Not defended.** Load: many visitors at once cost CPU and memory, and the way in has no rate limit of its own; the Fly config caps connections at 200. A visitor's cookie lasts the usual 7 days, which only lets them watch.
 
 `tests/demo.test.ts` opens the hosted demo as a visitor and tries each of these.
+
+The [replay demo](demo.md#the-replay-demo) is the public one: static files with a recording of this demo, no server behind them. Its tape is scrubbed before it is written (`deploy/replay/scrub.mjs`): the recording's folders are rewritten, and a string shaped like a token or key, or a folder or name of the computer it was recorded on, stops the recording.
 
 ## Sessions
 
