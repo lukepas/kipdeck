@@ -87,7 +87,7 @@ export function openDeploy(net: Net, opts: { prompt?: string; provider?: AgentPr
   };
   paintChips();
 
-  const ta = h('textarea', { rows: 5, id: 'deploy-prompt', placeholder: 'What should it do? For example: add rate limiting to /api/login', 'aria-label': 'Task' }) as HTMLTextAreaElement;
+  const ta = h('textarea', { rows: 5, id: 'deploy-prompt', placeholder: "What's the job? For example: add rate limiting to /api/login", 'aria-label': 'Task' }) as HTMLTextAreaElement;
   ta.value = opts.prompt ?? '';
   const install = absent.length
     ? h('div.deploy-other', {}, h('label', {}, 'Not on this computer yet'), ...absent.map((p) => h('p.deploy-note', {}, `${PROVIDER_META[p].label}: `, h('code', {}, agentFound(p)?.fix ?? ''), ' ', h('button.btn.small', { type: 'button', onclick: () => pick(p) }, 'Pick anyway'))))

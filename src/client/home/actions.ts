@@ -2,8 +2,8 @@
 // merge, send back, fix checks, resume, stop and archive. The windows behind them that the home page
 // doesn't draw itself (a pull request, the boards, the queue, Mission control) load when first wanted.
 
-import { nextUp, type RowAction } from '../../shared/inbox';
-import { waitWords } from '../../shared/wait';
+import { firstMergeLine } from '../../shared/warm';
+import { nextUp, shippedToday, type RowAction } from '../../shared/inbox';
 import type { InboxServerMsg, Reminder, RosterEntry } from '../../shared/protocol';
 import type { AgentProvider } from '../../shared/providers';
 import type { Net } from '../net';
@@ -13,6 +13,7 @@ import type { BoardActions } from '../ui/github/prompts';
 import type { MissionDeps } from '../ui/mission/act';
 import { reminderAction } from '../../shared/reminders';
 import { clearComments, commentsNote } from './brief';
+import { quiet } from './warm';
 import { onProject, openDeploy } from './deploy';
 import * as lazy from './lazy';
 import { currentView, entryRef, entryTitle } from './list';
@@ -193,7 +194,7 @@ export function createActions(net: Net): Actions {
       case 'send-home':
         return stop(e, e.pr?.state === 'merged');
       case 'give-task':
-        return void lazy.prompt().then(({ openPrompt }) => openPrompt({ title: `Give ${entryRef(e)} a task`, placeholder: 'What should it do?', onSubmit: (text) => net.send({ t: 'worker.prompt', workerId: e.id, prompt: text }) }));
+        return void lazy.prompt().then(({ openPrompt }) => openPrompt({ title: `Give ${entryRef(e)} a task`, placeholder: "What's the job?", onSubmit: (text) => net.send({ t: 'worker.prompt', workerId: e.id, prompt: text }) }));
       default:
         return show(e.id, 'terminal');
     }
@@ -217,9 +218,14 @@ export function createActions(net: Net): Actions {
         return home.change();
       }
       // The office tells everyone who merged what; this page's hold toast says it landed and moves on
-      // to the next thing. The first merge in this browser is worth saying once, with how long the loop took.
-      const first = home.firstMerge() ? `Your first merge, ${waitWords(Date.now() - Math.min(...store.roster.map((e) => e.createdAt), Date.now()))} after your first agent started. It's in Shipped today.` : undefined;
-      if (!mergeLanded(msg.workerId, msg, first) && first) toast(first);
+      // to the next thing. The first merge in this browser is worth saying once, with how long the loop
+      // took; any other says how many are on today's tape, and only while nothing needs you.
+      const isQuiet = quiet();
+      const started = Math.min(...store.roster.map((e) => e.createdAt), Date.now());
+      const first = home.firstMerge() ? firstMergeLine(Date.now() - started, isQuiet) : undefined;
+      const today = shippedToday(home.records, Date.now());
+      const onTape = today.length + (msg.record && !today.some((r) => r.id === msg.record?.id) ? 1 : 0);
+      if (!mergeLanded(msg.workerId, msg, { first, onTape, quiet: isQuiet }) && first) toast(first);
       home.check('merge');
       // On to the next thing that needs you.
       const next = nextUp(currentView(), msg.workerId);
