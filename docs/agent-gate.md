@@ -26,6 +26,8 @@ If the asking agent has gone home since it asked, its request can only be reject
 
 Either way the asking agent hears the outcome in its own session, as a message that starts with `[Kipdeck]`: *Ada approved your request to deploy a new agent (proposal 3f2a...). Hired Pixel at Desk 4 on branch office/pixel-1.*, or *Ada rejected your request to message Nova (proposal 3f2a...), so it did not happen. Their reason: Nova is busy.* The reason is typed in as one line, with control characters and terminal escape sequences taken out.
 
+An agent can never message one that is paused (by a person, or at a budget cap, see [Spend](spend.md#pause-all-resume-all-and-stop-all)), with or without a standing permission: the message would count as someone typing to it and lift the pause. It is refused with *Nova is paused: a person has to let it carry on first*, an approved one too, and the paused agent gets nothing.
+
 An agent that has stopped is not woken just to hear the outcome. The activity record has it at once, and the message waits for the agent: when it runs again (someone resumes it, or a message from another agent wakes it), it gets the message as soon as it is ready for one. The office keeps these messages in `agent-gate.json`, so a restart does not lose them. An agent sent home before it runs again never gets them.
 
 While it waits, the agent is told so at once: the tool answers that a person has to approve it first, that nothing has happened yet, and not to send the same request again. The `office-workers` command prints the same to stderr and exits 0. One agent can have at most 5 requests waiting at once; past that it is refused until some are decided.

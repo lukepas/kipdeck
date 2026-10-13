@@ -214,6 +214,24 @@ test('a grant lets a request through at once, on the record, up to its limit', a
   assert.equal(o.gate.record()[0].outcome, 'failed');
 });
 
+test("a tell never reaches a paused agent: only a person lifts a pause, granted or approved", async () => {
+  const o = fakeOffice();
+  const hold = { reason: 'paused' as const, at: 1, by: 'Ada' };
+  Object.assign(o.workers.get('w2')!, { hold, status: 'needs_input' });
+  o.gate.grant('f1', 'tell', undefined, 'Ada');
+  const told = await gateOrRun(o.ctx, o.floor, o.me, { action: 'tell', worker: 'w2', text: 'Carry on' }, { targets: ['Nova'], text: 'Carry on' });
+  assert.equal(told.status, 409);
+  assert.match(String(told.body.error), /Nova is paused: a person has to let it carry on first/);
+  assert.equal(o.prompts.length, 0, 'Nova got nothing, so nothing counts as someone typing to it');
+  assert.deepEqual(o.workers.get('w2')!.hold, hold, 'the pause stays');
+
+  // Approved by a person while it waited: still refused, the pause is lifted only with Continue.
+  const p = o.gate.propose({ floor: 'f1', floorName: 'shop', action: 'tell', by: { id: 'w1', name: 'Byte' }, req: { action: 'tell', worker: 'w2', text: 'Carry on' }, owner: 'acct-1' });
+  await decide(o.ctx, 'Ada', p.id, true);
+  assert.ok(!o.prompts.some((x) => x.id === 'w2'), 'Nova still got nothing');
+  assert.deepEqual(o.workers.get('w2')!.hold, hold);
+});
+
 test('only an admin or the account the asking agent runs as decides', () => {
   const o = fakeOffice(false);
   const p = o.gate.propose({ floor: 'f1', floorName: 'shop', action: 'tell', by: { id: 'w1', name: 'Byte' }, req: { action: 'tell', worker: 'w2', text: 'x' }, owner: 'acct-1' });
