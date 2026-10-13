@@ -94,7 +94,8 @@
       "paid": {
         "amount": "25000000",
         "decimals": 6,
-        "tx": "5DvhPHYEbDkBLmGygjrASJz9Ydm8AEVuS95m527FMrXU66K1aUDwkdgk6yoAbgpaYjBCLpRgtAzMBfErzgDRsm8w"
+        "tx": "5DvhPHYEbDkBLmGygjrASJz9Ydm8AEVuS95m527FMrXU66K1aUDwkdgk6yoAbgpaYjBCLpRgtAzMBfErzgDRsm8w",
+        "mint": "9CL3xM1UNUQk7XqKz8JHbYhPNH9iwZF4mU67sjSEzbMz"
       },
       "links": {
         "attestation": "https://base-sepolia.easscan.org/attestation/view/0x55b57b577102ceaac48d2a51987c99441111b219f4b665eed3b7946f66b77c3c",
