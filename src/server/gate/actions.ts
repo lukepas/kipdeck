@@ -47,13 +47,13 @@ export async function runHire(ctx: Ctx, floor: Floor, actor: Actor, ask: HireReq
   const untrusted = ask.prompt ? await floor.github.checkoutProblem(ask.prompt) : undefined;
   if (untrusted) return { status: 403, body: { error: untrusted } };
   const desk = ask.desk ?? nextFreeSeat((id) => floor.workers.deskOccupied(id), floor.plan.wing)?.id;
-  if (!desk) return { status: 409, body: { error: 'Every desk and bean bag is taken: send someone home first' } };
+  if (!desk) return { status: 409, body: { error: 'Kipdeck is full: send an agent home first' } };
   // A model or effort is the office's default worker's unless it says whose.
   const provider = ask.provider ?? (ask.model || ask.effort ? floor.workers.officeDefault.provider : undefined);
   const worktree = ask.worktree ?? !!floor.project.branch;
   // Its worktree starts from what's on GitHub now, like one hired from a desk.
   if (worktree) await floor.workers.fetchBase();
-  if (!ctx.floors.has(floor.id)) return { status: 410, body: { error: 'This floor closed' } };
+  if (!ctx.floors.has(floor.id)) return { status: 410, body: { error: 'That project is closed' } };
   const goal = ask.goal ? floor.mission.find(ask.goal) : undefined;
   if (ask.goal && !goal) return { status: 400, body: { error: `No milestone here is called ${ask.goal}: get_mission lists them` } };
   // It runs as whoever the asking worker runs as.

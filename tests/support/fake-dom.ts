@@ -212,6 +212,10 @@ export const fakeDocument = {
   createElement(tag: string) {
     return tag === 'template' ? new FakeTemplate(tag) : new FakeElement(tag);
   },
+  /** An SVG element (the pairing QR code): the namespace is not kept. */
+  createElementNS(_ns: string, tag: string) {
+    return new FakeElement(tag);
+  },
   getElementById(id: string) {
     return documentElement.descendants().find((el) => el.id === id) ?? null;
   },

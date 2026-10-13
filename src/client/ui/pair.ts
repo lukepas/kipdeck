@@ -88,6 +88,8 @@ export async function openPair(opts: { paired?: () => void } = {}) {
       stop();
     },
   });
+  /** The New code button on show: pressing it keeps focus on the one that replaces it. */
+  let again: HTMLElement | undefined;
 
   const load = async () => {
     stop();
@@ -95,6 +97,7 @@ export async function openPair(opts: { paired?: () => void } = {}) {
     const mine = (asking = new AbortController());
     /** This window was closed, or New code asked again, while this one was on its way. */
     const gone = () => closed || asking !== mine;
+    const refocus = () => !!again && document.activeElement === again;
     let offer: PairOffer;
     try {
       const res = await fetch('/api/pair', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}', signal: mine.signal });
@@ -106,12 +109,30 @@ export async function openPair(opts: { paired?: () => void } = {}) {
       return;
     }
     if (gone()) return;
+    const wasOnAgain = refocus();
     let pick = 0;
     const qr = h('div.pair-qr');
     const link = h('code.pair-link');
     const note = h('div.pair-reach');
     const picker = h('div.seg.pair-via', { role: 'radiogroup', 'aria-label': 'Address' });
     const left = h('p.pair-left');
+    // The address radios, made once per code: a pick only changes which is checked, so the one just
+    // pressed keeps focus. One tab stop for the group; the arrow keys move the pick, as in any radio group.
+    const radios = offer.addresses.length > 1 ? offer.addresses.map((x, i) => h('button.btn', { type: 'button', role: 'radio', title: x.base, onclick: () => choose(i) }, `${VIA[x.via]}${x.secure ? '' : ' (HTTP)'}`)) : [];
+    picker.replaceChildren(...radios);
+    const choose = (i: number) => {
+      pick = i;
+      draw();
+    };
+    picker.addEventListener('keydown', (ev) => {
+      const step: Record<string, number> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+      const k = (ev as KeyboardEvent).key;
+      const n = radios.length;
+      if (!n || !(k in step || k === 'Home' || k === 'End')) return;
+      ev.preventDefault();
+      choose(k === 'Home' ? 0 : k === 'End' ? n - 1 : (pick + step[k] + n) % n);
+      radios[pick].focus();
+    });
     const draw = () => {
       const a = offer.addresses[pick];
       note.replaceChildren(reachNote(a, offer));
@@ -119,14 +140,14 @@ export async function openPair(opts: { paired?: () => void } = {}) {
       qr.classList.toggle('hidden', !a);
       link.textContent = a ? pairLink(a.base, offer.token) : '';
       copy.classList.toggle('hidden', !a);
-      picker.replaceChildren(
-        ...(offer.addresses.length > 1
-          ? offer.addresses.map((x, i) => h('button.btn', { type: 'button', role: 'radio', 'aria-checked': String(i === pick), class: i === pick ? 'on' : '', title: x.base, onclick: () => ((pick = i), draw()) }, `${VIA[x.via]}${x.secure ? '' : ' (HTTP)'}`))
-          : []),
-      );
+      radios.forEach((b, i) => {
+        b.setAttribute('aria-checked', String(i === pick));
+        b.setAttribute('tabindex', i === pick ? '0' : '-1');
+        b.classList.toggle('on', i === pick);
+      });
     };
     const copy = h('button.btn.quiet', { type: 'button', onclick: () => void navigator.clipboard?.writeText(link.textContent ?? '').then(() => toast('Link copied. It works once.'), () => {}) }, icon('copy', 14), 'Copy link');
-    const again = h('button.btn', { type: 'button', onclick: () => void load() }, icon('refresh', 14), 'New code');
+    again = h('button.btn.pair-again', { type: 'button', onclick: () => void load() }, icon('refresh', 14), 'New code');
     const done = h('div.pair-done.hidden', { role: 'status' });
     body.replaceChildren(
       h('p.pair-intro', {}, "Scan this with your phone's camera. The phone is signed in as you without a password, and stays signed in until you revoke it in Settings > Account."),
@@ -138,6 +159,7 @@ export async function openPair(opts: { paired?: () => void } = {}) {
       h('details.pair-more', {}, h('summary', {}, 'Show the link'), link),
     );
     draw();
+    if (wasOnAgain) again.focus();
     const countdown = () => {
       const ms = offer.expiresAt - Date.now();
       left.textContent = ms > 0 ? `Works once, for ${Math.ceil(ms / 60_000)} more min.` : 'This code has run out. Make a new one.';
