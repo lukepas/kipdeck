@@ -76,6 +76,12 @@ class FakeClassList {
   remove(...cs: string[]) {
     this.el.setAttribute('class', this.list.filter((c) => !cs.includes(c)).join(' '));
   }
+  toggle(c: string, force?: boolean) {
+    const on = force ?? !this.contains(c);
+    if (on) this.add(c);
+    else this.remove(c);
+    return on;
+  }
 }
 
 export class FakeElement extends FakeNode {
@@ -151,6 +157,12 @@ export class FakeElement extends FakeNode {
   }
   querySelector(selector: string): FakeElement | null {
     return this.querySelectorAll(selector)[0] ?? null;
+  }
+  /** This element or the nearest one above it that matches (no `:scope` here). */
+  closest(selector: string): FakeElement | null {
+    const parts = parse(selector);
+    for (let n: FakeNode | null = this; n instanceof FakeElement; n = n.parentNode) if (parts.some((s) => matches(n as FakeElement, s))) return n;
+    return null;
   }
   focus() {
     if (this.unfocusable || !this.isConnected) return;

@@ -93,7 +93,10 @@ function ownerLabel(e: RosterEntry): string {
  */
 export function needsYouNow(except?: string): number {
   const all = buildInbox(store.ranked());
-  const n = waitingNow(all).needYou.length;
+  // Its own count, not waitingNow's: that one follows the picker and Mine for the pulse. Here every
+  // loose reminder and every agent's request count, whoever's agent asked and on whichever project.
+  const listed = new Set(store.roster.map((e) => e.id));
+  const n = all.sections['needs-you'].length + looseReminders(store.reminders, listed, Date.now()).length + store.gate.proposals.length;
   return except && all.sections['needs-you'].some((r) => r.entry.id === except) ? n - 1 : n;
 }
 
