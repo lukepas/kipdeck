@@ -12,6 +12,7 @@ import { randomLook, randomName } from '../shared/avatar';
 import { $, doingNow, onDoingChange, onModalChange, readingNow, toast } from './ui/dom';
 import { watchStuck } from './ui/mission/watch';
 import { DesktopNotifier, waitingOnSomeone } from './notify';
+import { buzz } from './buzz';
 // The tab title counts the agents waiting on someone, on every project, as the 3D bridge's does.
 import { renderTitle } from './shared/title';
 import { homeMessage, installHome } from './home';
@@ -85,7 +86,7 @@ store.on('workers', () => {
     lastStatus.set(w.id, w.status);
     if (before === undefined || before === w.status || !waitingOnSomeone(w)) continue;
     notifier.alert(w);
-    if (w.status === 'needs_input') navigator.vibrate?.(200);
+    if (w.status === 'needs_input') buzz();
   }
   notifier.sync(store.workers);
   renderTitle();
@@ -95,7 +96,7 @@ store.on('project', renderTitle);
 // Stuck anywhere: a notification while you're away, and a buzz.
 watchStuck((e, reason) => {
   notifier.stuck(e, reason, () => look(e));
-  if (e.floor === store.floor) navigator.vibrate?.(200);
+  if (e.floor === store.floor) buzz();
 });
 
 // ---- What you have open, for the others (see PeerInfo.doing) -----------------------------------
