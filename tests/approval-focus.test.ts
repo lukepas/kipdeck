@@ -89,7 +89,7 @@ test('a redraw with focus elsewhere leaves it there', () => {
 
 test('the next queued request comes up with focus on its card, never on Allow once', async () => {
   const sent: unknown[] = [];
-  const net = { onMessage: () => {}, send: (m: unknown) => sent.push(m) };
+  const net = { up: true, onMessage: () => {}, send: (m: unknown) => sent.push(m) };
   const ap = approvalCard(net as never);
   fakeDocument.body.append(ap.el as unknown as FakeElement);
   const e = { id: 'w1' } as RosterEntry;
