@@ -44,7 +44,7 @@ Every program in this folder asks what existed before and what we built. This pa
 The Colosseum form's prior work answer, at most 1,500 characters:
 
 ```field name="Disclosure (Colosseum)" max-chars=1500
-Kipdeck is built on agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs and community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D office, desks where coding agent CLIs run in live terminals, voice, the GitHub boards and the deploy scripts. Our history starts from two snapshot imports of upstream (commits 01d85bbb = upstream 665aeec, and 226452e4 = upstream 1bc3028, both 2026-09-30); all of that is theirs, and so are 11 upstream pull requests we re-committed under our name (listed with their authors in launch/chain/disclosure.md). Ours, all written during the contest (our first commit is 2026-09-30): the inbox and mission control (attention ranking, review inbox, goals, timeline), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and Proof of Merge, the payout layer: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, a GitHub Action attester, x402 paid tasks, EAS attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are every commit in 226452e4..4aff1cce except those 11, the import 01d85bbb and 2 Dependabot bumps. Testnets only. Diff: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
+Kipdeck is built on agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs and community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D office, desks where coding agent CLIs run in live terminals, voice, the GitHub boards and the deploy scripts. Our history starts from two snapshot imports of upstream (commits 01d85bbb = upstream 665aeec, and 226452e4 = upstream 1bc3028, both 2026-09-30); all of that is theirs, and so are 11 upstream pull requests we re-committed under our name (listed with their authors in launch/chain/disclosure.md). Ours, all written during the contest (our first commit is 2026-09-30): the inbox and mission control (attention ranking, review inbox, goals, timeline), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and Proof of Merge, the payout layer: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, a GitHub Action attester, x402 paid tasks, EAS attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are every commit in 226452e4..f61d0eb8 except those 11, the import 01d85bbb and 2 Dependabot bumps. Testnets only. Diff: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 ```
 
 A short form, where a field is tiny:
@@ -124,14 +124,14 @@ PRs we re-committed (#244 by Lohrey, the rest yours). If any of it is useful
 upstream I'm happy to open PRs. Thanks for building it.
 ```
 
-## The commit list, generated on 2026-10-12
+## The commit list, generated on 2026-10-13
 
 The output of `whats-new.ts` for the submitted commit, pasted as it came out.
 
 Kipdeck is built on agent-office (https://github.com/AgentSystemLabs/agent-office), MIT-licensed, Copyright (c) 2026 AgentSystemLabs, created by webdevcody (Web Dev Cody), AgentSystemLabs; its first commit is dated 2026-09-25.
 Our history starts from snapshot imports of upstream, not from upstream's own commits: 01d85bbb (upstream 665aeec) and 226452e4 (upstream 1bc3028). Everything in them is upstream work, not ours. This list counts from 226452e4 (upstream 1bc3028, 2026-09-30). The MIT license text and copyright notice are kept in LICENSE.
 
-In 226452e4..4aff1cce (merges left out): 589 commits. 575 ours; 11 upstream pull requests re-committed under our name; 2 by bots or other authors; 1 snapshot imports. 2673 files differ from upstream's snapshot, upstream's re-committed pull requests included.
+In 226452e4..f61d0eb8 (merges left out): 598 commits. 584 ours; 11 upstream pull requests re-committed under our name; 2 by bots or other authors; 1 snapshot imports. 2684 files differ from upstream's snapshot, upstream's re-committed pull requests included.
 
 Ours:
 
@@ -710,6 +710,15 @@ Ours:
 - 2026-10-12 5f760031 Colosseum submit stamp: 226452e4..bc4ea245, the commit list, fresh counts, --labs proof (#52)
 - 2026-10-12 8b252039 Team tier at USD 20 a seat a month (D8): deck, PDFs and launch copy (#56)
 - 2026-10-12 4aff1cce Replay demo on Vercel, linked from the landing; threat #5 says what B1 fixes (#57)
+- 2026-10-12 b6c9ef14 Colosseum re-stamp: 226452e4..4aff1cce, the commit list, the demo link (#58)
+- 2026-10-13 7460d56d Ignore local tooling: project map, graft cache, agent worktrees, browser-tool output (#59)
+- 2026-10-13 02335267 Two CI flakes: the coach strip and the numbers staircase wait for what they measure (#66)
+- 2026-10-13 f9420adc Agent messages: no keys in typed text, and no lifting a person's Pause (#62)
+- 2026-10-13 edaf291f Keep a person's pause and a brought-in session's fork across agents and restarts (#64)
+- 2026-10-13 1ab6cf9a Client races: approval card after a reconnect, pairing closed early, spend selects, warm gate, dialog double-open (#61)
+- 2026-10-13 276a922e Approval card, Pair a phone and first-task box: focus, rings, tap sizes and names (#65)
+- 2026-10-13 54b325fd Push taps reuse the inbox on /a/ and /p/; --budget help, gate and inbox size docs match the code (#60)
+- 2026-10-13 f61d0eb8 Keep the replay demo out of installs, widen Release's paths, load the setup card lazily (#63)
 
 Upstream, not ours (upstream pull requests re-committed in our history; the author is the upstream author):
 
@@ -1171,6 +1180,7 @@ Code:
 - added: src/client/home/question.ts
 - added: src/client/home/route.ts
 - added: src/client/home/settings.ts
+- added: src/client/home/setup-card.ts
 - added: src/client/home/setup.css
 - added: src/client/home/setup.ts
 - added: src/client/home/shipped.ts
@@ -1933,6 +1943,7 @@ Code:
 - deleted: src/shared/theme.ts
 - added: src/shared/tones.ts
 - added: src/shared/turnaround.ts
+- added: src/shared/typed.ts
 - added: src/shared/voice.ts
 - added: src/shared/wait.ts
 - added: src/shared/wall-screens.ts
@@ -2137,10 +2148,12 @@ On-chain packages (onchain/):
 
 Tests:
 
+- added: tests/a11y-css.test.ts
 - modified: tests/agents.test.ts
 - added: tests/alert.test.ts
 - added: tests/amphitheater.test.ts
 - added: tests/answer-advance.test.ts
+- added: tests/approval-focus.test.ts
 - added: tests/approval.test.ts
 - added: tests/approvals-desk.test.ts
 - added: tests/approvals-e2e.test.ts
@@ -2168,6 +2181,7 @@ Tests:
 - added: tests/cinema.test.ts
 - added: tests/cli-voice.test.ts
 - modified: tests/client-floors.test.ts
+- added: tests/client-races.test.ts
 - modified: tests/client-registry.test.ts
 - modified: tests/client-store.test.ts
 - modified: tests/client-structure.test.ts
@@ -2188,6 +2202,7 @@ Tests:
 - added: tests/dialog.test.ts
 - added: tests/dictation.test.ts
 - added: tests/diegetic-ui.test.ts
+- added: tests/docs-claims.test.ts
 - deleted: tests/dog-model.test.ts
 - added: tests/drive.test.ts
 - deleted: tests/driving.test.ts
@@ -2276,6 +2291,7 @@ Tests:
 - added: tests/overview-fit.test.ts
 - added: tests/overview-motion.test.ts
 - added: tests/painted-box.test.ts
+- added: tests/pair-focus.test.ts
 - added: tests/pairing.test.ts
 - added: tests/phone-e2e.test.ts
 - added: tests/phone-links.test.ts
@@ -2305,6 +2321,7 @@ Tests:
 - added: tests/readability.test.ts
 - added: tests/relay-beacon.test.ts
 - modified: tests/relay.test.ts
+- added: tests/release-paths.test.ts
 - added: tests/reminders.test.ts
 - added: tests/replay-e2e.test.ts
 - added: tests/replay.test.ts
@@ -2352,6 +2369,7 @@ Tests:
 - added: tests/spend-e2e.test.ts
 - added: tests/spend.test.ts
 - added: tests/start-command-e2e.test.ts
+- added: tests/starter-label.test.ts
 - added: tests/starters.test.ts
 - added: tests/state-trust.test.ts
 - added: tests/storage-key.test.ts
@@ -2456,6 +2474,7 @@ Docs:
 
 Deploy and CI:
 
+- modified: .github/workflows/release.yml
 - added: .github/workflows/showcase-pages.yml
 - modified: deploy/aws.sh
 - modified: deploy/azure.sh
@@ -2549,6 +2568,7 @@ Other:
 
 - modified: .gitattributes
 - modified: .gitignore
+- added: .ignore
 - added: AGENTS.md
 - modified: CLAUDE.md
 - added: DESIGN.md
