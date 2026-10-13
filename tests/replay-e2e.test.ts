@@ -57,6 +57,22 @@ test('the replay demo plays the recorded round on a static page, read only', asy
   page.on('websocket', (ws) => sockets.push(ws.url()));
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
+  // Console errors too, such as Chrome refusing navigator.vibrate on a page nobody has tapped yet
+  // (Codex's question lands from the tape before any click).
+  const consoleErrors: string[] = [];
+  page.on('console', (m) => {
+    if (m.type() === 'error') consoleErrors.push(m.text());
+  });
+  // Chrome refuses navigator.vibrate before the page has had a tap and logs a console error for it,
+  // which headless Chrome doesn't surface (and Playwright's evaluate counts as a tap), so each call
+  // is recorded with whether a real pointer or key press came first.
+  await page.addInitScript(() => {
+    // Inline listeners: a named function here would pick up tsx's __name helper, which the page lacks.
+    let pressed = false;
+    for (const type of ['pointerdown', 'keydown']) addEventListener(type, (e) => (pressed ||= e.isTrusted), true);
+    const calls: boolean[] = ((window as any).__vibrateCalls = []);
+    navigator.vibrate = () => (calls.push(pressed), true);
+  });
   await page.goto(`${base}/`);
 
   // The pill says it's a recording, and the agents arrive from the tape.
@@ -67,6 +83,9 @@ test('the replay demo plays the recorded round on a static page, read only', asy
   const question = page.getByText('The total is empty while the order loads. How should I fix the test?').first();
   await question.waitFor({ timeout: 20_000 });
   await page.locator('.xterm-rows').filter({ hasText: 'Fix the flaky checkout test' }).first().waitFor({ timeout: 10_000 });
+
+  // The question lands before any click, so nothing has buzzed yet.
+  assert.deepEqual(await page.evaluate(() => (window as any).__vibrateCalls), [], 'no vibrate before a tap');
 
   // Claude Code's change: its brief and its diff, answered from the tape.
   await page.getByRole('button', { name: 'Review changes' }).first().click({ timeout: 20_000 });
@@ -79,5 +98,7 @@ test('the replay demo plays the recorded round on a static page, read only', asy
 
   assert.deepEqual(sockets, [], 'nothing live: no socket is opened');
   assert.deepEqual(errors, []);
+  assert.deepEqual(consoleErrors, [], 'no console errors');
+  assert.ok(!(await page.evaluate(() => (window as any).__vibrateCalls as boolean[])).includes(false), 'never a vibrate before a tap');
   await page.close();
 });
