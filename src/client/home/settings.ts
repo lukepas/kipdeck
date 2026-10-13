@@ -10,7 +10,8 @@ import { corePanes, type CorePane } from '../ui/settings-core';
 import { openSettingsFrame, setting } from '../ui/settings-frame';
 import * as lazy from './lazy';
 import { home } from './state';
-import { setupState, usageSwitch } from './setup';
+import { setupState } from './setup';
+import { usageSwitch } from './setup-card';
 import { devicesSetting } from '../ui/devices';
 import { openPair } from './phone';
 
