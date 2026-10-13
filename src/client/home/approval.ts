@@ -46,13 +46,30 @@ export function approvalCard(net: Net): ApprovalCard {
   /** The request on show, and where the card is in answering it. */
   let shown: ApprovalView | undefined;
   const state: CardState = { sent: false, denying: false, behind: 0 };
+  /** A welcome came (a reconnect too) and the open requests it asked for haven't arrived yet. */
+  let resync = false;
 
   // Every welcome (a reconnect too): the open requests, and to be told from now on.
   net.onMessage((msg) => {
-    if (msg.t === 'welcome') net.send({ t: 'approvals.get' });
+    if (msg.t !== 'welcome') return;
+    resync = true;
+    net.send({ t: 'approvals.get' });
   });
-  // A request opening or going changes the list and the pane.
-  store.on('approvals', () => home.change());
+  // A request opening or going changes the list and the pane. The first list after a welcome also
+  // says the card's answer may never have got there: the socket can die with the frame in it. If the
+  // request is still open, the buttons come back, so the agent isn't left on its hook until a reload.
+  store.on('approvals', () => {
+    if (resync) {
+      resync = false;
+      if (shown && state.sent) {
+        state.sent = false;
+        state.denying = false;
+        state.reason = undefined;
+        paint();
+      }
+    }
+    home.change();
+  });
 
   const paint = () => {
     const a = shown;
@@ -64,7 +81,8 @@ export function approvalCard(net: Net): ApprovalCard {
   };
 
   const answer = (a: ApprovalView, decision: ApprovalDecision | 'release', reason?: string) => {
-    if (state.sent) return;
+    // With the socket down the answer would go nowhere and the card would wait on it for good.
+    if (state.sent || !net.up) return;
     state.sent = true;
     net.send({ t: 'approval.answer', id: a.id, decision, ...(reason ? { reason } : {}) });
     // Answered here, with nothing more from this agent behind it: the pane moves on (advance.ts).

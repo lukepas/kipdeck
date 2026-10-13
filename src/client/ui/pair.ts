@@ -72,23 +72,40 @@ export async function openPair(opts: { paired?: () => void } = {}) {
   const el = h('div.modal.pair', { role: 'dialog', 'aria-label': 'Pair a phone' }, h('header', {}, h('h2', {}, 'Pair a phone')), body);
   let poll: ReturnType<typeof setInterval> | undefined;
   let tick: ReturnType<typeof setInterval> | undefined;
+  /** The code being asked for, called off when the window closes or a newer one is asked for. */
+  let asking: AbortController | undefined;
+  let closed = false;
   const stop = () => {
     clearInterval(poll);
     clearInterval(tick);
   };
-  openModal(el, { doing: 'pairing a phone', onClose: stop });
+  // Closed while a code is on its way: no code is wanted, and nothing may start polling for one after.
+  openModal(el, {
+    doing: 'pairing a phone',
+    onClose: () => {
+      closed = true;
+      asking?.abort();
+      stop();
+    },
+  });
 
   const load = async () => {
     stop();
+    asking?.abort();
+    const mine = (asking = new AbortController());
+    /** This window was closed, or New code asked again, while this one was on its way. */
+    const gone = () => closed || asking !== mine;
     let offer: PairOffer;
     try {
-      const res = await fetch('/api/pair', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+      const res = await fetch('/api/pair', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}', signal: mine.signal });
       if (!res.ok) throw new Error(((await res.json().catch(() => ({}))) as { error?: string }).error ?? `Kipdeck answered ${res.status}`);
       offer = (await res.json()) as PairOffer;
     } catch (err) {
+      if (gone()) return;
       body.replaceChildren(h('p.pair-intro', {}, `Couldn't make a pairing code: ${(err as Error).message}`));
       return;
     }
+    if (gone()) return;
     let pick = 0;
     const qr = h('div.pair-qr');
     const link = h('code.pair-link');
