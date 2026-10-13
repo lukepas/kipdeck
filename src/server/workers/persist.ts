@@ -37,6 +37,7 @@ export function saveWorkers(file: string, workers: Iterable<Worker>, stopping: b
     repos: info.repos,
     title: info.title,
     sessionId: info.sessionId,
+    forkOf: info.forkOf,
     activity: info.activity,
     task: info.task,
     pr: info.pr,
@@ -116,6 +117,8 @@ export function restoreWorkers(file: string, dir: string, workers: Map<string, W
         repos: worktree ? validRepos(s.repos, dir) : undefined,
         title: s.title,
         sessionId: isSessionId(s.sessionId) ? s.sessionId : undefined,
+        // A session brought in from a terminal is forked on its next resume, after a restart too (providers/claude.ts).
+        forkOf: isSessionId(s.forkOf) ? s.forkOf : undefined,
         activity: s.activity,
         task: validTask(s.task),
         pr: s.pr && typeof s.pr.number === 'number' && typeof s.pr.url === 'string' ? { number: s.pr.number, url: s.pr.url } : undefined,
