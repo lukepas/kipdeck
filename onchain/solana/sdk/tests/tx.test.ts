@@ -20,6 +20,7 @@ import {
   verifySignature,
   type TxInstruction,
 } from '../src/index.js';
+import type { Blockhash } from '@solana/web3.js';
 
 // @solana/web3.js is only a dev dependency, to check these bytes against. Loading it pulls in
 // node-fetch, whose URL parser requires Node's deprecated punycode module: that warning is
@@ -76,27 +77,27 @@ const skip = !web3 && 'install onchain/solana dev dependencies to compare with @
 test('messages match @solana/web3.js byte for byte', { skip }, () => {
   const { Transaction, TransactionInstruction, PublicKey } = web3!;
   const ixs = release();
-  const theirs = new Transaction({ feePayer: new PublicKey(attester.publicKey), recentBlockhash: blockhash });
+  const theirs = new Transaction({ feePayer: new PublicKey(attester.publicKey), recentBlockhash: blockhash as Blockhash });
   for (const i of ixs) theirs.add(new TransactionInstruction({ programId: new PublicKey(i.programId), keys: i.keys.map((k) => ({ ...k, pubkey: new PublicKey(k.pubkey) })), data: Buffer.from(i.data) }));
   assert.deepEqual(compileMessage(attester.publicKey, ixs, blockhash), new Uint8Array(theirs.serializeMessage()));
 });
 
-test('bounty, contribution and token account addresses match @solana/web3.js', { skip }, () => {
+test('bounty, contribution and token account addresses match @solana/web3.js', { skip }, async () => {
   const { PublicKey } = web3!;
   for (let issue = 1; issue <= 20; issue++) {
     const issueLe = Buffer.alloc(8);
     issueLe.writeBigUInt64LE(BigInt(issue));
     const nonce = issue % 4;
-    const [theirs, bump] = PublicKey.findProgramAddressSync([Buffer.from('bounty'), Buffer.from(repoHash('some/repo')), issueLe, Buffer.of(nonce), new PublicKey(attester.publicKey).toBuffer(), new PublicKey(approver.publicKey).toBuffer()], new PublicKey(programId));
+    const [theirs, bump] = await PublicKey.findProgramAddress([Buffer.from('bounty'), Buffer.from(repoHash('some/repo')), issueLe, Buffer.of(nonce), new PublicKey(attester.publicKey).toBytes(), new PublicKey(approver.publicKey).toBytes()], new PublicKey(programId));
     assert.deepEqual(findBountyPda(programId, 'some/repo', issue, nonce, { attester: attester.publicKey, approver: approver.publicKey }), { address: theirs.toBase58(), bump }, `issue ${issue}`);
     const funder = keypairFromSeed(randomBytes(32)).publicKey;
-    const [c, cb] = PublicKey.findProgramAddressSync([Buffer.from('contrib'), theirs.toBuffer(), new PublicKey(funder).toBuffer()], new PublicKey(programId));
+    const [c, cb] = await PublicKey.findProgramAddress([Buffer.from('contrib'), theirs.toBytes(), new PublicKey(funder).toBytes()], new PublicKey(programId));
     assert.deepEqual(findContributionPda(programId, theirs.toBase58(), funder), { address: c.toBase58(), bump: cb });
   }
   for (let i = 0; i < 10; i++) {
     const owner = keypairFromSeed(randomBytes(32)).publicKey;
     const mint = encodeBase58(randomBytes(32));
-    const [theirs] = PublicKey.findProgramAddressSync([new PublicKey(owner).toBuffer(), new PublicKey(TOKEN_PROGRAM_ID).toBuffer(), new PublicKey(mint).toBuffer()], new PublicKey(ASSOCIATED_TOKEN_PROGRAM_ID));
+    const [theirs] = await PublicKey.findProgramAddress([new PublicKey(owner).toBytes(), new PublicKey(TOKEN_PROGRAM_ID).toBytes(), new PublicKey(mint).toBytes()], new PublicKey(ASSOCIATED_TOKEN_PROGRAM_ID));
     assert.equal(associatedTokenAddress(owner, mint), theirs.toBase58());
   }
 });
