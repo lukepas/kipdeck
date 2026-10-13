@@ -69,6 +69,21 @@ export function createActions(net: Net): Actions {
       .then((m) => m.openDeploy(n, opts))
       .finally(() => (deployAsked = false));
   };
+  /**
+   * Opens one of the confirm or note dialogs (Stop, Archive, Send back, Give a task, a lost worktree),
+   * loaded the first time one is wanted. A second click while that load is under way opens nothing:
+   * without this, each click queues its own dialog, and confirming both would stop the agent or send
+   * the task twice. The Deploy sheet has its own guard, above.
+   */
+  let asking = false;
+  const ask = (open: (m: Awaited<ReturnType<typeof lazy.prompt>>) => void) => {
+    if (asking) return;
+    asking = true;
+    void lazy
+      .prompt()
+      .then(open)
+      .finally(() => (asking = false));
+  };
   const merging = new Set<string>();
   /** Selects the agent, going to its project first when it's on another. */
   const show = (id: string, tab: 'terminal' | 'changes') => home.select(id, tab);
@@ -99,7 +114,7 @@ export function createActions(net: Net): Actions {
     if (!w?.lost || !w.worktree) return;
     const { lost, worktree } = w;
     const others = [...store.workers.values()].filter((o) => o.lost && o.id !== w.id);
-    void lazy.prompt().then(({ lostWorktreeDialog }) => lostWorktreeDialog({
+    ask(({ lostWorktreeDialog }) => lostWorktreeDialog({
       name: agentRef(w),
       worktree,
       lost,
@@ -162,7 +177,7 @@ export function createActions(net: Net): Actions {
   }
 
   function sendBack(e: RosterEntry) {
-    void lazy.prompt().then(({ openPrompt }) => openPrompt({
+    ask(({ openPrompt }) => openPrompt({
       title: `Send back to ${entryRef(e)}`,
       subtitle: 'Your note goes to the same agent, which keeps working on the same branch.',
       placeholder: 'What should it change?',
@@ -179,9 +194,9 @@ export function createActions(net: Net): Actions {
   function stop(e: RosterEntry, merged = false) {
     const branch = e.branch ? ` Its branch ${e.branch} stays, so nothing it did is lost.` : '';
     if (merged) {
-      return void lazy.prompt().then(({ confirmDialog }) => confirmDialog(`Archive ${entryRef(e)}?`, 'Its work is merged. Its session ends, and its worktree and branch are removed.', 'Archive', () => net.send({ t: 'worker.kill', workerId: e.id, cleanup: 'all' })));
+      return ask(({ confirmDialog }) => confirmDialog(`Archive ${entryRef(e)}?`, 'Its work is merged. Its session ends, and its worktree and branch are removed.', 'Archive', () => net.send({ t: 'worker.kill', workerId: e.id, cleanup: 'all' })));
     }
-    void lazy.prompt().then(({ confirmDialog }) => confirmDialog(`Stop ${entryRef(e)}?`, `Its session ends and it leaves the inbox.${branch}`, 'Stop agent', () => net.send({ t: 'worker.kill', workerId: e.id, cleanup: 'keep' })));
+    ask(({ confirmDialog }) => confirmDialog(`Stop ${entryRef(e)}?`, `Its session ends and it leaves the inbox.${branch}`, 'Stop agent', () => net.send({ t: 'worker.kill', workerId: e.id, cleanup: 'keep' })));
   }
 
   function act(e: RosterEntry, action: RowAction) {
@@ -213,7 +228,7 @@ export function createActions(net: Net): Actions {
       case 'send-home':
         return stop(e, e.pr?.state === 'merged');
       case 'give-task':
-        return void lazy.prompt().then(({ openPrompt }) => openPrompt({ title: `Give ${entryRef(e)} a task`, placeholder: "What's the job?", onSubmit: (text) => net.send({ t: 'worker.prompt', workerId: e.id, prompt: text }) }));
+        return ask(({ openPrompt }) => openPrompt({ title: `Give ${entryRef(e)} a task`, placeholder: "What's the job?", onSubmit: (text) => net.send({ t: 'worker.prompt', workerId: e.id, prompt: text }) }));
       default:
         return show(e.id, 'terminal');
     }

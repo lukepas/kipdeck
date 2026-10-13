@@ -1,7 +1,8 @@
 /* The Approval card over the selected agent's pane (approval-card.ts): set apart from a question by its
    own heading, the review color's edge and the command in mono. */
 .ap-card { display: flex; flex-direction: column; gap: 8px; padding: 14px 20px 16px; border-bottom: 1px solid var(--line); background: var(--surface-1); box-shadow: inset 3px 0 0 var(--review); outline: none; }
-.ap-card:focus-visible { box-shadow: inset 3px 0 0 var(--review), 0 0 0 2px var(--focus) inset; }
+/* --focus is a whole shadow list (tokens.css), so the ring here is spelt out with a single color. */
+.ap-card:focus-visible { box-shadow: inset 3px 0 0 var(--review), inset 0 0 0 2px var(--act); }
 .ap-head { display: flex; align-items: baseline; gap: 10px; }
 .ap-h { margin: 0; font: 600 11px var(--font-ui); letter-spacing: .04em; text-transform: uppercase; color: var(--review); }
 .ap-src { font-size: 12px; color: var(--muted); }

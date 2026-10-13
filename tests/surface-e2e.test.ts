@@ -239,6 +239,9 @@ test('first sight with every lab off: no Deck pill, no Signal chip without a goa
     p.on('pageerror', (e) => errors.push(e.message));
     await p.goto(`${base}/`);
     await p.locator('#demo .demo-tag').waitFor({ state: 'attached', timeout: 30_000 });
+    // The coach strip comes in its own chunk (demo.ts imports coach.ts after it draws the tag), so on
+    // a busy machine the tag can be up before the strip: wait for the strip's command before measuring it.
+    if (width >= 1440) await p.locator('#demo-coach .coach-last .fix').waitFor({ state: 'attached', timeout: 30_000 });
     // No helper functions inside: the test runner's transform would name them with a helper the page lacks.
     const bar = await p.evaluate(() => {
       const tag = document.querySelector('#demo .demo-tag')!;
