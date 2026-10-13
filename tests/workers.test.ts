@@ -177,7 +177,9 @@ function fixture(): Fixture {
     custom,
     read() {
       if (!existsSync(log)) return [];
-      return readFileSync(log, 'utf8').split('\n').filter(Boolean).map((line) => JSON.parse(line) as Invocation);
+      // A fake agent may still be appending its line; read only the lines it has finished.
+      const text = readFileSync(log, 'utf8');
+      return text.slice(0, text.lastIndexOf('\n') + 1).split('\n').filter(Boolean).map((line) => JSON.parse(line) as Invocation);
     },
     close() {
       rmSync(root, { recursive: true, force: true });
