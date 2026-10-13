@@ -1,6 +1,6 @@
 // The service worker (src/client/public/sw.js), run as it is in a stand-in for the browser's worker
 // scope: a push shows the notification the office sent (task as title, two buttons at most, sticky
-// for questions), a tap brings up the inbox tab on that agent or opens one (never a Deck tab, which
+// for questions), a tap brings up the inbox tab (on /, /a/... or /p/...) on that agent or opens one (never a Deck tab, which
 // doesn't know the message), and Snooze goes back to the office as the device that took the push.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -97,6 +97,35 @@ test('a tap brings up the inbox tab on that agent, and opens one when only the D
   await deck.fire('notificationclick', { notification: notification({ url: '/?agent=w1', worker: 'w1' }), action: 'open' });
   assert.deepEqual(deck.opened, ['/?agent=w1']);
   assert.deepEqual(deck.wins[0].told, []);
+});
+
+test('a tap reuses an inbox tab that has an agent or a project open, rather than opening a second inbox', async () => {
+  // client/home/route.ts moves an open inbox to /a/<project>/<agent> or /p/<project>.
+  for (const at of ['https://office.example/a/proj/w1', 'https://office.example/p/proj', 'https://office.example/index.html']) {
+    const s = scope(['https://office.example/deck', at]);
+    await s.fire('notificationclick', { notification: notification({ url: '/?agent=w2', worker: 'w2', kind: 'question' }), action: '' });
+    assert.equal(s.wins[1].focused, true, at);
+    assert.deepEqual(plain(s.wins[1].told), [{ t: 'kipdeck.open', worker: 'w2' }], at);
+    assert.deepEqual(s.wins[0].told, [], 'the Deck is left alone');
+    assert.deepEqual(s.opened, [], at);
+  }
+});
+
+test('a tap prefers the inbox tab already on that agent', async () => {
+  const s = scope(['https://office.example/a/proj/w1', 'https://office.example/a/proj/w2']);
+  await s.fire('notificationclick', { notification: notification({ url: '/?agent=w2', worker: 'w2' }), action: 'open' });
+  assert.equal(s.wins[0].focused, false);
+  assert.equal(s.wins[1].focused, true);
+  assert.deepEqual(plain(s.wins[1].told), [{ t: 'kipdeck.open', worker: 'w2' }]);
+  assert.deepEqual(s.opened, []);
+});
+
+test('a tap still opens an inbox when only the Deck or sign-in is open', async () => {
+  const s = scope(['https://office.example/deck', 'https://office.example/login?next=%2Fa%2Fproj%2Fw1']);
+  await s.fire('notificationclick', { notification: notification({ url: '/?agent=w1', worker: 'w1' }), action: 'open' });
+  assert.deepEqual(s.opened, ['/?agent=w1']);
+  assert.deepEqual(s.wins[0].told, []);
+  assert.deepEqual(s.wins[1].told, []);
 });
 
 test('Snooze and Mark seen go back to the office as this device, without opening anything', async () => {
