@@ -185,10 +185,9 @@ Options:
       --turn <url>        Add a TURN server for voice (repeatable), e.g.
                           turn:user:pass@turn.example.com:3478 (env
                           AGENT_OFFICE_TURN, several separated by spaces)
-      --budget <usd>      Daily budget (env AGENT_OFFICE_BUDGET): the daily cap
-                          in Settings > Agents > Budget until an admin sets one
-                          there. At it, agents at work are paused into Needs
-                          you (see docs/spend.md)
+      --budget <usd>      Daily cap (env AGENT_OFFICE_BUDGET) until an admin sets
+                          one in Settings > Agents > Budget. At it, agents at
+                          work are paused into Needs you (see docs/spend.md)
       --budget-pause      ...and no new agents can be deployed until the next
                           day (env AGENT_OFFICE_BUDGET_PAUSE=1)
       --max-workers <n>   Run at most this many agents at once, across every

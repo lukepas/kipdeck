@@ -84,8 +84,9 @@ test('--help describes --budget as the daily cap that pauses agents, as docs/con
     process.stdout.write = write;
   }
   const budget = out.slice(out.indexOf('--budget <usd>'), out.indexOf('--budget-pause'));
+  assert.match(budget, /Daily cap/);
   assert.match(budget, /Settings > Agents > Budget/);
-  assert.match(budget, /paused into Needs\s+you/);
+  assert.match(budget, /paused into Needs you/);
   assert.match(budget, /docs\/spend\.md/);
   assert.doesNotMatch(budget, /warned|excluded/);
 });
