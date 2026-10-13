@@ -1,6 +1,6 @@
 // The windows the inbox opens only now and then, loaded the first time they're wanted so the home page
 // draws without them: the terminal (xterm), the Changes window, the GitHub windows and boards, the task
-// queue, Mission control, Labs, the meeting room, sign-ins, Settings, Numbers, Rundown, Signal's card, Accounts, an agent's request, Pair a phone, the Deploy sheet, the confirm and note dialogs (Stop, Send back, Give a task) and Mission control's actions for a notification's Look. A module that reads server messages
+// queue, Mission control, Labs, the meeting room, sign-ins, Settings, Numbers, Rundown, Signal's card, Accounts, an agent's request, Pair a phone, the Deploy sheet, the setup card, the confirm and note dialogs (Stop, Send back, Give a task) and Mission control's actions for a notification's Look. A module that reads server messages
 // for its open window is handed every message from then on.
 
 import type { ServerMsg } from '../../shared/protocol';
@@ -47,6 +47,8 @@ export const accounts = once(() => import('../ui/accounts'), (m) => m.routeAccou
 export const proposal = once(() => import('./proposal-window'));
 export const pair = once(() => import('../ui/pair'));
 export const deploy = once(() => import('./deploy'));
+/** The setup card, its stylesheet and its task box, drawn only before the first agent (setup.ts). */
+export const setupCard = once(() => import('./setup-card'));
 /** Kip in the quiet moments: the all-clear pane, the setup card, the merge's cheer, the first job (kip-moments.ts). */
 export const kipMoments = once(() => import('./kip-moments'));
 /** The pane moving on after an answer, loaded with the first one (advance.ts). */

@@ -65,9 +65,9 @@ Real strings from `origin/ux/integration`. "Keep" rows are as important as the r
 | `src/server/cli.ts:144` | Ctrl+C stops it. | Keep. One warm line per run is spent on startup and exit. |
 | exit on a restart (SIGTERM, `src/server/startup.ts` goodbye) | closing Kipdeck - agents keep running for the next start... | Kipdeck stopped. 3 shipped this session; your agents keep working. |
 | exit on Ctrl+C (`src/server/startup.ts` goodbye) | closing Kipdeck... | Kipdeck stopped, and its agents with it. 3 shipped this session. (Ctrl+C stops the agents, so the line says so. The tally is left out when nothing merged.) |
-| `src/client/home/setup.ts:165` | Looking for your agents and projects... | Checking who's aboard: agents and projects... |
-| `src/client/home/setup.ts:180` | Deploy your first agent | Give your first agent a job |
-| `src/client/home/setup.ts:181` | It works on a branch of its own. When it needs an answer or has something to review, it shows up here. | It works on its own branch and comes back here when it needs you or has something to review. ("Something to show" was cut: "review" names the To review section it lands in.) |
+| `src/client/home/setup.ts:82` | Looking for your agents and projects... | Checking who's aboard: agents and projects... |
+| `src/client/home/setup-card.ts:132` | Deploy your first agent | Give your first agent a job |
+| `src/client/home/setup-card.ts:133` | It works on a branch of its own. When it needs an answer or has something to review, it shows up here. | It works on its own branch and comes back here when it needs you or has something to review. ("Something to show" was cut: "review" names the To review section it lands in.) |
 | `src/client/home/deploy.ts:90` | What should it do? For example: add rate limiting to /api/login | What's the job? For example: add rate limiting to /api/login |
 | `src/client/home/empty.ts:60` | All clear | All clear. Nobody's waiting on you. |
 | `src/client/home/list.ts:187` | Nothing needs you. | Keep. It is a section line people scan. |

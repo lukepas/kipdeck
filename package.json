@@ -40,7 +40,7 @@
   "scripts": {
     "test": "node --import tsx --import=#tests/css --test tests/*.test.ts",
     "dev": "concurrently -k \"vite\" \"tsx watch src/server/cli.ts --port 4600 --password dev --no-open\"",
-    "build": "npm run build:client && npm run build:server && npm run build:rundown && npm run build:replay",
+    "build": "npm run build:client && npm run build:server && npm run build:rundown",
     "build:client": "vite build && vite build -c vite.showcase.config.ts",
     "build:server": "tsc -p tsconfig.server.json",
     "build:rundown": "vite build -c vite.rundown.config.ts",

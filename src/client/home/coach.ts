@@ -8,7 +8,7 @@ import { store } from '../state';
 import { h, toast } from '../ui/dom';
 import { icon } from '../ui/icons';
 import { currentView } from './list';
-import { copyLine } from './setup';
+import { copyLine } from './setup-card';
 import { home } from './state';
 import './coach.css';
 
