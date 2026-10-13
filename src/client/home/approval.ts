@@ -46,25 +46,46 @@ export function approvalCard(net: Net): ApprovalCard {
   /** The request on show, and where the card is in answering it. */
   let shown: ApprovalView | undefined;
   const state: CardState = { sent: false, denying: false, behind: 0 };
+  /** A welcome came (a reconnect too) and the open requests it asked for haven't arrived yet. */
+  let resync = false;
 
   // Every welcome (a reconnect too): the open requests, and to be told from now on.
   net.onMessage((msg) => {
-    if (msg.t === 'welcome') net.send({ t: 'approvals.get' });
+    if (msg.t !== 'welcome') return;
+    resync = true;
+    net.send({ t: 'approvals.get' });
   });
-  // A request opening or going changes the list and the pane.
-  store.on('approvals', () => home.change());
+  // A request opening or going changes the list and the pane. The first list after a welcome also
+  // says the card's answer may never have got there: the socket can die with the frame in it. If the
+  // request is still open, the buttons come back, so the agent isn't left on its hook until a reload.
+  store.on('approvals', () => {
+    if (resync) {
+      resync = false;
+      if (shown && state.sent) {
+        state.sent = false;
+        state.denying = false;
+        state.reason = undefined;
+        paint();
+      }
+    }
+    home.change();
+  });
 
-  const paint = () => {
+  /** Focus fell to the page (its control was taken away), not moved somewhere else since. */
+  const lost = () => !document.activeElement || document.activeElement === document.body;
+  /** Draws the card; `keep` when the keyboard was in it before it emptied (see paintApproval). */
+  const paint = (keep = false) => {
     const a = shown;
     if (!a) return;
     void lazy.approval().then((m) => {
       if (shown !== a) return;
-      m.paintApproval(el, a, state, (decision, reason) => answer(a, decision, reason));
+      m.paintApproval(el, a, state, (decision, reason) => answer(a, decision, reason), { keep: keep && lost() });
     });
   };
 
   const answer = (a: ApprovalView, decision: ApprovalDecision | 'release', reason?: string) => {
-    if (state.sent) return;
+    // With the socket down the answer would go nowhere and the card would wait on it for good.
+    if (state.sent || !net.up) return;
     state.sent = true;
     net.send({ t: 'approval.answer', id: a.id, decision, ...(reason ? { reason } : {}) });
     // Answered here, with nothing more from this agent behind it: the pane moves on (advance.ts).
@@ -91,8 +112,10 @@ export function approvalCard(net: Net): ApprovalCard {
         state.denying = false;
         state.reason = undefined;
         state.behind = behind;
+        // The next request in the card the keyboard was on: focus goes back into it, not to the page.
+        const keep = el.contains(document.activeElement);
         el.replaceChildren();
-        paint();
+        paint(keep);
       } else if (state.behind !== behind) {
         state.behind = behind;
         paint();

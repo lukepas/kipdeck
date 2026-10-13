@@ -93,8 +93,8 @@ export interface WorkerInfo {
   task?: WorkerTask;
   /** Reported session tokens and cost, when the provider supplies them (agents only). */
   usage?: Usage;
-  /** Who last typed into its terminal (or sent it a prompt), and when. */
-  lastInput?: { by: string; at: number };
+  /** Who last typed into its terminal (or sent it a prompt), and when; `agent` when that was another agent's message. */
+  lastInput?: { by: string; at: number; agent?: true };
   /** The meeting it was called to, for a worker at the meeting room's table (see Meeting). */
   meeting?: string;
   /**

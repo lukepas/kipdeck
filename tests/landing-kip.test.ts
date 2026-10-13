@@ -287,7 +287,16 @@ test('the numbers staircase ends with him over Sunday', { skip: why || false, ti
   const { page, errors } = await open(t, { query: '?kiptest' });
   await page.waitForFunction(() => !!window.__kip?.state, undefined, { timeout: 8000 });
   await page.evaluate(() => document.getElementById('numbers')!.scrollIntoView());
-  await page.waitForTimeout(4000);
+  // The chart may finish before he comes; then he lands on a spot off Thursday (chart.right - 100)
+  // and walks the staircase from there, which on a busy machine ends well after 4 s. Wait for the
+  // end (up to 12 s) instead of a fixed time, and measure whatever is there then.
+  await page
+    .waitForFunction(() => {
+      const b = window.__kip!.box()[0];
+      const sun = document.querySelectorAll('#numbers .cols rect')[6]?.getBoundingClientRect();
+      return !!b && !!sun && window.__kip!.moment === 'numbers' && Math.abs((b.l + b.r) / 2 - (sun.left + sun.width / 2)) <= 30;
+    }, undefined, { timeout: 12_000, polling: 250 })
+    .catch(() => {});
   const r = await page.evaluate(() => {
     const b = window.__kip!.box()[0];
     const sun = document.querySelectorAll('#numbers .cols rect')[6].getBoundingClientRect();

@@ -31,10 +31,23 @@ export interface CardState {
   reason?: string;
 }
 
-/** Draws request `a` into `el`; `answer` sends the decision. */
-export function paintApproval(el: HTMLElement, a: ApprovalView, s: CardState, answer: (d: ApprovalDecision | 'release', reason?: string) => void) {
-  const redraw = () => paintApproval(el, a, s, answer);
-  const reason = h('input', { type: 'text', placeholder: 'Why not? (it reads this)', 'aria-label': 'Why not', maxlength: String(DENY_REASON_MAX), autocomplete: 'off', enterkeyhint: 'send' }) as HTMLInputElement;
+/** Where the keyboard goes when the card is drawn again. */
+export interface PaintFocus {
+  /** The control to put focus on (its data-k), in place of the one that had it. */
+  to?: string;
+  /** Focus was in the card before its frame emptied it (a new request), so it goes back in. */
+  keep?: boolean;
+}
+
+/**
+ * Draws request `a` into `el`; `answer` sends the decision. Every draw makes the controls anew, so
+ * when the keyboard was in the card it stays there: on the same control (each has a data-k), on
+ * `focus.to`, or, when that control is gone or disabled (a new request, an answer sent), on the card
+ * itself. A new request never puts focus on Allow once, so a second Enter can't approve it.
+ */
+export function paintApproval(el: HTMLElement, a: ApprovalView, s: CardState, answer: (d: ApprovalDecision | 'release', reason?: string) => void, focus: PaintFocus = {}) {
+  const redraw = (to?: string) => paintApproval(el, a, s, answer, { to });
+  const reason = h('input.ap-reason', { 'data-k': 'reason', type: 'text', placeholder: 'Why not? (it reads this)', 'aria-label': 'Why not', maxlength: String(DENY_REASON_MAX), autocomplete: 'off', enterkeyhint: 'send' }) as HTMLInputElement;
   reason.value = s.reason ?? '';
   reason.addEventListener('input', () => (s.reason = reason.value));
   const denyForm = h(
@@ -46,13 +59,12 @@ export function paintApproval(el: HTMLElement, a: ApprovalView, s: CardState, an
       },
     },
     reason,
-    h('button.btn.ap-deny-send', { type: 'submit', disabled: s.sent }, 'Deny'),
-    h('button.btn.quiet', { type: 'button', onclick: () => ((s.denying = false), redraw()) }, 'Back'),
+    h('button.btn.ap-deny-send', { 'data-k': 'deny-send', type: 'submit', disabled: s.sent }, 'Deny'),
+    h('button.btn.quiet.ap-back', { 'data-k': 'back', type: 'button', onclick: () => ((s.denying = false), redraw('deny-open')) }, 'Back'),
   );
   const openDeny = () => {
     s.denying = true;
-    redraw();
-    el.querySelector<HTMLInputElement>('.ap-deny input')?.focus();
+    redraw('reason');
   };
   const where = [a.cwd ? `in ${a.cwd}` : '', a.tool].filter(Boolean).join(' · ');
   const parts: (HTMLElement | null)[] = [
@@ -75,15 +87,18 @@ export function paintApproval(el: HTMLElement, a: ApprovalView, s: CardState, an
       : h(
           'div.ap-acts',
           { role: 'group', 'aria-label': 'Answer' },
-          h('button.btn.primary.ap-once', { type: 'button', disabled: s.sent, onclick: () => answer('once') }, 'Allow once'),
-          a.always ? h('button.btn.ap-always', { type: 'button', disabled: s.sent, title: `Adds the rule ${a.always}: calls like this stop asking`, onclick: () => answer('always') }, 'Always allow ', h('code', {}, a.always)) : null,
-          h('button.btn.ap-deny-open', { type: 'button', disabled: s.sent, onclick: openDeny }, 'Deny...'),
-          h('button.btn.quiet.ap-release', { type: 'button', disabled: s.sent, title: "Hand it back to the agent's own prompt in its terminal", onclick: () => answer('release') }, 'Answer in the terminal'),
+          h('button.btn.primary.ap-once', { 'data-k': 'once', type: 'button', disabled: s.sent, onclick: () => answer('once') }, 'Allow once'),
+          a.always ? h('button.btn.ap-always', { 'data-k': 'always', type: 'button', disabled: s.sent, title: `Adds the rule ${a.always}: calls like this stop asking`, onclick: () => answer('always') }, 'Always allow ', h('code', {}, a.always)) : null,
+          h('button.btn.ap-deny-open', { 'data-k': 'deny-open', type: 'button', disabled: s.sent, onclick: openDeny }, 'Deny...'),
+          h('button.btn.quiet.ap-release', { 'data-k': 'release', type: 'button', disabled: s.sent, title: "Hand it back to the agent's own prompt in its terminal", onclick: () => answer('release') }, 'Answer in the terminal'),
         ),
     s.sent ? h('p.ap-sent', { role: 'status' }, 'Sent. Waiting for the agent...') : null,
   ];
-  // A redraw while someone types a reason keeps the cursor in the box.
-  const typing = s.denying && !!document.activeElement?.matches('.ap-deny input') && el.contains(document.activeElement);
+  const active = document.activeElement;
+  const inside = !!active && el.contains(active);
+  const key = focus.to ?? (inside && active !== el ? active.getAttribute('data-k') : null);
   el.replaceChildren(...parts.filter((x): x is HTMLElement => !!x));
-  if (typing) reason.focus();
+  if (!inside && !focus.keep && !focus.to) return;
+  const next = key ? el.querySelector<HTMLElement>(`[data-k="${key}"]`) : null;
+  (next && !next.hasAttribute('disabled') ? next : el).focus();
 }

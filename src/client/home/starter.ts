@@ -29,7 +29,7 @@ export function askLine(agent: AgentProvider | undefined): string {
 function textarea(onInput: () => void): HTMLTextAreaElement {
   typed = onInput;
   if (!box) {
-    box = h('textarea.st-box', { id: 'first-task', rows: 3, placeholder: 'Fix the flaky checkout test, add a dark mode, explain the auth flow...', 'aria-label': 'Your first task', spellcheck: 'true' }) as HTMLTextAreaElement;
+    box = h('textarea.st-box', { id: 'first-task', rows: 3, placeholder: 'Fix the flaky checkout test, add a dark mode, explain the auth flow...', spellcheck: 'true' }) as HTMLTextAreaElement;
     box.addEventListener('input', () => {
       draft = box!.value;
       typed();

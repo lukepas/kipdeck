@@ -154,6 +154,10 @@ const LISTED: readonly string[] = [
   'src/server/whiteboard.ts',
   ...tsFiles('src/server/http/routes'),
   ...tsFiles('src/server/ws/handlers').filter((f) => !DECK_ONLY_SERVER.includes(f)),
+  // The agent-to-agent gate: a request that fails on approve reaches the person who approved it
+  // ("Approved, but it failed: ...").
+  'src/server/gate/actions.ts',
+  'src/server/gate/flow.ts',
 ];
 
 /** The files whose strings people read in the inbox, its windows, its notifications and the CLI. */
