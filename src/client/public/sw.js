@@ -46,12 +46,34 @@ async function act(action, worker) {
 }
 
 /**
- * To the agent: an inbox tab already open is brought up and told which, else one opens on it. Only
- * the inbox (/) knows the message; a Deck or login tab left open would just come up and do nothing.
+ * Is this tab the inbox? It sits on / and, once an agent or a project is open in it, on
+ * /a/<project>/<agent> or /p/<project> (history.pushState in client/home/route.ts). The same paths
+ * as parseHomePath in src/shared/deeplink.ts, written out here because this file is plain JS.
+ */
+function isInbox(pathname) {
+  return pathname === '/' || pathname === '/index.html' || pathname.startsWith('/a/') || pathname.startsWith('/p/');
+}
+
+/** The agent an inbox tab on /a/<project>/<agent> has open, if any. */
+function agentOf(pathname) {
+  const parts = pathname.split('/');
+  if (parts[1] !== 'a') return '';
+  try {
+    return decodeURIComponent(parts[3] || '');
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * To the agent: an inbox tab already open is brought up and told which (one already on that agent
+ * first), else one opens on it. Only the inbox knows the message; a Deck or login tab left open
+ * would just come up and do nothing.
  */
 async function open(data) {
   const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-  const home = wins.find((c) => new URL(c.url).pathname === '/');
+  const inboxes = wins.filter((c) => isInbox(new URL(c.url).pathname));
+  const home = (data.worker && inboxes.find((c) => agentOf(new URL(c.url).pathname) === data.worker)) || inboxes[0];
   if (home) {
     await home.focus().catch(() => {});
     home.postMessage({ t: 'kipdeck.open', worker: data.worker });

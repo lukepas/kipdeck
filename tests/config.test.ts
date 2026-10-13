@@ -73,3 +73,20 @@ test('TURN servers come from --turn and from AGENT_OFFICE_TURN', (t) => {
     { urls: 'turns:relay.example.com:5349' },
   ]);
 });
+
+test('--help describes --budget as the daily cap that pauses agents, as docs/configuration.md does', (t) => {
+  const write = process.stdout.write;
+  let out = '';
+  process.stdout.write = ((chunk: string | Uint8Array) => ((out += String(chunk)), true)) as typeof process.stdout.write;
+  try {
+    assert.throws(() => load(t, '--help'), /exit 0/);
+  } finally {
+    process.stdout.write = write;
+  }
+  const budget = out.slice(out.indexOf('--budget <usd>'), out.indexOf('--budget-pause'));
+  assert.match(budget, /Daily cap/);
+  assert.match(budget, /Settings > Agents > Budget/);
+  assert.match(budget, /paused into Needs you/);
+  assert.match(budget, /docs\/spend\.md/);
+  assert.doesNotMatch(budget, /warned|excluded/);
+});

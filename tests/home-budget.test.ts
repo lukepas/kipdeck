@@ -18,8 +18,8 @@ const stale = bundleWhy(path.join(BUNDLE, 'index.html'), [path.join(ROOT, 'src',
 const LITE_BUDGET_BYTES = 812_503;
 /**
  * The inbox's own ceiling since stage 2, when the terminal (xterm), the Changes window and the other
- * windows moved behind home/lazy.ts: it loaded about 175 kB, so 250 kB leaves room to grow without
- * anything big sliding back in up front.
+ * windows moved behind home/lazy.ts. At stage 2 it loaded about 175 kB; 250 kB left room to grow
+ * without anything big sliding back in up front, and README.md and docs/features.md quote this ceiling.
  */
 const HOME_BUDGET_BYTES = 250_000;
 
