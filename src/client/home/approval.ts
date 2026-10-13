@@ -54,12 +54,15 @@ export function approvalCard(net: Net): ApprovalCard {
   // A request opening or going changes the list and the pane.
   store.on('approvals', () => home.change());
 
-  const paint = () => {
+  /** Focus fell to the page (its control was taken away), not moved somewhere else since. */
+  const lost = () => !document.activeElement || document.activeElement === document.body;
+  /** Draws the card; `keep` when the keyboard was in it before it emptied (see paintApproval). */
+  const paint = (keep = false) => {
     const a = shown;
     if (!a) return;
     void lazy.approval().then((m) => {
       if (shown !== a) return;
-      m.paintApproval(el, a, state, (decision, reason) => answer(a, decision, reason));
+      m.paintApproval(el, a, state, (decision, reason) => answer(a, decision, reason), { keep: keep && lost() });
     });
   };
 
@@ -91,8 +94,10 @@ export function approvalCard(net: Net): ApprovalCard {
         state.denying = false;
         state.reason = undefined;
         state.behind = behind;
+        // The next request in the card the keyboard was on: focus goes back into it, not to the page.
+        const keep = el.contains(document.activeElement);
         el.replaceChildren();
-        paint();
+        paint(keep);
       } else if (state.behind !== behind) {
         state.behind = behind;
         paint();
