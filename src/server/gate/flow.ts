@@ -9,6 +9,7 @@ import type { Floor } from '../floor.js';
 import type { Ctx } from '../office/context.js';
 import { NOT_RUNNING } from '../workers/says.js';
 import { failureOf, resultWords, runRequest, type Actor, type GateRequest, type Reply } from './actions.js';
+import { cleanTyped } from '../../shared/typed.js';
 
 /** What a person sees of a request besides who asks and what: its targets, its text, the rest. */
 export type Shown = Pick<Proposal, 'targets' | 'merged' | 'text' | 'details'>;
@@ -66,13 +67,9 @@ export function mayDecide(ctx: Ctx, accountId: string | undefined, id: string): 
   return ctx.meOf(accountId).admin || (!!p.owner && p.owner === accountId);
 }
 
-/** Terminal escape sequences (CSI, OSC and the rest that start with ESC), and the C0 and C1 control characters. */
-const ESCAPES = /\u001b(?:\[[0-?]*[ -/]*[@-~]|\][^\u0007\u001b]*(?:\u0007|\u001b\\)?|[ -/]*[0-~])|\u009b[0-?]*[ -/]*[@-~]/g;
-const CONTROLS = /[\u0000-\u001f\u007f-\u009f]+/g;
-
 /** A person's reason on one line, with no control characters or escape sequences: it is typed into the agent's session. */
 export const cleanNote = (note: string | undefined): string | undefined =>
-  note?.replace(ESCAPES, '').replace(CONTROLS, ' ').replace(/\s+/g, ' ').trim() || undefined;
+  (note === undefined ? '' : cleanTyped(note)).replace(/\s+/g, ' ').trim() || undefined;
 
 /**
  * `who` approves or rejects proposal `id`. An approved request runs exactly as it would have; the

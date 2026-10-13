@@ -60,7 +60,7 @@ The **Pause all** button in the top bar (beside Deploy agent, while any agent ru
 - **Resume all paused**: lets every paused agent carry on. One that was at work is told to pick up where it left off.
 - **Stop all agents**: asks first, then waits 7 seconds with **Undo** before anything is sent. Each session ends and leaves the inbox, as each agent's own **Stop** does. Every branch stays.
 
-The pane has **Pause** beside **Stop** for one agent at work. Typing into the terminal of an agent someone paused lets it go too: the pause comes off as if you had pressed Continue (a budget pause doesn't, see above). A message from another agent never does: `tell_worker` to a paused agent is refused until a person lets it carry on. An agent that keeps working after a pause (its CLI ignored the Esc) is interrupted again every 30 seconds until someone decides. Pausing sends Esc, which interrupts Claude Code, Codex and OpenCode; a CLI that ignores it needs **Stop**.
+The pane has **Pause** beside **Stop** for one agent at work. Typing into the terminal of an agent someone paused lets it go too: the pause comes off as if you had pressed Continue (a budget pause doesn't, see above). A message from another agent never does: `tell_worker` to a paused agent is refused, even under a standing permission, and only a person lets a paused agent go. An agent that keeps working after a pause (its CLI ignored the Esc) is interrupted again every 30 seconds until someone decides. Pausing sends Esc, which interrupts Claude Code, Codex and OpenCode; a CLI that ignores it needs **Stop**.
 
 ## Where it is kept
 
