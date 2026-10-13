@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { NOT_RUNNING, exitedLine, resumeFailed, signInNeeded } from './says.js';
+import { cleanTyped } from '../../shared/typed.js';
 import path from 'node:path';
 import type { AgentChoice, AgentEffort, AgentProvider, TerminalHit, WorkerInfo, WorkerKind, WorkerRepo, WorkerStatus } from '../../shared/protocol.js';
 import { AGENT_PROVIDERS, takesEffort, takesModel } from '../../shared/providers.js';
@@ -506,34 +507,32 @@ export class WorkerManager {
   private typed(w: Worker, by: string): boolean {
     const now = Date.now();
     const last = w.info.lastInput;
-    if (last?.by === by && now - last.at < TYPED_REFRESH_MS) return false;
+    if (last?.by === by && !last.agent && now - last.at < TYPED_REFRESH_MS) return false;
     w.info.lastInput = { by, at: now };
     return true;
   }
 
-  /** Types a prompt into the agent's input box and submits it; `by` is the person who sent it, if any. */
-  prompt(id: string, text: string, by?: string): string | undefined {
+  /**
+   * Types a prompt into the agent's input box and submits it; `by` is who sent it, if anyone, and
+   * `agent` says that was another agent, not a person (so it can't lift a person's Pause, see spend/).
+   */
+  prompt(id: string, text: string, by?: string, agent?: boolean): string | undefined {
     const w = this.workers.get(id);
     if (!w) return 'No such agent';
-    if (w.dsh) {
-      const clean = text.replace(/\r\n?/g, '\n').trim();
-      if (!clean) return 'Empty prompt';
-      w.dsh.prompt(clean);
-      w.info.activity = truncate(clean, 80);
-      this.tasks.notePrompt(w, clean);
-      if (by) w.info.lastInput = { by, at: Date.now() };
-      this.emitUpdate(w);
-      return undefined;
-    }
-    if (!w.pty) return NOT_RUNNING;
-    const clean = text.replace(/\r\n?/g, '\n').trim();
+    const pty = w.pty;
+    if (!w.dsh && !pty) return NOT_RUNNING;
+    // No escape sequence or control key may end the paste early or press keys (see shared/typed.ts).
+    const clean = cleanTyped(text).trim();
     if (!clean) return 'Empty prompt';
-    // Bracketed paste keeps multi-line prompts in one message, then Enter submits.
-    w.pty.write(`\x1b[200~${clean}\x1b[201~`);
-    setTimeout(() => w.pty?.write('\r'), 120);
+    if (w.dsh) w.dsh.prompt(clean);
+    else if (pty) {
+      // Bracketed paste keeps multi-line prompts in one message, then Enter submits.
+      pty.write(`\x1b[200~${clean}\x1b[201~`);
+      setTimeout(() => w.pty?.write('\r'), 120);
+    }
     w.info.activity = truncate(clean, 80);
     this.tasks.notePrompt(w, clean);
-    if (by) w.info.lastInput = { by, at: Date.now() };
+    if (by) w.info.lastInput = { by, at: Date.now(), ...(agent ? { agent: true as const } : {}) };
     this.emitUpdate(w);
     return undefined;
   }

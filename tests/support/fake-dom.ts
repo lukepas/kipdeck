@@ -158,7 +158,7 @@ export class FakeElement extends FakeNode {
   querySelector(selector: string): FakeElement | null {
     return this.querySelectorAll(selector)[0] ?? null;
   }
-  /** This element or its nearest ancestor that matches. */
+  /** This element or the nearest one above it that matches (no `:scope` here). */
   closest(selector: string): FakeElement | null {
     const parts = parse(selector);
     for (let n: FakeNode | null = this; n instanceof FakeElement; n = n.parentNode) if (parts.some((s) => matches(n as FakeElement, s))) return n;

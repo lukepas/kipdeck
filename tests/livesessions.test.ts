@@ -11,6 +11,12 @@ import { liveClaude, liveCodexCount, liveSessions, type LiveDeps } from '../src/
 import { adoptSession } from '../src/server/adopt.js';
 import { claude } from '../src/server/providers/claude.js';
 import { setupHandlers } from '../src/server/ws/handlers/setup.js';
+import { restoreWorkers, saveWorkers } from '../src/server/workers/persist.js';
+import { newWorker } from '../src/server/workers/worker.js';
+import { restoreTracker } from '../src/server/usage.js';
+import { DESK_BY_ID } from '../src/shared/layout.js';
+import type { WorkerInfo } from '../src/shared/protocol.js';
+import type { Worker } from '../src/server/workers/types.js';
 
 const tmp = () => mkdtempSync(path.join(tmpdir(), 'live-'));
 const ID_A = '11111111-1111-4111-8111-111111111111';
@@ -80,6 +86,26 @@ test('a forked session: Claude Code resumes it with --fork-session until it repo
   const later = claude.launch({ h: { info } as never, args: [], resumeSessionId: ID_B, cwd: '/x', setup: { settings: '/s.json' } as never });
   assert.ok(!later.args.includes('--fork-session'));
   assert.deepEqual(later.args.slice(-2), ['--resume', ID_B]);
+});
+
+test('a forked session is still forked after a restart, before Claude ever reported its own id', () => {
+  // Brought in, then the office restarted before the copy's first hook (sign-in, a trust prompt...).
+  const dir = tmp();
+  const file = path.join(dir, 'workers.json');
+  const deskId = [...DESK_BY_ID.keys()][0];
+  const info = { id: 'w1', kind: 'agent', provider: 'claude', deskId, name: 'Byte', color: '#fff', status: 'offline', acked: true, createdBy: 'Ada', createdAt: 1, cols: 100, rows: 30, viewers: [], viewerIds: [], sessionId: ID_A, forkOf: ID_A } as WorkerInfo;
+  saveWorkers(file, [newWorker(info, restoreTracker(undefined))], true);
+  const back = new Map<string, Worker>();
+  restoreWorkers(file, dir, back, 'claude', () => false);
+  const restored = back.get('w1')!.info;
+  assert.equal(restored.forkOf, ID_A);
+  const plan = claude.launch({ h: { info: restored } as never, args: [], resumeSessionId: restored.sessionId, cwd: dir, setup: { settings: '/s.json' } as never });
+  assert.deepEqual(plan.args.slice(-3), ['--resume', ID_A, '--fork-session'], "never a plain resume of the session still live in someone's terminal");
+  // A forkOf that isn't a session id is dropped, like a bad sessionId.
+  writeFileSync(file, JSON.stringify([{ id: 'w2', kind: 'agent', provider: 'claude', deskId, name: 'Nova', sessionId: ID_A, forkOf: '--evil' }]));
+  const bad = new Map<string, Worker>();
+  restoreWorkers(file, dir, bad, 'claude', () => false);
+  assert.equal(bad.get('w2')!.info.forkOf, undefined);
 });
 
 test('adopting: only a CLI that can fork takes a running session, and a session already in the inbox is turned away', () => {

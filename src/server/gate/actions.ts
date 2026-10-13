@@ -79,10 +79,14 @@ export async function runTell(ctx: Ctx, floor: Floor, actor: Actor, key: string,
   if (w.id === actor.id) return { status: 400, body: { error: "That's you" } };
   // A shell would run it as a command, in someone's terminal.
   if (w.kind !== 'agent') return { status: 400, body: { error: `${w.name} is a shell, not an agent` } };
+  // A pause or a budget hold is a person's to lift (spend/service.ts): text from another agent would
+  // set it working again under its hold, so it waits until a person decides.
+  if (w.hold) return { status: 409, body: { error: `${w.name} is paused: a person has to let it carry on first` } };
   // Never a fork's or an outsider's PR to check out and run (see shared/pulltrust.ts).
   const untrusted = await floor.github.checkoutProblem(text);
   if (untrusted) return { status: 403, body: { error: untrusted } };
-  let err = floor.workers.prompt(w.id, text, actor.name);
+  // An agent's message, not a person's: it doesn't let an agent a person paused carry on.
+  let err = floor.workers.prompt(w.id, text, actor.name, true);
   // Stopped or asleep: it wakes up with this as its next message.
   if (err === NOT_RUNNING) err = floor.workers.resume(w.id, text);
   if (err) return { status: 400, body: { error: err } };
