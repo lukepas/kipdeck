@@ -13,6 +13,7 @@ import { attention } from '../../shared/attention.js';
 import { milestoneProgress } from '../../shared/mission.js';
 import type { Ctx } from '../office/context.js';
 import { str } from '../office/input.js';
+import { cleanTyped } from '../../shared/typed.js';
 import { readBody, send } from '../http/util.js';
 
 /**
@@ -126,7 +127,8 @@ export async function officeWorkers(ctx: Ctx, req: http.IncomingMessage, res: ht
     if (w.id === me.id) return send(res, 400, { error: "That's you" });
     // A shell would run it as a command, in someone's terminal.
     if (w.kind !== 'agent') return send(res, 400, { error: `${w.name} is a shell, not an agent` });
-    const text = str(b.prompt, 20000).replace(/\r\n?/g, '\n').trim();
+    // Exactly what will be typed, so a person deciding sees every byte of it (see shared/typed.ts).
+    const text = cleanTyped(str(b.prompt, 20000)).trim();
     if (!text) return send(res, 400, { error: 'Say what to tell it: prompt' });
     // Never a fork's or an outsider's PR to check out and run (see shared/pulltrust.ts).
     const untrusted = await floor.github.checkoutProblem(text);

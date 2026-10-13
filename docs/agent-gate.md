@@ -15,12 +15,12 @@ When an agent calls `hire_worker`, `tell_worker` or `send_home` (or `office-work
 - who asks: the asking agent's task, and its name
 - the project, and what it wants to do
 - whom it is for: the agents it would message or stop, or *every agent whose pull request merged*
-- the whole text: the new agent's task, or the message, however long (up to 20,000 characters)
+- the whole text: the new agent's task, or the message, however long (up to 20,000 characters). A message has its control characters and terminal escape sequences taken out first (tabs and new lines stay), so what you read is exactly what gets typed into the other agent's session: nothing in it can end the paste early and press keys there
 - anything else it asked for: the agent CLI, model, effort, issue, milestone, or, for a send-home, what becomes of their worktrees and branches in plain words (*Deletes their worktrees, with any changes not committed, and keeps their branches*)
 
 ![An agent's request to deploy another, open in full with Approve and Reject](img/agent-gate-request.png)
 
-**Approve** runs the request exactly as it would have run before the gate: the same desk choice, worktree, issue claim, toasts and checks (a fork's or an outsider's pull request is still refused). A send-home only ever takes the agents the window listed: if a name now belongs to a newer agent, or more pull requests merged since, those agents stay. **Reject** runs nothing. The window has a box for a reason. The window's close button (top right) and Esc close it without deciding, and it closes by itself once anyone else decides. The window opens with the focus on the text, not on Approve, so an Enter pressed out of habit runs nothing.
+**Approve** runs the request exactly as it would have run before the gate: the same desk choice, worktree, issue claim, toasts and checks (a fork's or an outsider's pull request is still refused). A send-home only ever takes the agents the window listed: if a name now belongs to a newer agent, or more pull requests merged since, those agents stay. A message to an agent a person paused leaves it paused: the agent may start on it, and is interrupted again as one that ignored the Esc, until someone presses Continue or types to it ([spend](spend.md)). **Reject** runs nothing. The window has a box for a reason. The window's close button (top right) and Esc close it without deciding, and it closes by itself once anyone else decides. The window opens with the focus on the text, not on Approve, so an Enter pressed out of habit runs nothing.
 
 If the asking agent has gone home since it asked, its request can only be rejected: the row says *Its agent has gone home - reject to clear it*, the window says the same, and Approve is off. There is nobody left to act for. Until someone rejects it, the request stays in Needs you.
 
