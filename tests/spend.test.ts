@@ -191,6 +191,33 @@ test('a paused agent someone types to is let go; one that keeps working is inter
   assert.equal(a.hold, undefined, 'they typed to it, so it carries on');
 });
 
+test("another agent's message to a paused agent doesn't let it go: only a person does", () => {
+  const b = agent('b');
+  let clock = 0;
+  const { floor, writes } = fakeFloor('p', [b], () => clock);
+  const { spend, tick, at } = service([floor]);
+  clock = at();
+  spend.pause(['b'], 'Ada');
+  assert.equal(b.hold?.by, 'Ada');
+  b.status = 'idle';
+  // Agent A tells it something under a standing grant: WorkerManager.prompt stamps it as an agent's.
+  tick(5000);
+  b.lastInput = { by: 'Byte', at: at(), agent: true };
+  b.status = 'working';
+  tick(6000);
+  spend.sweep();
+  assert.equal(b.hold?.by, 'Ada', 'still paused');
+  tick(31_000);
+  clock = at();
+  spend.sweep();
+  assert.equal(b.hold?.by, 'Ada');
+  assert.equal(writes.length, 2, 'and it is interrupted again, as one that ignored the Esc');
+  b.lastInput = { by: 'Ada', at: at() + 1000 };
+  tick(6000);
+  spend.sweep();
+  assert.equal(b.hold, undefined, 'a person typing to it still lets it go');
+});
+
 test('pause only touches agents at work; stop ends sessions and keeps branches', async () => {
   const a = agent('a');
   const b = agent('b', { status: 'needs_input' });

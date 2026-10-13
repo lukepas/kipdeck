@@ -382,7 +382,8 @@ export class Spend {
    * then). A budget hold only comes off with Continue, so typing can't spend past a cap.
    */
   private heldAtWork(floor: SpendFloor, info: WorkerInfo, hold: Hold): boolean {
-    const typed = info.lastInput?.at;
+    // Another agent's message is not someone letting it go (see WorkerManager.prompt).
+    const typed = info.lastInput?.agent ? undefined : info.lastInput?.at;
     if (hold.reason === 'paused' && typed !== undefined && typed > hold.at + 2_000 && typed !== this.ownKeys.get(info.id)) {
       this.release(floor, info, hold);
       return true;
