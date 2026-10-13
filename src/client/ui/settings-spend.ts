@@ -22,10 +22,16 @@ export function spendSettings(net: Net, follow: Follow): Node[] {
   // ---- Permission mode, per project ------------------------------------------------------------
   const modes = h('div.spend-modes');
   const modeNote = h('p.setting-note');
+  /** What the rows last showed. Spend moves by the cent while agents work; only a change to what the
+   * rows show redraws them, since taking an open select out of the page closes it under your mouse. */
+  let shown = '';
   follow(() => {
     const admin = store.me.admin;
     const floors = store.floors.filter((f) => !f.cloning);
     const set = store.spend?.modes ?? {};
+    const key = JSON.stringify([!!admin, floors.map((f) => [f.id, f.name, set[f.id] ?? ''])]);
+    if (key === shown) return;
+    shown = key;
     modes.replaceChildren(
       ...floors.map((f) => {
         const now = set[f.id];
