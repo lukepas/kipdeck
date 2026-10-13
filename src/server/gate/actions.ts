@@ -82,7 +82,8 @@ export async function runTell(ctx: Ctx, floor: Floor, actor: Actor, key: string,
   // Never a fork's or an outsider's PR to check out and run (see shared/pulltrust.ts).
   const untrusted = await floor.github.checkoutProblem(text);
   if (untrusted) return { status: 403, body: { error: untrusted } };
-  let err = floor.workers.prompt(w.id, text, actor.name);
+  // An agent's message, not a person's: it doesn't let an agent a person paused carry on.
+  let err = floor.workers.prompt(w.id, text, actor.name, true);
   // Stopped or asleep: it wakes up with this as its next message.
   if (err === NOT_RUNNING) err = floor.workers.resume(w.id, text);
   if (err) return { status: 400, body: { error: err } };
