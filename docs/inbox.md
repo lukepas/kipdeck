@@ -69,7 +69,7 @@ While the card is up, the top bar's **Deploy agent** is hidden (the card has the
 
 No agent CLI yet? `npx github:zbagdzevicius/kipdeck --demo` opens this page on a throwaway repository with five scripted agents. It opens with a question in Needs you and a change in To review, a **Demo** tag in the top bar, and a coach strip over the list that ends at *Run it on your repo* (*That's the loop.* once you've answered and merged) with the command to copy ([the demo](demo.md)).
 
-Already running Claude Code in a terminal? **Bring in** on the card adopts it without quitting. For a Codex session, or from a terminal, quit it there and run `kipdeck attach` (typed the way you run Kipdeck; the setup card and the banner show it) in the same folder: its session carries on as one of the inbox's agents ([Configuration](configuration.md#command-line)). The server side of the card is `src/server/firstrun.ts` and `ws/handlers/setup.ts`; the card is `src/client/home/setup.ts`.
+Already running Claude Code in a terminal? **Bring in** on the card adopts it without quitting. For a Codex session, or from a terminal, quit it there and run `kipdeck attach` (typed the way you run Kipdeck; the setup card and the banner show it) in the same folder: its session carries on as one of the inbox's agents ([Configuration](configuration.md#command-line)). The server side of the card is `src/server/firstrun.ts` and `ws/handlers/setup.ts`; the card is `src/client/home/setup-card.ts` (loaded only while there's no agent yet), its state `src/client/home/setup.ts`.
 
 ## The loop
 

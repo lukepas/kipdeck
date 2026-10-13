@@ -31,7 +31,7 @@ import { renderPulse } from './pulse';
 import { installSignal, signalView } from './signal';
 import { deckCommands, deckMenuEntry } from './deck-link';
 import { markChanges } from './motion';
-import { askSetup, onSetupChange, setupCard, setupMessage } from './setup';
+import { askSetup, firstRunCard, onSetupChange, setupMessage } from './setup';
 import { demoMessage } from './demo';
 import { installSpend, spendMessage, spendUi } from './spend-slot';
 import { installPhone, phoneCommands, phoneMenuEntry } from './phone';
@@ -198,7 +198,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
       home.saveChecklist();
       return;
     }
-    renderList(inbox, actions, () => setupCard(net, (prompt, provider) => actions.deploy(prompt, provider)));
+    renderList(inbox, actions, () => firstRunCard(net, (prompt, provider) => actions.deploy(prompt, provider)));
     // The demo shows the loop rather than teaching it: no checklist there.
     renderChecklist(checklist, () => actions.deploy(), !!inbox.querySelector('.first-run') || home.demo);
     // The setup card has the one Deploy button until the first agent.

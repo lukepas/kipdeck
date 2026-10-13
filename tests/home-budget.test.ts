@@ -49,3 +49,12 @@ test('the 3D Deck is its own page, and the home page shares none of its entry', 
   assert.ok(!eager('index.html').includes(entry), 'the home page does not load the bridge');
   assert.match(readFileSync(entry, 'utf8') + bridge.filter((f) => f.endsWith('.js')).map((f) => readFileSync(f, 'utf8')).join(''), /WebGLRenderer/, 'the bridge carries three.js');
 });
+
+test('the setup card, its stylesheet and its task box load only when the card is wanted', { skip: stale || undefined }, () => {
+  // Only a home page with no agent yet draws the card (home/setup-card.ts, through lazy.ts), so none of
+  // it is in what every visit loads: not its rows' styles, not its usage switch.
+  for (const f of eager('index.html')) {
+    const text = readFileSync(f, 'utf8');
+    assert.doesNotMatch(text, /\.su-rows|Share anonymous usage numbers/, `${path.basename(f)} carries the setup card, which loads through home/lazy.ts`);
+  }
+});
