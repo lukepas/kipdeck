@@ -6,6 +6,9 @@ name: Release
 #
 # Pull requests get the same build, tests and a real install of the packed release through
 # install.sh, but publish nothing.
+#
+# The paths below are everything `npm run build` (and so `prepare`), the replay demo's build and the
+# packed release read; tests/release-paths.test.ts keeps them that way.
 
 on:
   push:
@@ -17,6 +20,10 @@ on:
       - 'package-lock.json'
       - 'tsconfig*.json'
       - 'vite.config.ts'
+      - 'vite.*.config.ts'
+      - 'deploy/replay/**'
+      - 'skills/**'
+      - 'NOTICE'
       - '.github/workflows/release.yml'
   pull_request:
     paths:
@@ -27,6 +34,10 @@ on:
       - 'package-lock.json'
       - 'tsconfig*.json'
       - 'vite.config.ts'
+      - 'vite.*.config.ts'
+      - 'deploy/replay/**'
+      - 'skills/**'
+      - 'NOTICE'
       - 'install.sh'
       - '.github/workflows/release.yml'
   workflow_dispatch:
@@ -57,6 +68,11 @@ jobs:
         run: npm ci # its prepare script builds the client and the server
 
       - run: npm run typecheck
+
+      # The replay demo (docs/demo.md#the-replay-demo) isn't part of `build`, so installs never build
+      # it; it's built here so tests/replay-e2e.test.ts checks it on every pull request.
+      - name: Build the replay demo
+        run: npm run build:replay
 
       - run: npm test
 
