@@ -52,7 +52,7 @@ The 3D Deck keeps its own words, because they name things you see on the ship. T
 7. **Thank once, after you act.** "Thanks." may follow an answer you gave, at most once a minute. Never before, never in a block of text.
 8. **Every empty or error line ends with the next step.**
 9. **Crew words are allowed**: aboard, watch, shift, tape, track, side A, B-sides, quiet deck. **Military and jargon words are not**: unit, troops, conn, captain's log, stand down, war, attack, kill. VESPER on the Deck keeps its own phrasebook (`src/shared/shipvoice.ts`), which already passes the calm-voice test.
-10. **Status words never change**: Needs you, To review, Working, Stuck, Done. Buttons stay verb plus object: Merge, Send back, Stop agent.
+10. **Status words never change**: the five states, Needs you, Stuck, To review, Working and Idle (`STATE_LABEL` in `src/shared/attention.ts`). An Idle row says why in a word: no task, asleep, merged or snoozed. Buttons stay verb plus object: Merge, Send back, Stop agent.
 
 ## Before and after
 

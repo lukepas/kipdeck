@@ -11,7 +11,7 @@ import type { Net } from '../net';
 import { store } from '../state';
 import { $, h } from '../ui/dom';
 import { icon } from '../ui/icons';
-import { digestCard, recallDigest, watchAway } from '../ui/mission/digest';
+import { digestCard, recallDigest, watchAway } from '../ui/mission/away';
 import type { DesktopNotifier } from '../notify';
 import type { Settings } from '../state';
 import { applyLight, toggleLight } from '../lite-theme';
@@ -184,7 +184,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
       const next = nextUp(currentView());
       home.select(next?.id, next?.status === 'needs_input' ? 'terminal' : 'changes');
     };
-    const card = digestShown ? digestCard(actions.deps, showNext, () => ((digestShown = false), renderAll())) : null;
+    const card = digestShown ? digestCard(showNext, () => ((digestShown = false), renderAll())) : null;
     // Back after a night away, a line over it says so (warm.ts).
     const welcome = card ? welcomeLine(store.away?.since, showNext) : null;
     digest.replaceChildren(...(welcome ? [welcome] : []), ...(card ? [h('ul.digest', {}, card)] : []));

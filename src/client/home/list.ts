@@ -10,7 +10,7 @@
 
 import { attention, LEVEL_LABEL, type Ranked } from '../../shared/attention';
 import { workingWords } from '../../shared/doing';
-import { AGE_PREFIX, ageLabel, ALWAYS_OPEN, buildInbox, changeSummary, INBOX_SECTIONS, looseReminders, rowAction, SECTION_LABEL, waitShare, type InboxSection, type InboxView, type RowAction } from '../../shared/inbox';
+import { AGE_PREFIX, ageLabel, ALWAYS_OPEN, buildInbox, changeSummary, idleBreakdown, idleStatus, INBOX_SECTIONS, looseReminders, rowAction, SECTION_LABEL, waitShare, type InboxSection, type InboxView, type RowAction } from '../../shared/inbox';
 import type { Waiting } from '../../shared/metrics';
 import { waitTone, waitWords } from '../../shared/wait';
 import type { Reminder, RosterEntry } from '../../shared/protocol';
@@ -25,6 +25,7 @@ import { approvalRow } from './approval';
 import { home } from './state';
 import { proposalRows, proposalWaits } from './proposals';
 import { spendUi } from './spend-slot';
+import { sectionHint } from './hints';
 import { landBadges } from './land';
 import { workingAge, workingFacts, workingSpoken } from './doing';
 import { verdictStatus } from './verdict-row';
@@ -142,13 +143,19 @@ function row(r: Ranked, section: InboxSection, deps: ListDeps, now: number): HTM
   const ask = approvalRow(e.id);
   const { action, label } = ask ? { action: rowAction(r.att).action, label: ask.label } : rowAction(r.att);
   const provider = PROVIDER_META[e.provider ?? 'claude']?.label ?? 'Agent';
-  // Working: what it's doing right now (workingStatus). To review: what it changed. Otherwise why it's
-  // here, in the ranking's words.
+  // Working: what it's doing right now (workingStatus). To review: what it changed. Idle: why it's idle
+  // (idleStatus). Otherwise why it's here, in the ranking's words.
   // In To review, its verdict first when the office has one (verdict-row.ts). A branch that would
   // conflict says so instead (land.ts), since a clean verdict would read as ready to merge.
   const restack = r.att.action === 'restack';
   const verdict = !ask && section === 'review' && !restack ? verdictStatus(e) : undefined;
-  const status = ask ? ask.status : section === 'working' ? workingStatus(r, title) : verdict?.el ?? ((section === 'review' && !restack && changeSummary(e.work)) || rowStatus(r.att, title));
+  const status = ask
+    ? ask.status
+    : section === 'working'
+      ? workingStatus(r, title)
+      : section === 'idle'
+        ? idleStatus(r.att, rowStatus(r.att, title))
+        : verdict?.el ?? ((section === 'review' && !restack && changeSummary(e.work)) || rowStatus(r.att, title));
   const selected = home.selected === e.id;
   const where = rowWhere(e);
   const owner = ownerLabel(e);
@@ -197,10 +204,10 @@ function reminderRow(r: Reminder, deps: ListDeps, now: number): HTMLElement {
 
 /**
  * A row's clock: "waiting 38s" in its wait's tone. A wait on you carries `data-since`, so clock.ts
- * ticks its text each second without drawing the list again; the calm sections ("idle 2h", "snoozed
+ * ticks its text each second without drawing the list again; the calm sections ("asleep 2h", "snoozed
  * 1h") move on with the 30 second redraw.
  */
-function ageEl(section: InboxSection, att: { since: number; snoozed?: boolean }, now: number): HTMLElement {
+function ageEl(section: InboxSection, att: Parameters<typeof ageLabel>[1], now: number): HTMLElement {
   const waits = section === 'needs-you' || section === 'review';
   if (!waits) return h('span.row-age', {}, ageLabel(section, att, now));
   return h('span.row-age.wait-clock', { 'data-since': String(att.since), 'data-prefix': AGE_PREFIX[section], 'data-tone': waitTone(now - att.since) }, ageLabel(section, att, now));
@@ -227,10 +234,10 @@ function section(s: InboxSection, view: InboxView, extra: HTMLElement[], deps: L
   }
   const open = !foldable || home.idleOpen;
   const head = foldable
-    ? h('button.sec-h', { type: 'button', 'aria-expanded': String(open), onclick: () => home.setIdleOpen(!open) }, h('span.sec-glyph', { class: `g-${s}` }, icon(LEVEL_ICON.parked, 14)), SECTION_LABEL[s], h('span.sec-n', {}, String(n)), h('span.sec-fold', {}, open ? 'Hide' : 'Show'))
+    ? h('button.sec-h', { type: 'button', 'aria-expanded': String(open), onclick: () => home.setIdleOpen(!open) }, h('span.sec-glyph', { class: `g-${s}` }, icon(LEVEL_ICON.parked, 14)), SECTION_LABEL[s], h('span.sec-n', {}, String(n)), s === 'idle' && !open ? h('span.sec-kinds', {}, idleBreakdown(items)) : null, h('span.sec-fold', {}, open ? 'Hide' : 'Show'))
     : h('h2.sec-h', {}, h('span.sec-glyph', { class: `g-${s}` }, icon(LEVEL_ICON[s === 'needs-you' ? 'needs-you' : s === 'review' ? 'review' : 'working'], 14)), SECTION_LABEL[s], n ? h('span.sec-n', {}, String(n)) : null);
   const body = !open ? null : n ? h('ol.rows', { 'aria-label': SECTION_LABEL[s] }, ...extra, ...items.map((r) => row(r, s, deps, now))) : h('p.sec-empty', { class: `e-${s}` }, s === 'needs-you' ? icon('check', 14) : null, EMPTY[s]);
-  return h('section.sec', { class: `sec-${s}${n ? '' : ' empty'}` }, head, body);
+  return h('section.sec', { class: `sec-${s}${n ? '' : ' empty'}` }, head, open ? sectionHint(s, n) : null, body);
 }
 
 /** Draws the inbox into `root`; with no agent yet, `firstRun` (the setup card, setup.ts) stands in for it. */
