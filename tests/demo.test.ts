@@ -69,9 +69,9 @@ test('everything the demo writes says it is demo data', () => {
   for (const a of FLEET) for (const s of a.steps) for (const [file, text] of Object.entries(s.write ?? {})) assert.match(text, /\[demo\]|\(demo\)/, `${a.key}: ${file}`);
   for (const s of improvised('Do a thing', 'do-a-thing')) for (const text of Object.values(s.write ?? {})) assert.match(text, /\[demo\]/);
   assert.match(demoNote({ readOnly: false, project: 'acme-shop' }).text, /Scripted agents/);
-  // Until kipdeck is on npm, nothing shows `npx kipdeck` (a 404): npx runs it from the public repository.
+  // Until kipdeck is on npm, nothing shows `npx kipdeck` (a 404): npx runs the newest release's package.
   if (!ON_NPM) {
-    assert.equal(DEMO_COMMAND, 'npx github:zbagdzevicius/kipdeck --demo');
+    assert.equal(DEMO_COMMAND, 'npx https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz --demo');
     for (const s of [READ_ONLY_REFUSAL, demoNote({ readOnly: true, project: 'acme-shop' }).text]) assert.doesNotMatch(s, /npx kipdeck|private beta|not on npm/);
   }
   // A visitor to the hosted demo copies the command that runs the demo on their computer.
@@ -88,6 +88,7 @@ test('the pill shows a short command itself, and a long one only behind its copy
   assert.ok(fitsPill('kipdeck'));
   assert.ok(fitsPill('npx kipdeck --demo'));
   assert.ok(!fitsPill('npx github:zbagdzevicius/kipdeck'));
+  assert.ok(!fitsPill('npx https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz'));
   assert.ok(!fitsPill('node ~/kipdeck/bin/agent-office.js'));
 });
 

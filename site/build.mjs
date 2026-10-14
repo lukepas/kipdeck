@@ -5,8 +5,8 @@
 //   KIPDECK_BRAND=<id> npm run build:site           # another entry in site/landing/brand.ts
 //
 // The brand's repository (github.com/zbagdzevicius/kipdeck) is public, so a build with no settings
-// links it: the npx github:owner/repo commands, section 06's terminal, the Source and Docs links and the structured
-// data's codeRepository. For a brand whose repository is private, build with KIPDECK_REPO_PUBLIC=0:
+// links it: the npx commands (its newest release, site/npx.mjs), section 06's terminal, the Source
+// and Docs links and the structured data's codeRepository. For a brand whose repository is private, build with KIPDECK_REPO_PUBLIC=0:
 // the page then shows nothing a visitor could not follow.
 //
 // Each address must be https (a waitlist on http would send emails in the clear). Without
@@ -26,6 +26,11 @@ export const OUT = path.join(ROOT, 'dist', 'site');
 /** The repository a built page points at: the brand's (site/landing/brand.ts), on the html element. */
 export function repoOf(html) {
   return (/<html\b[^>]*\bdata-repo="([^"]+)"/.exec(html) ?? [])[1] ?? '';
+}
+
+/** What its start commands give npx: the brand's short /get address, else the release's (site/npx.mjs). */
+export function npxOf(html) {
+  return (/<html\b[^>]*\bdata-npx="([^"]+)"/.exec(html) ?? [])[1] ?? '';
 }
 
 /** The build's settings, with KIPDECK_SITE_URL taken from Vercel's production address
@@ -76,9 +81,16 @@ export function buildPage(html, given) {
   const current = repoOf(out);
   if (repo && current) {
     const next = repo.href.replace(/\/$/, '').replace(/\.git$/, '');
-    // The start commands run the repository with npx (github:owner/repo), so they move with it.
-    out = out.replaceAll(npxSpec(current), attr(npxSpec(next)));
-    out = out.replaceAll(current, attr(next));
+    // The start commands run the repository's newest release with npx, so they move with it. One
+    // pass, so an address that begins with the old one is never moved twice.
+    const moves = new Map([
+      [npxOf(out) || npxSpec(current), attr(npxSpec(next))],
+      [npxSpec(current), attr(npxSpec(next))],
+      [current, attr(next)],
+    ]);
+    const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const keys = [...moves.keys()].sort((a, b) => b.length - a.length);
+    out = out.replace(new RegExp(keys.map(escape).join('|'), 'g'), (m) => moves.get(m));
   }
   // Until `npx` works from the registry, the page shows the from-source command and says so (never a
   // command that 404s). Published, the npx command takes its place.
@@ -101,6 +113,7 @@ function withoutPrivateRepo(html, { open, npm, demo }) {
   out = out.replace(/,"codeRepository":"[^"]*"/, '');
   if (npm) return out;
   out = out.replace(/\s*<!-- runnable -->[\s\S]*?<!-- \/runnable -->/g, '');
+  out = out.replace(/ data-npx="[^"]*"/, '');
   // npx cannot fetch a private repository: the Labs line says it the way a clone runs it.
   out = out.replace(/<span data-unpublished>npx [^<]* --labs<\/span>/, '<span data-unpublished>npm start -- --labs</span>');
   if (demo) return out;

@@ -39,8 +39,9 @@ function brandHtml(brand: Brand): Plugin {
     muted: brand.wordmark.muted,
     pkg: brand.pkg,
     repo: brand.repo,
-    // The start command until npm is published: npx straight from the repository (github:owner/repo).
-    npx: npxSpec(brand.repo),
+    // The start command until npm is published: npx on the newest release's prebuilt package, by the
+    // landing page's short /get address when the brand has one (site/npx.mjs has the full one).
+    npx: brand.get ?? npxSpec(brand.repo),
     contact: brand.contact,
     ogTitle: brand.ogTitle,
     ogDescription: brand.ogDescription,

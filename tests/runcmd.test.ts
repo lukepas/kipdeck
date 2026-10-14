@@ -58,6 +58,10 @@ test('started by npx: the spec npx installed it from, and node for a command bes
   const npxPath = (cmd: string) => (cmd === 'kipdeck' ? path.join(dotBin, 'kipdeck') : null);
   assert.equal(localCommand(env(root, npxPath)), `node ${path.join(root, 'bin', 'agent-office.js')}`);
   assert.equal(launchCommand(env(root, npxPath)), 'npx github:zbagdzevicius/kipdeck');
+  // The README's first command: the newest release's tarball, by its https address, as given.
+  writeFileSync(path.join(cache, 'package.json'), JSON.stringify({ dependencies: { kipdeck: 'https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz' } }));
+  assert.equal(launchCommand(env(root)), 'npx https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz');
+  assert.equal(localCommand(env(root)), `node ${path.join(root, 'bin', 'agent-office.js')}`);
   // From the registry, under a scoped name: the name, not the range npm wrote.
   writeFileSync(path.join(cache, 'package.json'), JSON.stringify({ dependencies: { '@kipdeck/kipdeck': '^0.2.0' } }));
   writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name: '@kipdeck/kipdeck' }));
