@@ -6,7 +6,8 @@
 // nothing, never scrolls sideways and shifts nothing; the loop's answer clears the visitor's own
 // wait and its merge is a real button that stamps the change merged; the footer tells the truth
 // about the wait; every section that skips rendering is rendered once while idle after the opening;
-// and with less motion no scene stages anything, so every section is its final HTML.
+// a scene that plays in time holds while it is out of view; and with less motion no scene stages
+// anything, so every section is its final HTML.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync } from 'node:fs';
@@ -165,6 +166,23 @@ test('on a phone the problem plays as the reader arrives, with its headline numb
   // The day has drawn by now: the clip on the lanes is gone.
   const clip = await page.locator('#problem .lane-draw').evaluate((el) => (el as SVGGElement).style.clipPath);
   assert.match(clip, /inset\(0(px)? (-?[0-2](\.\d+)?%|0%?)/, clip);
+  assert.deepEqual(errors, []);
+});
+
+test('on a phone a scene that plays in time holds while it is scrolled out of view, and finishes when it is back', { skip: why || false, timeout: 60_000 }, async (t) => {
+  const { page, errors } = await open(t, { width: 390, height: 844 });
+  const clip = () => page.locator('#problem .lane-draw').evaluate((el) => (el as SVGGElement).style.clipPath);
+  const drawn = /inset\(0(px)? (-?[0-2](\.\d+)?%|0%?)/;
+  await page.evaluate(() => document.querySelector('#problem .lanes')!.scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(600);
+  // Away before its 3.2 s are up, for longer than that.
+  await page.evaluate(() => document.getElementById('end')!.scrollIntoView());
+  await page.waitForTimeout(4000);
+  const held = await clip();
+  assert.doesNotMatch(held, drawn, `it held while away: ${held}`);
+  await page.evaluate(() => document.querySelector('#problem .lanes')!.scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(3600);
+  assert.match(await clip(), drawn);
   assert.deepEqual(errors, []);
 });
 
