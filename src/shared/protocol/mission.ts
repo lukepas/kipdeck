@@ -2,11 +2,13 @@
 // roster of workers that the attention ranking (shared/attention.ts) runs on.
 
 import type { AgentProvider } from './agents.js';
+import type { RowVerdict } from './brief.js';
 import type { GhPull } from './github.js';
 import type { WorkerAction, WorkerKind, WorkerStatus, WorkerTask } from './workers.js';
 import type { Hold } from './spend.js';
 import type { Autonomy } from '../autonomy.js';
 import type { LandState, OverlapState } from '../landqueue.js';
+import type { TurnFacts } from '../doing.js';
 
 /**
  * A worker put aside on purpose, so it stops asking for attention: until a time, or until its
@@ -102,6 +104,8 @@ export interface RosterEntry {
   land?: LandState;
   /** Other live agents on its project that changed some of the same files (shared/overlap.ts). */
   overlap?: OverlapState;
+  /** Whether that work looks ready to merge, for its To review row (worked out at rest, see RowVerdict). */
+  verdict?: RowVerdict;
   /** Its queue task failed to start. */
   taskFailed?: boolean;
   issue?: number;
@@ -113,6 +117,8 @@ export interface RosterEntry {
   tokens?: number;
   workedMs?: number;
   workingSince?: number;
+  /** While it works: its turn so far, for its row's second line (shared/doing.ts). */
+  turn?: TurnFacts;
   snooze?: Snooze;
   /** Its permission mode (WorkerInfo.mode), and its pause (WorkerInfo.hold). */
   mode?: Autonomy;

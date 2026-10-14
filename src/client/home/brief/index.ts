@@ -5,6 +5,7 @@
 // shared/brief/verdict.ts. Its view (view.ts, with the line comments in the diff, comments.ts) loads
 // the first time a brief is shown; the comments themselves (store.ts) go with Send back.
 
+import { workKey } from '../../../shared/brief/row-verdict';
 import type { ReviewBrief, RosterEntry, ServerMsg } from '../../../shared/protocol';
 import type { Net } from '../../net';
 import { h } from '../../ui/dom';
@@ -39,9 +40,6 @@ function loadView() {
     home.change();
   });
 }
-
-/** Its work as of now: a new key means the brief may say something new. */
-const workKey = (e: RosterEntry) => [e.status, e.waitingSince ?? '', e.work?.files ?? '', e.work?.additions ?? '', e.work?.deletions ?? '', e.work?.ahead ?? ''].join('|');
 
 /** Follows the office's briefs; `paneBody` is where the diff is drawn, for line comments. */
 export function installBrief(n: Net, paneBody: HTMLElement) {

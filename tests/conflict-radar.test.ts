@@ -111,3 +111,15 @@ test('conflicting work ranks after the work that lands, so next is always landab
   assert.equal(nextUp(view)?.id, 'fresh');
   assert.equal(nextUp(view, 'fresh')?.id, 'old', 'with nothing that lands left, the conflicting work still comes up');
 });
+
+test('a ready verdict does not lift work that conflicts above clean work in To review', () => {
+  const ready = { ready: true, tests: 'pass' as const, gaps: 0, flags: [] };
+  const gap = { ready: false, tests: 'none' as const, gaps: 1, flags: [] };
+  // Both waited longer than the clean one, and the conflicting one's own verdict says ready.
+  const clashing = entry({ id: 'clashing', land: clash, verdict: ready, waitingSince: NOW - 50 * MIN });
+  const untested = entry({ id: 'untested', verdict: gap, waitingSince: NOW - 30 * MIN });
+  const clean = entry({ id: 'clean', verdict: ready, waitingSince: NOW - 2 * MIN });
+  const view = buildInbox(rankRoster([clashing, untested, clean], NOW));
+  assert.deepEqual(view.sections.review.map((r) => r.entry.id), ['clean', 'untested', 'clashing']);
+  assert.equal(nextUp(view)?.id, 'clean');
+});

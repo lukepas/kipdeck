@@ -25,3 +25,4 @@ design/shots/fundable/*/video/
 /.claude/worktrees/
 /.claude/settings.local.json
 /.playwright-mcp/
+.vitest/

@@ -1,6 +1,6 @@
 // The rundown collector: the facts about one checkout, with no judgement in them (see
 // shared/rundown/schema.ts, Facts). Shared by the office (service.ts, for each floor it hosts) and the
-// /rundown skill (cli.ts, bundled to dist/rundown/rundown.mjs). Read only, git through execFile with
+// /rundown skill (cli.ts, bundled to plugins/rundown/skills/rundown/scripts/rundown.mjs). Read only, git through execFile with
 // fixed arguments (git.ts), files listed by git and read under caps (files.ts), within a time budget:
 // whatever is late comes back partial, with `truncated` set and a gap saying what.
 

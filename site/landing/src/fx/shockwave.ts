@@ -199,7 +199,10 @@ export function warmShockwave(): Promise<void> {
   let ready = Promise.resolve();
   if (gl) {
     ring = gl.ring;
-    ready = gl.ready;
+    // The first frame the compositor takes from a WebGL canvas is the costly one (with a software
+    // GL, tens of ms on the GPU thread, which holds up the page's next frame). So once the faded
+    // frame is drawn, the canvas is shown for a frame with nothing on it, here and not on the merge.
+    ready = gl.ready.then(() => showEmptyOnce(canvas));
   } else {
     // A canvas that tried WebGL cannot draw 2D, so the fallback gets a fresh one.
     canvas = make();
@@ -211,6 +214,21 @@ export function warmShockwave(): Promise<void> {
 }
 
 let running = 0;
+
+/** Shows the canvas for one frame (it holds only the fully faded frame), then hides it again unless
+ *  a ring has started meanwhile. */
+function showEmptyOnce(canvas: HTMLCanvasElement): Promise<void> {
+  const before = running;
+  canvas.style.visibility = 'visible';
+  return new Promise((resolve) =>
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        if (running === before) canvas.style.visibility = 'hidden';
+        resolve();
+      }),
+    ),
+  );
+}
 
 /** Sends one ring out from (x, y) in viewport pixels, `reach` px at most (the whole viewport by
  *  default). Resolves when it has gone. */

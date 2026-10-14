@@ -69,13 +69,14 @@ export function rowAction(att: Attention): { action: RowAction; label: string } 
 
 /**
  * What a row's clock says before the time, in its section's words: "waiting" in Needs you, "done" in
- * To review, "idle" in Idle (the idle section, named as STATE_LABEL names it), nothing for Working.
+ * To review, "working" in Working (or "quiet" once it goes still, shared/doing.ts) and "idle" in Idle
+ * (the idle section, named as STATE_LABEL names it).
  */
-export const AGE_PREFIX: Readonly<Record<InboxSection, string>> = { 'needs-you': 'waiting', review: 'done', working: '', idle: 'idle' };
+export const AGE_PREFIX: Readonly<Record<InboxSection, string>> = { 'needs-you': 'waiting', review: 'done', working: 'working', idle: 'idle' };
 
 /**
  * How long a row has been the way it is, in the words its section uses: "waiting 38s", "done 12m",
- * "idle 2h", "snoozed 1h". A wait on you (Needs you, To review) counts in seconds at first with
+ * "working 4m", "idle 2h", "snoozed 1h". A wait on you (Needs you, To review) counts in seconds at first with
  * waitWords, the clock the page ticks (home/clock.ts); the rest keep whole minutes. A snoozed row sits
  * under Idle but says snoozed.
  */
@@ -129,7 +130,8 @@ export interface InboxView {
 }
 
 /**
- * The ranked roster sorted into sections, keeping the ranking's order within each: `project` for one
+ * The ranked roster sorted into sections, keeping the ranking's order within each, except that in To
+ * review the work whose verdict is ready (shared/brief/row-verdict.ts) and that doesn't conflict comes first: `project` for one
  * project's agents, `query` to search, and `owner` for only the agents that person deployed (Mine).
  */
 export function buildInbox(ranked: readonly Ranked[], opts: { project?: string; query?: string; owner?: string } = {}): InboxView {
@@ -140,6 +142,10 @@ export function buildInbox(ranked: readonly Ranked[], opts: { project?: string; 
     if (opts.query && !matches(r.entry, opts.query)) continue;
     sections[sectionOf(r.att)].push(r);
   }
+  // Ready first, the ranking's order kept within each half (the sort is stable). Work that conflicts
+  // with its base is never ready, whatever its verdict says: it can't merge until it is restacked.
+  const ready = (r: Ranked) => Number(!!r.entry.verdict?.ready && !r.att.blocked);
+  sections.review.sort((a, b) => ready(b) - ready(a));
   const counts = Object.fromEntries(INBOX_SECTIONS.map((s) => [s, sections[s].length])) as Record<InboxSection, number>;
   return { sections, counts };
 }
