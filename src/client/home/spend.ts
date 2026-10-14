@@ -110,7 +110,7 @@ function paint() {
 export function installSpend(n: Net) {
   net = n;
   n.send({ t: 'spend.get' });
-  const b = h('button.btn.quiet.hb-fleet.hidden', { type: 'button', 'aria-haspopup': 'menu', onclick: () => void control().then((c) => c.openMenu(n, b)) }, icon('pause', 14), h('span.hb-fleet-label', {}, 'Pause all'));
+  const b = h('button.btn.quiet.hb-fleet.hidden', { type: 'button', 'aria-haspopup': 'menu', 'aria-label': 'Pause all', onclick: () => void control().then((c) => c.openMenu(n, b)) }, icon('pause', 14), h('span.hb-fleet-label', {}, 'Pause all'));
   button = b;
   document.getElementById('btn-deploy')?.before(b);
   store.on('roster', paint);
