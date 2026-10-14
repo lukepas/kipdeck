@@ -24,6 +24,8 @@ export interface AlertDeps {
    * deployed by on the shared password ("n:<name>"), as devices.ts's personOf keys them.
    */
   owner(workerId: string, createdBy: string): string;
+  /** The push as one device gets it (Allow once and Deny from approve.ts); as it is when missing. */
+  dress?(payload: PushPayload, device: Device, owner: string | undefined): PushPayload;
   /** Tests only. */
   settleMs?: number;
   escalateMs?: number;
@@ -143,7 +145,7 @@ export class Alerts {
     const theirs = owner ? all.filter((x) => x.person === owner) : [];
     const targets = (theirs.length ? theirs : all).filter((x) => !wait.pushed.has(x.person) && !this.d.presence.present(x.person));
     for (const x of targets) wait.pushed.add(x.person);
-    const out = await Promise.all(targets.map((x: Device) => this.d.devices.send(x, payload, { urgency: urgencyOf(payload.kind) })));
+    const out = await Promise.all(targets.map((x: Device) => this.d.devices.send(x, this.d.dress ? this.d.dress(payload, x, owner) : payload, { urgency: urgencyOf(payload.kind) })));
     return out.filter((s) => s === 'sent').length;
   }
 

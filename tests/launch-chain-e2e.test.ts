@@ -134,6 +134,6 @@ test('every launch doc renders in a browser: tables are tables, fields are code 
     for (const rows of got.rows) assert.ok(rows.every((n) => n === rows[0]), `${doc}: ragged table ${rows}`);
     assert.equal(got.strayPipes, 0, `${doc}: a table fell apart into a paragraph`);
     assert.equal(got.fields, (text.match(/^```field /gm) ?? []).length, `${doc}: every form field is a code block`);
-    for (const href of got.links) assert.ok(/^(https:\/\/|[\w./-]+\.(md|ics|json)(#[\w-]*)?$|#)/.test(href), `${doc}: odd link ${href}`);
+    for (const href of got.links) assert.ok(/^(https:\/\/|mailto:|[\w./-]+\.(md|ics|json)(#[\w-]*)?$|#)/.test(href), `${doc}: odd link ${href}`);
   }
 });
