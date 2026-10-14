@@ -77,7 +77,7 @@ kipdeck --telemetry                 # share anonymous usage numbers (off by defa
 kipdeck --labs proof                # turn on Proof of Merge (testnets), the Colosseum entry's payout layer
 ```
 
-`kipdeck rundown [path]` writes a project's map (its parts by status, inferred from the code, no Claude needed) into `.rundown/`, and `kipdeck rundown install` adds the `/rundown` skill to Claude Code for Claude's own read; see [docs/rundown.md](docs/rundown.md).
+`kipdeck rundown [path]` writes a project's map (its parts by status, inferred from the code, no Claude needed) into `.rundown/`, and `kipdeck rundown install` adds the `/rundown` skill to Claude Code for Claude's own read (it never replaces a newer installed copy unless you add `--force`). The repository is also a Claude Code plugin: `/plugin marketplace add zbagdzevicius/kipdeck`, then `/plugin install rundown@kipdeck`, adds the same skill plus a SessionStart hook that starts each session in a mapped repository with a brief of at most 1.5 KB (milestone, next step, open decisions, stuck parts) when its map is under a week old; see [docs/rundown.md](docs/rundown.md).
 
 Once it is on npm, to have a `kipdeck` command instead: `npm install -g` with its package name, or [`install.sh`](install.sh) (macOS and Linux) and [`install.ps1`](install.ps1) (Windows), which install the same package. Until then those print the from-source steps above, and `npm link` gives you the same command. Every option is in [docs/configuration.md](docs/configuration.md); choosing models and providers per agent is in [docs/agents.md](docs/agents.md).
 
@@ -204,7 +204,7 @@ The rules for coding agents working on this repository are in [`AGENTS.md`](AGEN
 
 ### Publishing to npm
 
-The npm package ships the built `dist/` (`files` in `package.json`: the app, the server, the showcase and the rundown script), so an install from npm builds nothing on the user's machine. `prepare` runs `npm run build` on `npm pack`, `npm publish` and a GitHub install (`npx github:zbagdzevicius/kipdeck`), and `publishConfig.access` is `public`, which a scoped name needs. Both bin names (`kipdeck`, `agent-office`) run the same script, so `npx <any name>` finds it. To publish under a scope you own, for example `@kipdeck/kipdeck`:
+The npm package ships the built `dist/` and the /rundown skill (`files` in `package.json`: the app, the server, the showcase, and `skills/rundown/` with its committed script), so an install from npm builds nothing on the user's machine. `prepare` runs `npm run build` on `npm pack`, `npm publish` and a GitHub install (`npx github:zbagdzevicius/kipdeck`), and `publishConfig.access` is `public`, which a scoped name needs. Both bin names (`kipdeck`, `agent-office`) run the same script, so `npx <any name>` finds it. To publish under a scope you own, for example `@kipdeck/kipdeck`:
 
 ```bash
 npm login
@@ -239,7 +239,7 @@ Then, in the same release: set `NPM_PACKAGE` to that name and `ON_NPM` to `true`
 Labs and the Deck:
 
 - [Labs](docs/labs.md): what each lab brings back, and how to switch it
-- [Rundown](docs/rundown.md): the project map, as the `/rundown` skill in any repository and in the office, its data model and its limits
+- [Rundown](docs/rundown.md): the project map, as the `/rundown` skill or the Claude Code plugin in any repository and in the office, the index of every project, the session brief, its data model and its limits
 - [Mission control](docs/mission-control.md): the attention ranking, the floor's mission and milestones, linking work to goals, the review inbox, the timeline, reminders and the digest
 - [Design system](docs/design.md): each surface on screen, the motion and the deck's sound, demo mode, and how to check a design change with `design/shoot.mjs`
 - [Voice](docs/voice.md): the crew voice, before and after copy, Kip's states, the signature moments and where fun is forbidden

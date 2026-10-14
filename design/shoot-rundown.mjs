@@ -61,7 +61,7 @@ writeFileSync(
     ],
   }),
 );
-execFileSync(process.execPath, [path.join(ROOT, 'dist', 'rundown', 'rundown.mjs'), 'quick', '--no-gh', '--root', project], { stdio: 'ignore' });
+execFileSync(process.execPath, [path.join(ROOT, 'skills', 'rundown', 'scripts', 'rundown.mjs'), 'quick', '--no-gh', '--root', project], { stdio: 'ignore' });
 
 const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--labs', 'rundown,bridge', '--home', path.join(home, '.agent-office')], {
   env: { ...process.env, HOME: home },

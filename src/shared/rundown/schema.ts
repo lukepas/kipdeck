@@ -1,5 +1,5 @@
 // Rundown: a map of one project's parts, milestones, activity and decisions. One data model shared by
-// the /rundown skill (its collector and page, bundled to dist/rundown/rundown.mjs) and the office (the
+// the /rundown skill (its collector and page, bundled to skills/rundown/scripts/rundown.mjs) and the office (the
 // Rundown window in the inbox and the holo city on the bridge). Pure: no Node imports. See
 // docs/rundown.md for who fills which field.
 

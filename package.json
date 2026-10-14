@@ -33,7 +33,6 @@
     "dist/public",
     "dist/server",
     "dist/showcase",
-    "dist/rundown",
     "skills/rundown",
     "NOTICE"
   ],
@@ -46,7 +45,7 @@
     "build:rundown": "vite build -c vite.rundown.config.ts",
     "build:replay": "vite build -c vite.replay.config.ts",
     "record:replay": "node deploy/replay/record.mjs",
-    "rundown:install": "npm run build:rundown && node dist/rundown/rundown.mjs install --skill skills/rundown/SKILL.md --readme skills/rundown/README.md",
+    "rundown:install": "npm run build:rundown && node skills/rundown/scripts/rundown.mjs install",
     "build:site": "node site/build.mjs",
     "logo": "tsx design/logo/sync.ts",
     "preview:site": "node site/serve.mjs",
