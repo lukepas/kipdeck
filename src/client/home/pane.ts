@@ -195,7 +195,7 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
 
   /** The agents last seen waiting on you, so one that newly does opens again after an Esc or a merge. */
   let waitingIds = new Set<string>();
-  /** With nothing selected on a wide screen: the oldest that needs you, else the oldest to review. */
+  /** With nothing selected on a wide screen: the oldest that needs you, else the top of To review (ready first). */
   const autoOpen = (): boolean => {
     const view = currentView();
     const now = new Set([...view.sections['needs-you'], ...view.sections.review].map((r) => r.entry.id));

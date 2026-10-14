@@ -12,7 +12,7 @@ export const SHIPPED_SHOWN = 5;
 export type EmptyPane =
   /** No agent yet: the setup card's preview has the pane. */
   | { kind: 'start' }
-  /** Someone waits on you: the oldest, and how many more after it. */
+  /** Someone waits on you: the first in its section (in To review the ready ones come first), and how many more after it. */
   | { kind: 'next'; next: Ranked; section: 'needs-you' | 'review'; waitedMs: number; more: number; working: number }
   /** Nobody waits: what merged today, newest first, and how many agents are still at it. */
   | { kind: 'clear'; shipped: ShipRecord[]; total: number; line: string; working: number };

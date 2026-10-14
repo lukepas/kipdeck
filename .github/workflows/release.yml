@@ -22,7 +22,7 @@ on:
       - 'vite.config.ts'
       - 'vite.*.config.ts'
       - 'deploy/replay/**'
-      - 'skills/**'
+      - 'plugins/**'
       - 'NOTICE'
       - '.github/workflows/release.yml'
   pull_request:
@@ -36,7 +36,7 @@ on:
       - 'vite.config.ts'
       - 'vite.*.config.ts'
       - 'deploy/replay/**'
-      - 'skills/**'
+      - 'plugins/**'
       - 'NOTICE'
       - 'install.sh'
       - '.github/workflows/release.yml'
@@ -79,7 +79,7 @@ jobs:
       - run: npm run typecheck
 
       # The replay demo (docs/demo.md#the-replay-demo) isn't part of `build`, so installs never build
-      # it; it's built here so tests/replay-e2e.test.ts checks it on every pull request.
+      # it; it's built here so tests/replay-e2e.test.ts and tests/replay-deck-e2e.test.ts check it on every pull request.
       - name: Build the replay demo
         run: npm run build:replay
 

@@ -1,6 +1,7 @@
 // Kipdeck's service worker: shows the office's pushes (server/push/alerts.ts) when no Kipdeck tab is
 // in front of you, and takes you to the agent when you tap one. The buttons that are safe without
-// looking (Snooze 1h, Mark seen) are done from here; Answer, Review and Look open the inbox on that
+// looking (Snooze 1h, Mark seen) are done from here, and so are Allow once and Deny on an approval
+// push with no risk tags (server/push/approve.ts); Answer, Review and Look open the inbox on that
 // agent. No caching and no offline mode: the inbox is only any use connected to the office.
 
 self.addEventListener('install', () => self.skipWaiting());
@@ -29,7 +30,7 @@ async function show(p) {
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     actions: Array.isArray(p.actions) ? p.actions.slice(0, 2) : [],
-    data: { url: p.url || '/', worker: p.worker, kind: p.kind },
+    data: { url: p.url || '/', worker: p.worker, kind: p.kind, ...(p.approve ? { approve: p.approve, title: p.title } : {}) },
   });
 }
 
@@ -43,6 +44,38 @@ async function act(action, worker) {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ endpoint: sub.endpoint, worker, action }),
   }).catch(() => {});
+}
+
+/**
+ * Allow once or Deny, from the button, as the device that took the push, with the one-use token it
+ * carried. Refused (answered elsewhere, moved on, expired), the notification comes back saying why,
+ * and a tap on it opens the agent.
+ */
+async function answer(decision, data) {
+  const sub = await self.registration.pushManager.getSubscription();
+  let why = 'Could not reach Kipdeck.';
+  if (sub) {
+    try {
+      const res = await fetch('/api/push/answer', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ endpoint: sub.endpoint, token: data.approve, decision }),
+      });
+      if (res.ok) return;
+      const b = await res.json().catch(() => ({}));
+      if (b && typeof b.error === 'string') why = b.error;
+    } catch {
+      // why stays as it is
+    }
+  }
+  await self.registration.showNotification(data.title || 'Kipdeck', {
+    body: `${why}\nTap to open it in Kipdeck.`,
+    tag: data.worker ? `worker-${data.worker}` : 'kipdeck-approval',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    data: { url: data.url || '/', worker: data.worker, kind: data.kind },
+  });
 }
 
 /**
@@ -87,5 +120,6 @@ self.addEventListener('notificationclick', (e) => {
   const data = n.data || {};
   n.close();
   if ((e.action === 'snooze' || e.action === 'seen') && data.worker) return e.waitUntil(act(e.action, data.worker));
+  if ((e.action === 'allow' || e.action === 'deny') && data.approve) return e.waitUntil(answer(e.action === 'allow' ? 'once' : 'deny', data));
   e.waitUntil(open(data));
 });

@@ -22,6 +22,7 @@ export const SERIAL = [
   'tests/dialog-e2e.test.ts',
   'tests/mission-e2e.test.ts',
   'tests/surface-e2e.test.ts',
+  'tests/replay-deck-e2e.test.ts',
 ];
 
 const root = path.join(import.meta.dirname, '..', '..');

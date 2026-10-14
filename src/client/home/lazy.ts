@@ -51,6 +51,8 @@ export const deploy = once(() => import('./deploy'));
 export const setupCard = once(() => import('./setup-card'));
 /** Kip in the quiet moments: the all-clear pane, the setup card, the merge's cheer, the first job (kip-moments.ts). */
 export const kipMoments = once(() => import('./kip-moments'));
+/** Triage: the inbox one card at a time from the keyboard (T, triage.ts). */
+export const triage = once(() => import('./triage'));
 /** The pane moving on after an answer, loaded with the first one (advance.ts). */
 const advance = once(() => import('./advance'));
 /** This page sent an answer for agent `id`: the pane moves on once it's back at work. */

@@ -129,7 +129,8 @@ export interface InboxView {
 }
 
 /**
- * The ranked roster sorted into sections, keeping the ranking's order within each: `project` for one
+ * The ranked roster sorted into sections, keeping the ranking's order within each, except that in To
+ * review the work whose verdict is ready (shared/brief/row-verdict.ts) comes first: `project` for one
  * project's agents, `query` to search, and `owner` for only the agents that person deployed (Mine).
  */
 export function buildInbox(ranked: readonly Ranked[], opts: { project?: string; query?: string; owner?: string } = {}): InboxView {
@@ -140,6 +141,8 @@ export function buildInbox(ranked: readonly Ranked[], opts: { project?: string; 
     if (opts.query && !matches(r.entry, opts.query)) continue;
     sections[sectionOf(r.att)].push(r);
   }
+  // Ready first, the ranking's order kept within each half (the sort is stable).
+  sections.review.sort((a, b) => Number(!!b.entry.verdict?.ready) - Number(!!a.entry.verdict?.ready));
   const counts = Object.fromEntries(INBOX_SECTIONS.map((s) => [s, sections[s].length])) as Record<InboxSection, number>;
   return { sections, counts };
 }
