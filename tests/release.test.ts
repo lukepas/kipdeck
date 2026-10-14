@@ -163,7 +163,8 @@ test('the Release workflow publishes kipdeck.tgz from main and smoke-tests it on
   assert.match(publish, /if: github\.event_name != 'pull_request' && github\.ref == 'refs\/heads\/main'/);
   assert.match(publish, /permissions:\n\s+contents: write/);
   assert.match(publish, /GH_TOKEN: \$\{\{ github\.token \}\}/);
-  assert.match(publish, /gh release create "\$TAG" release\/kipdeck\.tgz [^\n]*--latest/);
+  assert.match(publish, /gh release create "\$TAG" release\/kipdeck\.tgz [^\n]*--latest="\$latest"/);
+  assert.match(publish, /sort -V/, 'an older commit re-run never becomes the latest');
   assert.match(publish, /releases\/latest\/download\/kipdeck\.tgz/, 'and checks the README address serves it');
   assert.match(wf, /\npermissions:\n\s+contents: read\n/, 'every other job reads only');
   assert.match(job('pack'), /node deploy\/release\/pack\.mjs --version/);

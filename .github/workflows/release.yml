@@ -276,7 +276,15 @@ jobs:
             echo "$TAG is already released"
             exit 0
           fi
-          gh release create "$TAG" release/kipdeck.tgz --target "$GITHUB_SHA" --title "$TAG" --generate-notes --latest
+          # Only a newer version becomes the latest: a re-run of an older commit's workflow would
+          # otherwise move releases/latest/download (the README's address) back to an older package.
+          newest="$(gh release view --json tagName --jq .tagName 2> /dev/null || true)"
+          latest=true
+          if [ -n "$newest" ] && [ "$(printf '%s\n%s\n' "$newest" "$TAG" | sort -V | tail -n 1)" != "$TAG" ]; then
+            echo "$newest is newer than $TAG, so $TAG is released without becoming the latest"
+            latest=false
+          fi
+          gh release create "$TAG" release/kipdeck.tgz --target "$GITHUB_SHA" --title "$TAG" --generate-notes --latest="$latest"
 
       - name: The README's address serves it
         run: |

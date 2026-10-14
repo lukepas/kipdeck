@@ -19,7 +19,7 @@ import { buildSite } from '../site/build.mjs';
 import { serve } from '../site/serve.mjs';
 
 const dir = mkdtempSync(path.join(tmpdir(), 'landing-scenes-'));
-// Built as the page will be once the source is public: the npx github command and the terminal are on it.
+// Built as the page will be once the source is public: the npx release command and the terminal are on it.
 await buildSite({ env: {}, outDir: dir, card: false });
 const { server, url } = await serve(dir, 0);
 

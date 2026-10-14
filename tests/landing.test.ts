@@ -38,7 +38,7 @@ async function built(env: Record<string, string>): Promise<Served> {
   return { dir, url, html: readFileSync(path.join(dir, 'index.html'), 'utf8'), close: () => server.close() };
 }
 
-// The repository is public, so the default build (no settings) links it: the npx github command, the
+// The repository is public, so the default build (no settings) links it: the npx release command, the
 // terminal, the Source link. `closed` is a build for a brand whose repository is private.
 const main = await built({});
 const closed = await built({ KIPDECK_REPO_PUBLIC: '0' });
