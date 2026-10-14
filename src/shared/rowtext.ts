@@ -136,6 +136,7 @@ export function stateWord(att: Pick<Attention, 'level' | 'label' | 'action'>): s
       if (att.action === 'merge') return 'approved';
       if (att.action === 'fix-checks') return 'checks';
       if (att.action === 'hand-back') return 'changes';
+      if (att.action === 'restack') return 'conflicts';
       if (att.action === 'send-home') return 'merged';
       return 'review';
     case 'working':
