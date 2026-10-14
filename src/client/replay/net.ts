@@ -5,9 +5,12 @@
 // are answered from the tape as it stood at that moment, and anything that would change something gets
 // the read-only demo's toast. Every recorded time is moved to now, so the waits read as they did.
 // The few HTTP calls the page makes are answered here too, and there is no service worker.
+// The Deck (bridge.html, at /deck) is built with this socket as well, so the 3D view plays the same
+// round, with the project's city over the mission table; on a phone it goes to the inbox instead.
 import type { ClientMsg, ServerMsg } from '../../shared/protocol';
 import { READ_ONLY_ALLOWS, READ_ONLY_QUIET, READ_ONLY_REFUSAL } from '../../shared/demo';
-import { Follows, answer, shiftTimes, tapePosition, type Tape } from '../../shared/replay';
+import { isDeckPath } from '../../shared/deck';
+import { Follows, REPLAY_ALSO_ANSWERS, answer, isPhone, shiftTimes, tapePosition, type Tape } from '../../shared/replay';
 import type { Profile, Spot } from '../state';
 
 export { loginUrl } from '../net';
@@ -20,6 +23,9 @@ const TICK_MS = 100;
 const TOLD_GAP_MS = 4000;
 
 type Handler = (msg: ServerMsg) => void;
+
+// The Deck on a phone: the inbox is the demo there, before the 3D starts loading.
+if ((isDeckPath(location.pathname) || location.pathname.endsWith('/bridge.html')) && isPhone({ coarse: matchMedia('(pointer: coarse)').matches, width: innerWidth, height: innerHeight })) location.replace('/');
 
 let tape: Promise<Tape> | undefined;
 const loadTape = () => (tape ??= fetch(TAPE_URL, { cache: 'no-cache' }).then((r) => (r.ok ? (r.json() as Promise<Tape>) : Promise.reject(new Error(`tape: ${r.status}`)))));
@@ -56,7 +62,22 @@ export class Net {
     _profile: () => Profile,
     _where: () => Spot | null,
     _lite = false,
-  ) {}
+  ) {
+    // A link into the office's HTTP API (the Rundown window's Download map) has no office behind it
+    // here, so it gets the read-only toast instead of the static host's 404 as a download.
+    document.addEventListener(
+      'click',
+      (e) => {
+        const a = e.target instanceof Element ? e.target.closest('a[href]') : null;
+        if (!(a instanceof HTMLAnchorElement)) return;
+        const url = new URL(a.href, location.href);
+        if (url.origin !== location.origin || !url.pathname.startsWith('/api/')) return;
+        e.preventDefault();
+        this.refuse();
+      },
+      true,
+    );
+  }
 
   onMessage(h: Handler) {
     this.handlers.push(h);
@@ -91,16 +112,21 @@ export class Net {
     const t = this.tape;
     if (!t) return;
     if (msg.t === 'ping') return this.emit({ t: 'pong', at: msg.at, now: Date.now() });
-    if (!READ_ONLY_ALLOWS.has(msg.t)) {
+    if (!READ_ONLY_ALLOWS.has(msg.t) && !REPLAY_ALSO_ANSWERS.has(msg.t)) {
       if (READ_ONLY_QUIET.has(msg.t)) return;
-      const now = performance.now();
-      if (now - this.toldAt < TOLD_GAP_MS) return;
-      this.toldAt = now;
-      return this.emit({ t: 'toast', text: READ_ONLY_REFUSAL, level: 'warn' });
+      return this.refuse();
     }
     this.follows.note(msg);
     const pos = this.position();
     for (const m of answer(t, msg, pos.at)) this.emit(shiftTimes(m, pos.delta, t));
+  }
+
+  /** The read-only demo's toast, at most once every TOLD_GAP_MS. */
+  private refuse() {
+    const now = performance.now();
+    if (now - this.toldAt < TOLD_GAP_MS) return;
+    this.toldAt = now;
+    this.emit({ t: 'toast', text: READ_ONLY_REFUSAL, level: 'warn' });
   }
 
   /** Where on the tape the page is now, and how far its times move. */

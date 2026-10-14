@@ -4,6 +4,11 @@
   "buildCommand": "",
   "installCommand": "",
   "outputDirectory": ".",
+  "redirects": [
+    { "source": "/deck", "missing": [{ "type": "query", "key": "demo" }], "destination": "/deck?demo=1", "permanent": false },
+    { "source": "/bridge", "destination": "/deck?demo=1", "permanent": false }
+  ],
+  "rewrites": [{ "source": "/deck", "destination": "/bridge.html" }],
   "headers": [
     {
       "source": "/assets/(.*)",
