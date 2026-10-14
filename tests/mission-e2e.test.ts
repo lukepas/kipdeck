@@ -393,8 +393,10 @@ test('docked in the 3D office: the deck stays in view, D floats it, a click on t
   assert.ok(seen.card && seen.button, `the selected unit's card is in view beside the docked panel: ${JSON.stringify(seen)}`);
   assert.ok(seen.right <= seen.dock, 'the card ends left of the docked panel');
 
-  // Whoever has the keys after Locate, a click on the panel gives them to it (its tabs undim).
-  await docked.locator('header h2').click();
+  // Whoever has the keys after Locate, a click on the panel gives them to it (its tabs undim). The
+  // panel takes them on pointerdown (ui/mission/dock.ts), dispatched as Locate's click above: right
+  // after Locate's flight the software renderer can hold Playwright's real click past 30 s (Release).
+  await docked.locator('header h2').dispatchEvent('pointerdown');
   assert.equal(await docked.evaluate((m) => m.classList.contains('mc-keys-away')), false, 'a click on the panel takes the keys back');
   // D floats it in the middle, remembered; D again docks it.
   await page.keyboard.press('d');
