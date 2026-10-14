@@ -19,6 +19,8 @@ import { sampleRundown } from './support/rundown-sample.js';
 
 const tmp = mkdtempSync(path.join(tmpdir(), 'rundown-cli-'));
 after(() => rmSync(tmp, { recursive: true, force: true }));
+// Every render updates the index of every project: here, never the real ~/.claude/rundown/.
+process.env.RUNDOWN_HOME = path.join(tmp, 'rundown-home');
 
 /** Runs main() with the console caught. */
 async function cli(argv: string[]): Promise<{ code: number; out: string; err: string }> {
@@ -75,11 +77,11 @@ test('the style: the saved file, then --theme and --accent over it; an unknown a
   assert.match(page, /<html lang="en" data-theme="light">/);
   assert.match(page, /--accent:#60a5fa/);
   const plain = renderPage(r, new Date('2026-10-07T12:00:00Z'));
-  assert.match(plain, /<html lang="en">/);
+  assert.match(plain, /<html lang="en" data-theme="dark">/);
   assert.doesNotMatch(plain, /--accent:#60a5fa/);
 });
 
-test('the page: stuck parts and what they wait on, whole, over the map; no "1 lines"', () => {
+test('the page: stuck parts and what they wait on, whole, under Needs you; no "1 lines"', () => {
   const r = sampleRundown({
     judgement: {
       parts: [
@@ -91,8 +93,9 @@ test('the page: stuck parts and what they wait on, whole, over the map; no "1 li
   const stuck = r.parts.find((p) => p.status === 'stuck');
   assert.ok(stuck?.waitingOn, 'the sample has a stuck part');
   const page = renderPage(r, new Date('2026-10-07T12:00:00Z'));
-  assert.match(page, /class="needs"/);
-  assert.ok(page.includes(`waiting on ${stuck.waitingOn}`));
+  assert.match(page, /<section id="needs"/);
+  assert.match(page, /class="stuck-row" id="stuck-server"/);
+  assert.ok(page.includes(`waiting on: ${stuck.waitingOn}`));
   const one = { ...r, parts: r.parts.map((p, i) => (i === 0 ? { ...p, metrics: { ...p.metrics, lines: 1 } } : p)) };
   assert.doesNotMatch(renderPage(one), /\b1 lines\b/);
 });
@@ -131,7 +134,9 @@ test('a repository with no commits yet: its branch, remote and untracked files a
   // And the script maps it: the page under both names.
   const r = await cli(['quick', '--no-gh', '--root', repo]);
   assert.equal(r.code, 0, r.err);
-  assert.match(r.out, /Rundown: .*rundown\.html/);
+  assert.match(r.out, /^Rundown · .+ · .*rundown\.html$/m);
+  assert.match(r.out, /^Index  .*rundown-home\/index\.html · 1 project$/m);
+  assert.ok(existsSync(path.join(tmp, 'rundown-home', 'index.html')), 'the index of every project');
   for (const f of ['rundown.html', 'map.html']) assert.ok(existsSync(path.join(repo, '.rundown', f)), f);
   assert.equal(readFileSync(path.join(repo, '.rundown', 'rundown.html'), 'utf8'), readFileSync(path.join(repo, '.rundown', 'map.html'), 'utf8'));
 });

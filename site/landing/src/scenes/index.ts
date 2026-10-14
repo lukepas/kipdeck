@@ -22,6 +22,15 @@ export const SCENES: Record<string, Loader> = {
   end: () => import('./end').then((m) => m.mountEnd),
 };
 
+/**
+ * The scenes whose mount is a costly frame of its own, so they are mounted while the browser is idle
+ * after the opening rather than as their section comes near in the middle of a scroll. The loop splits
+ * its question into some 180 letters and measures them: on a slow phone that was a task over 50 ms. A
+ * scene goes here only when mounting it early changes nothing the visitor sees: its motion waits for
+ * its own arrival (drive, onArrive), not for the mount.
+ */
+export const EARLY: ReadonlySet<string> = new Set(['loop']);
+
 /** Fetches every scene's chunk, one per idle period, in page order. */
 export function preloadScenes(order: string[]) {
   const idle = (fn: () => void) =>

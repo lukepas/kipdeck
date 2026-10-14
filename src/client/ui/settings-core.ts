@@ -15,6 +15,7 @@ import { setting, type SettingsPaneDef } from './settings-frame';
 import { gateSettings } from './gate-settings';
 import { spendSettings } from './settings-spend';
 import { pushSetting } from './push-settings';
+import { pushApproveSetting } from './push-approve-setting';
 
 export type CorePane = 'account' | 'agents' | 'notify';
 
@@ -304,7 +305,7 @@ export function corePanes(d: CoreDeps): { panes: SettingsPaneDef<CorePane>[]; of
       icon: 'bell',
       label: 'Notifications',
       blurb: 'Hear about an agent that needs you, or has something to review, while you are somewhere else.',
-      body: [pushSetting(), setting('Desktop notifications', 'you', notifyRow, notifyNote), setting('Team channel (Slack or Discord)', 'office', hookRow, hookActions, hookStatus), ...(extra.notify ?? [])],
+      body: [pushSetting(), pushApproveSetting(), setting('Desktop notifications', 'you', notifyRow, notifyNote), setting('Team channel (Slack or Discord)', 'office', hookRow, hookActions, hookStatus), ...(extra.notify ?? [])],
     },
   ];
   return { panes, off: () => offs.forEach((off) => off()) };

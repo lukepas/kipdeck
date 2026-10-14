@@ -3,9 +3,9 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import base from './vite.config.ts';
 
-// The replay demo (docs/demo.md#the-replay-demo): the home page's own build with the recorded socket
-// (src/client/replay/net.ts) in the live one's place, and the tape beside it, into dist/replay/: static
-// files for any host, with nothing live behind them. deploy/replay/vercel.json goes with it.
+// The replay demo (docs/demo.md#the-replay-demo): the home page's and the Deck's own builds with the
+// recorded socket (src/client/replay/net.ts) in the live one's place, and the tape beside it, into
+// dist/replay/: static files for any host, with nothing live behind them. deploy/replay/vercel.json goes with it.
 const NET = resolve(import.meta.dirname, 'src/client/net.ts');
 const REPLAY_NET = resolve(import.meta.dirname, 'src/client/replay/net.ts');
 
@@ -32,6 +32,6 @@ export default defineConfig({
   build: {
     ...base.build,
     outDir: resolve(import.meta.dirname, 'dist/replay'),
-    rollupOptions: { ...base.build?.rollupOptions, input: { home: resolve(import.meta.dirname, 'src/client/index.html') } },
+    rollupOptions: { ...base.build?.rollupOptions, input: { home: resolve(import.meta.dirname, 'src/client/index.html'), bridge: resolve(import.meta.dirname, 'src/client/bridge.html') } },
   },
 });
