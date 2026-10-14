@@ -106,6 +106,25 @@ TRIGGER:-PT5H
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
+UID:gitlab-register@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261014
+DTEND;VALUE=DATE:20261015
+SUMMARY:GitLab Life After Code: register on Devpost and start contributor o
+ nboarding (about 24 business hours)
+DESCRIPTION:Kit: launch/gitlab-life-after-code.md\nhttps://gitlab-transcend
+ .devpost.com/
+URL:https://gitlab-transcend.devpost.com/
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:GitLab Life After Code: register on Devpost and start contribut
+ or onboarding (about 24 business hours)
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
 UID:solana-grant@agent-office-launch
 DTSTAMP:20260930T000000Z
 DTSTART;VALUE=DATE:20261014
@@ -125,6 +144,59 @@ TRIGGER:PT9H
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
+UID:amazon-go-decision@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261015
+DTEND;VALUE=DATE:20261016
+SUMMARY:Amazon Build Ship Shape: go or no-go on the Alexa+ build (needs 6 f
+ ree days)
+DESCRIPTION:Kit: launch/amazon-build-ship-shape.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Amazon Build Ship Shape: go or no-go on the Alexa+ build (needs
+  6 free days)
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:nortal-permission@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261015
+DTEND;VALUE=DATE:20261016
+SUMMARY:Ask Nortal for written permission (outside work\, IP\, prizes and g
+ rants): blocks every kit
+DESCRIPTION:Kit: launch/PROPOSALS.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Ask Nortal for written permission (outside work\, IP\, prizes a
+ nd grants): blocks every kit
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:superteam-email@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261015
+DTEND;VALUE=DATE:20261016
+SUMMARY:Superteam Agentic Engineering: email support@superteam.fun asking w
+ hen applications reopen
+DESCRIPTION:Kit: launch/superteam-agentic-engineering.md\nhttps://superteam
+ .fun/earn/grants/agentic-engineering/
+URL:https://superteam.fun/earn/grants/agentic-engineering/
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Superteam Agentic Engineering: email support@superteam.fun aski
+ ng when applications reopen
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
 UID:vultr-signup@agent-office-launch
 DTSTAMP:20260930T000000Z
 DTSTART;VALUE=DATE:20261015
@@ -140,6 +212,44 @@ BEGIN:VALARM
 ACTION:DISPLAY
 DESCRIPTION:Vultr Agent Rush: sign up on lablab.ai\, join the Discord\, ask
   about the on-site day in Salt Lake City
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:openai-codex-apply@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261016
+DTEND;VALUE=DATE:20261017
+SUMMARY:OpenAI Codex for Open Source: apply (rolling) within 2 days of Nort
+ al's written OK
+DESCRIPTION:Kit: launch/openai-codex-for-oss.md\nhttps://openai.com/form/co
+ dex-for-oss/
+URL:https://openai.com/form/codex-for-oss/
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:OpenAI Codex for Open Source: apply (rolling) within 2 days of 
+ Nortal's written OK
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:stellar-interest@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261016
+DTEND;VALUE=DATE:20261017
+SUMMARY:Stellar SCF #46: file the interest form on the SCF dashboard (invit
+ es take about 2 weeks)
+DESCRIPTION:Kit: launch/stellar-scf-46.md\nhttps://communityfund.stellar.or
+ g/dashboard
+URL:https://communityfund.stellar.org/dashboard
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Stellar SCF #46: file the interest form on the SCF dashboard (i
+ nvites take about 2 weeks)
 TRIGGER:PT9H
 END:VALARM
 END:VEVENT
@@ -176,6 +286,21 @@ TRIGGER:PT9H
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
+UID:amazon-submit-target@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261022
+DTEND;VALUE=DATE:20261023
+SUMMARY:Amazon Build Ship Shape: submit a day early
+DESCRIPTION:Kit: launch/amazon-build-ship-shape.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Amazon Build Ship Shape: submit a day early
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
 UID:amazon-deadline@agent-office-launch
 DTSTAMP:20260930T000000Z
 DTSTART:20261023T180000Z
@@ -207,6 +332,23 @@ TRIGGER:-PT5H
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
+UID:gitlab-submit-target@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261026
+DTEND;VALUE=DATE:20261027
+SUMMARY:GitLab Life After Code: submit by 20:00 Vilnius\, then edit only un
+ til 12:00 on the 27th
+DESCRIPTION:Kit: launch/gitlab-life-after-code.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:GitLab Life After Code: submit by 20:00 Vilnius\, then edit onl
+ y until 12:00 on the 27th
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
 UID:nebius-video@agent-office-launch
 DTSTAMP:20260930T000000Z
 DTSTART;VALUE=DATE:20261027
@@ -224,19 +366,49 @@ TRIGGER:PT9H
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:base-nomination@agent-office-launch
+UID:gitlab-deadline@agent-office-launch
 DTSTAMP:20260930T000000Z
-DTSTART;VALUE=DATE:20261028
-DTEND;VALUE=DATE:20261029
-SUMMARY:Base Builder Grants: nominate the project once x402 payments are li
- ve on Base mainnet
-DESCRIPTION:Kit: launch/base-builder-grants.md
+DTSTART:20261027T120000Z
+DTEND:20261027T130000Z
+SUMMARY:DEADLINE: GitLab Life After Code (GitLab Transcend): submission clo
+ ses
+DESCRIPTION:Closes 13:00 UTC (2026-10-27 13:00 UTC\, 2026-10-27 15:00 Europ
+ e/Vilnius).\nKit: launch/gitlab-life-after-code.md\nhttps://gitlab-transce
+ nd.devpost.com/
+URL:https://gitlab-transcend.devpost.com/
+CATEGORIES:DEADLINE
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: GitLab Life After Code (GitLab Transcend): submission
+  closes
+TRIGGER:-P7D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: GitLab Life After Code (GitLab Transcend): submission
+  closes
+TRIGGER:-P2D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: GitLab Life After Code (GitLab Transcend): submission
+  closes
+TRIGGER:-PT5H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:nebius-submit-target@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261029
+DTEND;VALUE=DATE:20261030
+SUMMARY:Nebius x NVIDIA: submit a day early
+DESCRIPTION:Kit: launch/nebius-nvidia.md
 CATEGORIES:TASK
 TRANSP:TRANSPARENT
 BEGIN:VALARM
 ACTION:DISPLAY
-DESCRIPTION:Base Builder Grants: nominate the project once x402 payments ar
- e live on Base mainnet
+DESCRIPTION:Nebius x NVIDIA: submit a day early
 TRIGGER:PT9H
 END:VALARM
 END:VEVENT
@@ -272,6 +444,42 @@ TRIGGER:-PT5H
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
+UID:base-nomination@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261102
+DTEND;VALUE=DATE:20261103
+SUMMARY:Base Builder Grants: revisit at 10:00 Vilnius\; nominate only once 
+ every mainnet gate in the kit is green
+DESCRIPTION:Kit: launch/chain/base-builder.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Base Builder Grants: revisit at 10:00 Vilnius\; nominate only o
+ nce every mainnet gate in the kit is green
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:vultr-recheck@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261102
+DTEND;VALUE=DATE:20261103
+SUMMARY:Vultr Agent Rush: re-check the event page for the cut-off time and 
+ update vultr-final
+DESCRIPTION:Kit: launch/vultr-agent-rush.md\nhttps://lablab.ai/ai-hackathon
+ s/vultr-hackathon
+URL:https://lablab.ai/ai-hackathons/vultr-hackathon
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Vultr Agent Rush: re-check the event page for the cut-off time 
+ and update vultr-final
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
 UID:vultr-build@agent-office-launch
 DTSTAMP:20260930T000000Z
 DTSTART;VALUE=DATE:20261103
@@ -292,12 +500,60 @@ TRIGGER:-P1D
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
+UID:stellar-submit-target@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261107
+DTEND;VALUE=DATE:20261108
+SUMMARY:Stellar SCF #46: Build form in by 18:00 Vilnius
+DESCRIPTION:Kit: launch/stellar-scf-46.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Stellar SCF #46: Build form in by 18:00 Vilnius
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:stellar-deadline@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261108
+DTEND;VALUE=DATE:20261109
+SUMMARY:DEADLINE: Stellar SCF #46 Build Award: submissions close (no time o
+ r zone published) [unverified]
+DESCRIPTION:Not confirmed by the organizer yet: check the official page bef
+ ore relying on it.\nKit: launch/stellar-scf-46.md\nhttps://communityfund.s
+ tellar.org/awards
+URL:https://communityfund.stellar.org/awards
+CATEGORIES:DEADLINE
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Stellar SCF #46 Build Award: submissions close (no ti
+ me or zone published) [unverified]
+TRIGGER:-P7D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Stellar SCF #46 Build Award: submissions close (no ti
+ me or zone published) [unverified]
+TRIGGER:-P2D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Stellar SCF #46 Build Award: submissions close (no ti
+ me or zone published) [unverified]
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
 UID:vultr-final@agent-office-launch
 DTSTAMP:20260930T000000Z
 DTSTART;VALUE=DATE:20261108
 DTEND;VALUE=DATE:20261109
-SUMMARY:DEADLINE: Vultr Agent Rush: submission and on-site day in Salt Lake
-  City (exact cut-off time not published yet) [unverified]
+SUMMARY:DEADLINE: Vultr Agent Rush: submission cut-off (time not published\
+ ; our target is 18:00 Vilnius) and on-site day in Salt Lake City [unverifi
+ ed]
 DESCRIPTION:Not confirmed by the organizer yet: check the official page bef
  ore relying on it.\nKit: launch/vultr-agent-rush.md\nhttps://lablab.ai/ai-
  hackathons/vultr-hackathon
@@ -306,20 +562,38 @@ CATEGORIES:DEADLINE
 TRANSP:TRANSPARENT
 BEGIN:VALARM
 ACTION:DISPLAY
-DESCRIPTION:DEADLINE: Vultr Agent Rush: submission and on-site day in Salt 
- Lake City (exact cut-off time not published yet) [unverified]
+DESCRIPTION:DEADLINE: Vultr Agent Rush: submission cut-off (time not publis
+ hed\; our target is 18:00 Vilnius) and on-site day in Salt Lake City [unve
+ rified]
 TRIGGER:-P7D
 END:VALARM
 BEGIN:VALARM
 ACTION:DISPLAY
-DESCRIPTION:DEADLINE: Vultr Agent Rush: submission and on-site day in Salt 
- Lake City (exact cut-off time not published yet) [unverified]
+DESCRIPTION:DEADLINE: Vultr Agent Rush: submission cut-off (time not publis
+ hed\; our target is 18:00 Vilnius) and on-site day in Salt Lake City [unve
+ rified]
 TRIGGER:-P2D
 END:VALARM
 BEGIN:VALARM
 ACTION:DISPLAY
-DESCRIPTION:DEADLINE: Vultr Agent Rush: submission and on-site day in Salt 
- Lake City (exact cut-off time not published yet) [unverified]
+DESCRIPTION:DEADLINE: Vultr Agent Rush: submission cut-off (time not publis
+ hed\; our target is 18:00 Vilnius) and on-site day in Salt Lake City [unve
+ rified]
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:paypal-submit-target@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261111
+DTEND;VALUE=DATE:20261112
+SUMMARY:PayPal AI Hackathon: submit a day early
+DESCRIPTION:Kit: launch/paypal-ai-hackathon.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:PayPal AI Hackathon: submit a day early
 TRIGGER:PT9H
 END:VALARM
 END:VEVENT
@@ -375,6 +649,44 @@ DESCRIPTION:Meta VR Start: record real headset footage for the demo video (
  no AI-generated video)
 TRIGGER:PT9H
 END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:paypal-deadline@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART:20261112T190000Z
+DTEND:20261112T200000Z
+SUMMARY:DEADLINE: PayPal AI Hackathon: submission closes
+DESCRIPTION:Closes 12:00 PT (PST\, UTC-8) (2026-11-12 20:00 UTC\, 2026-11-1
+ 2 22:00 Europe/Vilnius).\nKit: launch/paypal-ai-hackathon.md\nhttps://payp
+ alaihackathon.devpost.com/
+URL:https://paypalaihackathon.devpost.com/
+CATEGORIES:DEADLINE
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: PayPal AI Hackathon: submission closes
+TRIGGER:-P7D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: PayPal AI Hackathon: submission closes
+TRIGGER:-P2D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: PayPal AI Hackathon: submission closes
+TRIGGER:-PT5H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:gitlab-results@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261116
+DTEND;VALUE=DATE:20261117
+SUMMARY:Results: GitLab Life After Code: winners announced (on or around)
+DESCRIPTION:Kit: launch/gitlab-life-after-code.md
+CATEGORIES:RESULT
+TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:meta-deadline@agent-office-launch
@@ -475,6 +787,16 @@ DTSTART;VALUE=DATE:20261211
 DTEND;VALUE=DATE:20261212
 SUMMARY:Results: Meta VR Start Developer Competition: winners announced
 DESCRIPTION:Kit: launch/meta-vr-start.md
+CATEGORIES:RESULT
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:paypal-results@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261221
+DTEND;VALUE=DATE:20261222
+SUMMARY:Results: PayPal AI Hackathon: winners announced (on or around)
+DESCRIPTION:Kit: launch/paypal-ai-hackathon.md
 CATEGORIES:RESULT
 TRANSP:TRANSPARENT
 END:VEVENT

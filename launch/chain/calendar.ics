@@ -359,38 +359,6 @@ TRIGGER:PT9H
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:arbitrum-dubai-register@agent-office-chain-launch
-DTSTAMP:20261003T000000Z
-DTSTART;VALUE=DATE:20261030
-DTEND;VALUE=DATE:20261031
-SUMMARY:DEADLINE: Arbitrum Open House Dubai: registration countdown ends (p
- age showed 27 days left on 2026-10-03) [unverified]
-DESCRIPTION:Not confirmed by the organizer yet: check the official page bef
- ore relying on it.\nKit: launch/chain/arbitrum-dubai.md\nhttps://arbitrum-
- dubai.hackquest.io/
-URL:https://arbitrum-dubai.hackquest.io/
-CATEGORIES:DEADLINE
-TRANSP:TRANSPARENT
-BEGIN:VALARM
-ACTION:DISPLAY
-DESCRIPTION:DEADLINE: Arbitrum Open House Dubai: registration countdown end
- s (page showed 27 days left on 2026-10-03) [unverified]
-TRIGGER:-P7D
-END:VALARM
-BEGIN:VALARM
-ACTION:DISPLAY
-DESCRIPTION:DEADLINE: Arbitrum Open House Dubai: registration countdown end
- s (page showed 27 days left on 2026-10-03) [unverified]
-TRIGGER:-P2D
-END:VALARM
-BEGIN:VALARM
-ACTION:DISPLAY
-DESCRIPTION:DEADLINE: Arbitrum Open House Dubai: registration countdown end
- s (page showed 27 days left on 2026-10-03) [unverified]
-TRIGGER:PT9H
-END:VALARM
-END:VEVENT
-BEGIN:VEVENT
 UID:leaderboard-friday-3@agent-office-chain-launch
 DTSTAMP:20261003T000000Z
 DTSTART;VALUE=DATE:20261030
@@ -406,23 +374,25 @@ TRIGGER:PT9H
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:arbitrum-dubai-buildathon@agent-office-chain-launch
+UID:arbitrum-dubai-register@agent-office-chain-launch
 DTSTAMP:20261003T000000Z
-DTSTART;VALUE=DATE:20261031
-DTEND;VALUE=DATE:20261122
-SUMMARY:Arbitrum Open House Dubai: online buildathon (three weeks) [unverif
- ied]
-DESCRIPTION:Not confirmed by the organizer yet: check the official page bef
- ore relying on it.\nKit: launch/chain/arbitrum-dubai.md\nhttps://arbitrum-
- dubai.hackquest.io/
-URL:https://arbitrum-dubai.hackquest.io/
-CATEGORIES:EVENT
+DTSTART:20261031T150100Z
+DTEND:20261031T160100Z
+SUMMARY:Arbitrum Open House Dubai: registration opens on HackQuest (18:01 V
+ ilnius)\; register once Nortal permission is in
+DESCRIPTION:Closes 16:01 UTC: 2026-10-31 09:01 PT\, 2026-10-31 18:01 Europe
+ /Vilnius\, 2026-10-31 16:01 UTC.\nKit: launch/chain/arbitrum-dubai.md\nhtt
+ ps://www.hackquest.io/hackathons/Arbitrum-Open-House-Dubai-Online-Buildath
+ on
+URL:https://www.hackquest.io/hackathons/Arbitrum-Open-House-Dubai-Online-Bu
+ ildathon
+CATEGORIES:TASK
 TRANSP:TRANSPARENT
 BEGIN:VALARM
 ACTION:DISPLAY
-DESCRIPTION:Arbitrum Open House Dubai: online buildathon (three weeks) [unv
- erified]
-TRIGGER:-P1D
+DESCRIPTION:Arbitrum Open House Dubai: registration opens on HackQuest (18:
+ 01 Vilnius)\; register once Nortal permission is in
+TRIGGER:-PT1H
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
@@ -430,15 +400,52 @@ UID:base-builder-revisit@agent-office-chain-launch
 DTSTAMP:20261003T000000Z
 DTSTART;VALUE=DATE:20261102
 DTEND;VALUE=DATE:20261103
-SUMMARY:Base Builder Grants: revisit only after a mainnet decision\; do not
-  nominate testnet work
+SUMMARY:Base Builder Grants: revisit at 10:00 Vilnius\; nominate only once 
+ every mainnet gate in the kit is green\, never testnet work
 DESCRIPTION:Kit: launch/chain/base-builder.md
 CATEGORIES:TASK
 TRANSP:TRANSPARENT
 BEGIN:VALARM
 ACTION:DISPLAY
-DESCRIPTION:Base Builder Grants: revisit only after a mainnet decision\; do
-  not nominate testnet work
+DESCRIPTION:Base Builder Grants: revisit at 10:00 Vilnius\; nominate only o
+ nce every mainnet gate in the kit is green\, never testnet work
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:arbitrum-dubai-buildathon@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261116
+DTEND;VALUE=DATE:20261207
+SUMMARY:Arbitrum Open House Dubai: submission window (new work must land in
+  it)
+DESCRIPTION:Kit: launch/chain/arbitrum-dubai.md\nhttps://www.hackquest.io/h
+ ackathons/Arbitrum-Open-House-Dubai-Online-Buildathon
+URL:https://www.hackquest.io/hackathons/Arbitrum-Open-House-Dubai-Online-Bu
+ ildathon
+CATEGORIES:EVENT
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Arbitrum Open House Dubai: submission window (new work must lan
+ d in it)
+TRIGGER:-P1D
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:arbitrum-dubai-submit-target@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261205
+DTEND;VALUE=DATE:20261206
+SUMMARY:Arbitrum Open House Dubai: submit a day early (registration also cl
+ oses 2026-12-05 16:01 UTC)
+DESCRIPTION:Kit: launch/chain/arbitrum-dubai.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Arbitrum Open House Dubai: submit a day early (registration als
+ o closes 2026-12-05 16:01 UTC)
 TRIGGER:PT9H
 END:VALARM
 END:VEVENT
@@ -452,6 +459,53 @@ SUMMARY:Results: Colosseum Crypto World's Fair winners announced (by this d
 DESCRIPTION:Kit: launch/chain/colosseum-worlds-fair.md\nhttps://colosseum.c
  om/worldsfair
 URL:https://colosseum.com/worldsfair
+CATEGORIES:RESULT
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:arbitrum-dubai-deadline@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART:20261206T150100Z
+DTEND:20261206T160100Z
+SUMMARY:DEADLINE: Arbitrum Open House Dubai: submission closes (18:01 Vilni
+ us)
+DESCRIPTION:Closes 16:01 UTC: 2026-12-06 08:01 PT\, 2026-12-06 18:01 Europe
+ /Vilnius\, 2026-12-06 16:01 UTC.\nKit: launch/chain/arbitrum-dubai.md\nhtt
+ ps://www.hackquest.io/hackathons/Arbitrum-Open-House-Dubai-Online-Buildath
+ on
+URL:https://www.hackquest.io/hackathons/Arbitrum-Open-House-Dubai-Online-Bu
+ ildathon
+CATEGORIES:DEADLINE
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Arbitrum Open House Dubai: submission closes (18:01 V
+ ilnius)
+TRIGGER:-P7D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Arbitrum Open House Dubai: submission closes (18:01 V
+ ilnius)
+TRIGGER:-P2D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Arbitrum Open House Dubai: submission closes (18:01 V
+ ilnius)
+TRIGGER:-PT5H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:arbitrum-dubai-results@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261213
+DTEND;VALUE=DATE:20261214
+SUMMARY:Results: Arbitrum Open House Dubai: rewards announced
+DESCRIPTION:Kit: launch/chain/arbitrum-dubai.md\nhttps://www.hackquest.io/h
+ ackathons/Arbitrum-Open-House-Dubai-Online-Buildathon
+URL:https://www.hackquest.io/hackathons/Arbitrum-Open-House-Dubai-Online-Bu
+ ildathon
 CATEGORIES:RESULT
 TRANSP:TRANSPARENT
 END:VEVENT
