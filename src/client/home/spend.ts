@@ -104,6 +104,8 @@ function paint() {
   button.classList.toggle('hidden', !liveAgents().length);
   button.classList.toggle('has-paused', p > 0);
   button.title = p ? `${plural(p)} paused. Pause, resume or stop agents` : 'Pause or stop every agent';
+  // Its name when the words are hidden, and the paused count a screen reader would otherwise lose.
+  button.setAttribute('aria-label', p ? `Pause all, ${plural(p)} paused` : 'Pause all');
 }
 
 /** Puts Pause all in the top bar, before Deploy agent, and keeps it current. */
