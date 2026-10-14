@@ -2,7 +2,7 @@
 // the card's title, from Claude Code's PermissionRequest payload.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { alwaysRules, approvalTitle, approvalView, claudeDecision, DENIED_DEFAULT, resolvePath, riskTags, sameCall } from '../src/shared/approval.js';
+import { alwaysRules, approvalTitle, approvalView, callKey, claudeDecision, DENIED_DEFAULT, resolvePath, riskTags, sameCall } from '../src/shared/approval.js';
 import { looksLikePermission } from '../src/shared/question.js';
 
 const ROOT = '/work/repo';
@@ -116,7 +116,7 @@ test('a payload becomes a card: tool, command, folder, tags and the always rule'
     { id: 'r1', workerId: 'w1', floor: 'f1', at: 5 },
   );
   assert.ok(made);
-  assert.deepEqual(made.view, { id: 'r1', title: 'Run rm -rf dist', workerId: 'w1', floor: 'f1', tool: 'Bash', command: 'rm -rf dist', paths: [], description: 'Clean the build', cwd: ROOT, risks: ['destructive'], at: 5 });
+  assert.deepEqual(made.view, { id: 'r1', title: 'Run rm -rf dist', workerId: 'w1', floor: 'f1', tool: 'Bash', command: 'rm -rf dist', paths: [], description: 'Clean the build', cwd: ROOT, risks: ['destructive'], call: callKey({ tool_name: 'Bash', tool_input: { command: 'rm -rf dist', description: 'Clean the build' } }), at: 5 });
   assert.equal(
     approvalView({ tool_name: 'Bash', tool_input: { command: 'npm test' }, cwd: ROOT }, { id: 'r2', workerId: 'w1', floor: 'f1', at: 6 })?.view.always,
     'Bash(npm test:*)',

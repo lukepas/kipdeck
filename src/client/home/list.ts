@@ -26,6 +26,7 @@ import { home } from './state';
 import { proposalRows, proposalWaits } from './proposals';
 import { spendUi } from './spend-slot';
 import { workingAge, workingFacts, workingSpoken } from './doing';
+import { verdictStatus } from './verdict-row';
 
 export interface ListDeps {
   /** A row's primary button. */
@@ -142,7 +143,9 @@ function row(r: Ranked, section: InboxSection, deps: ListDeps, now: number): HTM
   const provider = PROVIDER_META[e.provider ?? 'claude']?.label ?? 'Agent';
   // Working: what it's doing right now (workingStatus). To review: what it changed. Otherwise why it's
   // here, in the ranking's words.
-  const status = ask ? ask.status : section === 'working' ? workingStatus(r, title) : (section === 'review' && changeSummary(e.work)) || rowStatus(r.att, title);
+  // In To review, its verdict first when the office has one (verdict-row.ts).
+  const verdict = !ask && section === 'review' ? verdictStatus(e) : undefined;
+  const status = ask ? ask.status : section === 'working' ? workingStatus(r, title) : verdict?.el ?? ((section === 'review' && changeSummary(e.work)) || rowStatus(r.att, title));
   const selected = home.selected === e.id;
   const where = rowWhere(e);
   const owner = ownerLabel(e);
@@ -153,7 +156,7 @@ function row(r: Ranked, section: InboxSection, deps: ListDeps, now: number): HTM
   const away = held || inFlight(e.id);
   const style = waits && !away ? `--wait:${waitShare(r.att.since, now).toFixed(3)}` : '';
   const working = section === 'working' && !r.att.snoozed;
-  const spoken = [title, provider, LEVEL_LABEL[r.att.level], waits && !away ? `${AGE_PREFIX[section]} ${waitWords(now - r.att.since)}` : '', working ? workingSpoken(e, now) : '', owner ? `deployed by ${e.createdBy}` : ''].filter(Boolean).join(', ');
+  const spoken = [title, provider, LEVEL_LABEL[r.att.level], verdict?.spoken ?? '', waits && !away ? `${AGE_PREFIX[section]} ${waitWords(now - r.att.since)}` : '', working ? workingSpoken(e, now) : '', owner ? `deployed by ${e.createdBy}` : ''].filter(Boolean).join(', ');
   return h(
     'li.row',
     { class: `l-${r.att.level} s-${section}${ask ? ' approval' : ''}${selected ? ' selected' : ''}${r.att.snoozed ? ' snoozed' : ''}${held ? ' holding' : ''}`, 'data-id': e.id, 'data-section': section, style: style || undefined },
