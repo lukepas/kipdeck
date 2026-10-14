@@ -173,6 +173,8 @@ test('the Release workflow publishes kipdeck.tgz from main and smoke-tests it on
   assert.match(job('smoke-windows'), /runs-on: windows-latest/);
   assert.match(job('smoke-windows'), /\.\/install\.ps1/);
   // Every test runs somewhere: the landing page's in a job of its own, the rest in the gate.
-  assert.match(job('test'), /grep -v '\^tests\/landing'/);
-  assert.match(job('landing'), /--test tests\/landing\*\.test\.ts/);
+  for (const g of ['main', 'perf']) {
+    assert.match(job('test'), new RegExp(`run: npm run test:${g} -- --skip=tests/landing\n`));
+    assert.match(job('landing'), new RegExp(`run: npm run test:${g} -- --only=tests/landing\n`));
+  }
 });

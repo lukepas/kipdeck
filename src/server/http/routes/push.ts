@@ -20,13 +20,13 @@ const appFile = (name: string) => (ctx: Ctx, { res }: RouteRequest) => {
 };
 
 /** Whose devices: the account's, else the name a page goes by on the shared password. */
-function who(session: Session, name: unknown): { person: string; name: string } {
+export function who(session: Session, name: unknown): { person: string; name: string } {
   const n = session.account?.name ?? (typeof name === 'string' && name.trim() ? name.trim().slice(0, 60) : 'someone');
   return { person: personOf(session.account?.id, n), name: n };
 }
 
 /** A small JSON body from one of the office's own pages (or its service worker); undefined when it isn't. */
-async function body(ctx: Ctx, req: http.IncomingMessage, res: http.ServerResponse): Promise<Record<string, unknown> | undefined> {
+export async function body(ctx: Ctx, req: http.IncomingMessage, res: http.ServerResponse): Promise<Record<string, unknown> | undefined> {
   if (!ctx.hosts.postOk(req)) return void send(res, 403, { error: 'Forbidden' });
   try {
     const v = JSON.parse(await readBody(req, 8192)) as unknown;

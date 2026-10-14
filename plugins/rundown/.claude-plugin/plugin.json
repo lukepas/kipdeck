@@ -1,0 +1,10 @@
+{
+  "name": "rundown",
+  "version": "1.4.0",
+  "description": "A project map of any git repo (/rundown): the milestone road, the next step, what needs you and the parts, as one offline page in .rundown/, plus a short brief from it at the start of every session.",
+  "author": { "name": "Kipdeck", "url": "https://github.com/zbagdzevicius/kipdeck" },
+  "homepage": "https://github.com/zbagdzevicius/kipdeck/blob/main/docs/rundown.md",
+  "repository": "https://github.com/zbagdzevicius/kipdeck",
+  "license": "MIT",
+  "keywords": ["project-map", "rundown", "status", "milestones", "session-start"]
+}

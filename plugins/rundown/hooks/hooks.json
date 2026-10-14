@@ -1,0 +1,17 @@
+{
+  "description": "Rundown: at the start of a session, a short brief from the project's .rundown/ map when it is under a week old (at most 1.5 KB; nothing otherwise).",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/skills/rundown/scripts/rundown.mjs\" session-start",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -5,6 +5,7 @@
 // shared/brief/verdict.ts. Its view (view.ts, with the line comments in the diff, comments.ts) loads
 // the first time a brief is shown; the comments themselves (store.ts) go with Send back.
 
+import { workKey } from '../../../shared/brief/row-verdict';
 import type { ReviewBrief, RosterEntry, ServerMsg } from '../../../shared/protocol';
 import type { Net } from '../../net';
 import { h } from '../../ui/dom';
@@ -40,9 +41,6 @@ function loadView() {
   });
 }
 
-/** Its work as of now: a new key means the brief may say something new. */
-const workKey = (e: RosterEntry) => [e.status, e.waitingSince ?? '', e.work?.files ?? '', e.work?.additions ?? '', e.work?.deletions ?? '', e.work?.ahead ?? ''].join('|');
-
 /** Follows the office's briefs; `paneBody` is where the diff is drawn, for line comments. */
 export function installBrief(n: Net, paneBody: HTMLElement) {
   net = n;
@@ -67,7 +65,7 @@ export function reviewBrief(e: RosterEntry): BriefView {
   if (!view) loadView();
   if (!b || !view) return { el: h('section.rv-brief.loading', { 'aria-label': 'Review brief' }, h('p.rb-dim', {}, 'Reading its brief...')), ready: false };
   // Drawn again only when what it says changes, so an open "Told since" or More stays open.
-  const drawKey = `${e.id}|${b.at}|${e.pr?.state}|${e.pr?.checks}|${commentsOf(e.id).length}`;
+  const drawKey = `${e.id}|${b.at}|${e.pr?.state}|${e.pr?.checks}|${commentsOf(e.id).length}|${JSON.stringify([e.land, e.overlap])}`;
   if (drawn?.key !== drawKey) drawn = { key: drawKey, view: view.renderBrief(e, b) };
   return drawn.view;
 }

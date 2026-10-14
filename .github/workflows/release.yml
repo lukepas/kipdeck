@@ -11,10 +11,11 @@ name: Release
 # and Windows, but publish nothing.
 #
 # The jobs:
-# - test: typecheck and every test but the landing page's, the gate for publishing;
-# - landing: the landing page's tests (tests/landing*.test.ts). The page is not in the package and
-#   ships to Vercel on its own, so its browser timing budgets fail this workflow without holding
-#   back the app's release;
+# - test: typecheck and every test but the landing page's (npm run test:main, then test:perf), the
+#   gate for publishing;
+# - landing: the landing page's tests (tests/landing*.test.ts), in the same two groups. The page is
+#   not in the package and ships to Vercel on its own, so its browser timing budgets fail this
+#   workflow without holding back the app's release;
 # - pack: builds and packs kipdeck.tgz once;
 # - smoke: on Linux and macOS, runs that tarball the way the README's npx command does, installs it
 #   with install.sh, starts it and checks it answers;
@@ -38,7 +39,7 @@ on:
       - 'vite.*.config.ts'
       - 'deploy/replay/**'
       - 'deploy/release/**'
-      - 'skills/**'
+      - 'plugins/**'
       - 'NOTICE'
       - '.github/workflows/release.yml'
   pull_request:
@@ -53,7 +54,7 @@ on:
       - 'vite.*.config.ts'
       - 'deploy/replay/**'
       - 'deploy/release/**'
-      - 'skills/**'
+      - 'plugins/**'
       - 'NOTICE'
       - 'install.sh'
       - 'install.ps1'
@@ -79,24 +80,32 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            onchain/attest/package-lock.json
 
       - name: Install and build
         run: npm ci # its prepare script builds the client and the server
 
-      # tests/pseudonym.test.ts checks the office's pseudonyms against the onchain package's own (viem).
-      - name: Install the onchain package the tests cross-check
+      # Some tests import onchain/attest's sources (its schema, with viem), whose packages are its own,
+      # not the app's. Only the packages: its build needs forge, and the tests read src/, not dist/.
+      - name: Install onchain/attest's packages for the tests
         working-directory: onchain/attest
         run: npm ci --ignore-scripts
 
       - run: npm run typecheck
 
       # The replay demo (docs/demo.md#the-replay-demo) isn't part of `build`, so installs never build
-      # it; it's built here so tests/replay-e2e.test.ts checks it on every pull request.
+      # it; it's built here so tests/replay-e2e.test.ts and tests/replay-deck-e2e.test.ts check it on every pull request.
       - name: Build the replay demo
         run: npm run build:replay
 
-      - name: Test, all but the landing page
-        run: node --import tsx --import=#tests/css --test $(ls tests/*.test.ts | grep -v '^tests/landing')
+      # npm test is these two. The timing-sensitive files (tests/support/run.mjs) run on their own,
+      # one at a time, after the rest, so the parallel run can't starve them of CPU. The landing
+      # page's files run in the landing job instead.
+      - run: npm run test:main -- --skip=tests/landing
+
+      - run: npm run test:perf -- --skip=tests/landing
 
   landing:
     runs-on: ubuntu-latest
@@ -110,8 +119,10 @@ jobs:
 
       - run: npm ci
 
-      - name: Test the landing page
-        run: node --import tsx --import=#tests/css --test tests/landing*.test.ts
+      # The same two groups, only the landing page's files (tests/landing*.test.ts).
+      - run: npm run test:main -- --only=tests/landing
+
+      - run: npm run test:perf -- --only=tests/landing
 
   pack:
     runs-on: ubuntu-latest
@@ -126,6 +137,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            onchain/attest/package-lock.json
 
       - name: Install and build
         run: npm ci

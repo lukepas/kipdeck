@@ -27,6 +27,23 @@ export interface RiskFlag {
   paths: string[];
 }
 
+/**
+ * The verdict a To review row carries (shared/brief/row-verdict.ts): the brief's verdict cut to what a
+ * row says, worked out by the office for each agent at rest with changes (server/brief/verdicts.ts).
+ */
+export interface RowVerdict {
+  /** Verified and nothing flagged: the same call as the brief's one confident Merge. */
+  ready: boolean;
+  /** What its own test runs say (shared/brief/verdict.ts TestState). */
+  tests: 'none' | 'pass' | 'fail' | 'stale';
+  /** Its pull request's CI, when it has one open. */
+  ci?: 'pass' | 'fail' | 'pending' | 'none';
+  /** How many gaps the brief lists. */
+  gaps: number;
+  /** The kinds of risk its diff raises, once each, in the brief's order. */
+  flags: RiskKind[];
+}
+
 export interface ReviewBrief {
   workerId: string;
   /** The task as it was given: its first prompt. */

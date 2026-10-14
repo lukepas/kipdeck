@@ -14,7 +14,8 @@ export const ESCALATE_MS = 3 * 60_000;
 export const PUSH_SNOOZE_MS = 60 * 60_000;
 
 export type PushKind = 'question' | 'approval' | 'review' | 'stuck' | 'test';
-export type PushAction = 'open' | 'snooze' | 'seen';
+/** 'allow' and 'deny' only on an approval push with no risk tags (shared/push-approve.ts). */
+export type PushAction = 'open' | 'snooze' | 'seen' | 'allow' | 'deny';
 
 /** What the office sends a device; the service worker (public/sw.js) shows it as it is. */
 export interface PushPayload {
@@ -30,6 +31,8 @@ export interface PushPayload {
   actions: { action: PushAction; title: string }[];
   /** Stays up until it's dealt with: an agent that's blocked on you. */
   sticky: boolean;
+  /** The one-use token Allow once and Deny send back, bound to this request and this device (server/push/approve.ts). */
+  approve?: string;
 }
 
 /** What an agent waiting on someone wants: a permission prompt reads "Wants permission: ..." (workers/lifecycle.ts). */

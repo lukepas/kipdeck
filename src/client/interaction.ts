@@ -43,6 +43,8 @@ export function interactionAvailable(it: Interactable | null, key: DeskKey, stat
   if (it.kind === 'monitor') return key === 'E' || key === 'O' || key === 'C' || key === 'R';
   // The Services board: E on a row puts that service on the monitor, O opens the board's window.
   if (it.kind === 'services') return key === 'E' || key === 'O';
+  // A holo city district: E opens the Rundown window, or at the next step's beam deploys on it; R opens the window there.
+  if (it.kind === 'rundown') return key === 'E' || key === 'R';
   if (key !== 'E') return false;
 
   if (it.kind === 'seat') return !!it.seatId;

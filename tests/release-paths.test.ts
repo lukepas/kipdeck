@@ -10,7 +10,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 const root = path.join(import.meta.dirname, '..');
-const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')) as { files: string[]; scripts: Record<string, string> };
+const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')) as { name: string; bin: Record<string, string>; files: string[]; scripts: Record<string, string> };
 const workflow = readFileSync(path.join(root, '.github/workflows/release.yml'), 'utf8');
 
 /** The `paths` list under an event (`push:` or `pull_request:`) in the workflow's `on:`. */
@@ -69,8 +69,8 @@ test('installs never build the replay demo', () => {
 test('the Release workflow builds the replay demo before the tests', () => {
   const build = workflow.indexOf('npm run build:replay');
   assert.ok(build >= 0, 'release.yml runs npm run build:replay');
-  const tests = workflow.indexOf('--test $(ls tests/*.test.ts');
-  assert.ok(tests >= 0, 'release.yml runs the tests');
+  const tests = workflow.indexOf('run: npm run test:main');
+  assert.ok(tests >= 0, 'release.yml runs npm run test:main');
   assert.ok(build < tests, 'release.yml builds the replay demo before the tests, so replay-e2e runs');
 });
 
@@ -84,3 +84,23 @@ for (const event of ['push', 'pull_request']) {
     assert.deepEqual(missed, [], `release.yml's ${event} paths miss these build inputs`);
   });
 }
+
+// The package was renamed (agent-office to kipdeck) and install.sh with it; the release steps kept the
+// old tarball name and the old variables, which install.sh ignores, so Release could pack nothing and
+// would have installed from the registry. These keep the steps on the names the package and script use.
+test('the Release workflow packs whatever npm names the tarball and installs it with install.sh as it is now', () => {
+  const install = readFileSync(path.join(root, 'install.sh'), 'utf8');
+  // deploy/release/pack.mjs packs and takes whatever .tgz npm made, then names it kipdeck.tgz, the
+  // asset the README's address and install.sh fetch.
+  const pack = readFileSync(path.join(root, 'deploy/release/pack.mjs'), 'utf8');
+  assert.match(workflow, /node deploy\/release\/pack\.mjs --version/, 'the pack step runs pack.mjs');
+  assert.match(pack, /readdirSync\(dest\)\.filter\(\(f\) => f\.endsWith\('\.tgz'\)\)/, 'pack.mjs takes the tarball npm made, whatever its name');
+  assert.ok(!/agent-office(-\$version)?\.tgz/.test(workflow + pack), 'no tarball name from before the rename');
+  // Unique names: the Linux/macOS and the Windows smoke jobs set the same ones.
+  const vars = [...new Set([...workflow.matchAll(/^\s+(KIPDECK_\w+|AGENT_OFFICE_\w+):/gm)].map((m) => m[1]))];
+  assert.ok(vars.includes('KIPDECK_TARBALL'), 'the install step hands install.sh the packed tarball');
+  for (const v of vars.filter((v) => v.startsWith('KIPDECK_'))) assert.ok(install.includes(`\${${v}`), `install.sh reads ${v}`);
+  assert.deepEqual(vars.filter((v) => v.startsWith('AGENT_OFFICE_')), ['AGENT_OFFICE_HOME'], 'install.sh reads no AGENT_OFFICE_ variable; the office reads AGENT_OFFICE_HOME');
+  assert.ok(pkg.bin.kipdeck && workflow.includes('"$RUNNER_TEMP/bin/kipdeck"'), 'the step starts the kipdeck command install.sh links');
+  assert.ok(workflow.includes(`lib/node_modules/${pkg.name}/package.json`), 'the step checks the installed package version');
+});

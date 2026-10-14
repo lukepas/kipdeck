@@ -32,6 +32,7 @@ import type { ApprovalsClientMsg, ApprovalsServerMsg } from './protocol/approval
 import type { GateClientMsg, GateServerMsg } from './protocol/gate.js';
 import type { SpendClientMsg, SpendServerMsg } from './protocol/spend.js';
 import type { PushClientMsg } from './protocol/push.js';
+import type { YourCallClientMsg, YourCallServerMsg } from './protocol/yourcall.js';
 
 export * from './protocol/accounts.js';
 export * from './protocol/agents.js';
@@ -62,6 +63,7 @@ export * from './protocol/approvals.js';
 export * from './protocol/gate.js';
 export * from './protocol/spend.js';
 export * from './protocol/push.js';
+export * from './protocol/yourcall.js';
 
 export type ClientMsg =
   | PresenceClientMsg
@@ -93,7 +95,8 @@ export type ClientMsg =
   | ApprovalsClientMsg
   | GateClientMsg
   | SpendClientMsg
-  | PushClientMsg;
+  | PushClientMsg
+  | YourCallClientMsg;
 
 export type ServerMsg =
   | PresenceServerMsg
@@ -122,4 +125,5 @@ export type ServerMsg =
   | BriefServerMsg
   | ApprovalsServerMsg
   | GateServerMsg
-  | SpendServerMsg;
+  | SpendServerMsg
+  | YourCallServerMsg;
