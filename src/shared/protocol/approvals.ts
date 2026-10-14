@@ -26,6 +26,12 @@ export interface ApprovalView {
   risks: ApprovalRisk[];
   /** The rule "Allow always" adds ("Bash(npm test:*)"); none when the agent offers no rule for this call. */
   always?: string;
+  /**
+   * The call itself in a few characters (the tool and its exact input, hashed: shared/approval.ts
+   * callKey): two requests with the same one ask for a byte-identical call, so Shift+Y in triage can
+   * allow them together.
+   */
+  call?: string;
   at: number;
 }
 
@@ -37,9 +43,10 @@ export type ApprovalsClientMsg =
   | { t: 'approvals.get' }
   /**
    * Answers request `id`. 'deny' carries `reason` back to the agent. 'release' hands the request back
-   * to the agent's own terminal prompt, for someone who'd rather answer there.
+   * to the agent's own terminal prompt, for someone who'd rather answer there. `same` with 'once'
+   * allows every open request for the byte-identical call too, whichever agent asked (triage's Shift+Y).
    */
-  | { t: 'approval.answer'; id: string; decision: ApprovalDecision | 'release'; reason?: string };
+  | { t: 'approval.answer'; id: string; decision: ApprovalDecision | 'release'; reason?: string; same?: boolean };
 
 export type ApprovalsServerMsg =
   /** Every open request, whenever one opens or goes (sent to everyone who asked with 'approvals.get'). */

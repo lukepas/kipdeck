@@ -17,7 +17,7 @@ import type { Settings } from '../state';
 import { applyLight, toggleLight } from '../lite-theme';
 import { createActions, type Actions } from './actions';
 import { startClocks, tickClocks } from './clock';
-import { installKeys, openHelp } from './keys';
+import { installKeys, openHelp, openTriage } from './keys';
 import * as lazy from './lazy';
 import { rewatch, routeLazy } from './lazy';
 import { currentView, renderList } from './list';
@@ -108,6 +108,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     { label: 'Deploy agent', hint: 'N', icon: 'plus', run: () => actions.deploy() },
     ...(spendUi()?.spendCommands() ?? []),
     { label: 'Search agents', hint: '/', icon: 'search', run: () => search.focus() },
+    { label: 'Triage', hint: 'T: one card at a time, from the keyboard', icon: 'queue', run: () => openTriage(actions) },
     { label: 'Numbers', hint: 'Wait time, merges, merge rate', icon: 'plot', run: openNumbers },
     { label: 'Signal', hint: 'Project status: on track, at risk or off track', icon: 'target', run: openSignal },
     { label: 'While you were away', icon: 'clock', run: () => recallDigest(showDigest) },
