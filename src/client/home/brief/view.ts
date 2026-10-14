@@ -3,6 +3,7 @@
 // brief is shown (with comments.ts and the stylesheet), so the inbox draws without it.
 
 import { verdict, type CiState, type Verdict } from '../../../shared/brief/verdict';
+import { ciOf } from '../../../shared/brief/row-verdict';
 import { duration } from '../../../shared/attention';
 import type { ReviewBrief, RosterEntry } from '../../../shared/protocol';
 import { h } from '../../ui/dom';
@@ -61,7 +62,7 @@ function checked(b: ReviewBrief, v: Verdict, ci: CiState | undefined): HTMLEleme
 
 /** Draws `b`, the brief for `e`. */
 export function renderBrief(e: RosterEntry, b: ReviewBrief): BriefView {
-  const ci = e.pr && e.pr.state !== 'merged' ? (e.pr.checks ?? 'none') : undefined;
+  const ci = ciOf(e);
   const comments = commentsOf(e.id);
   const v = verdict(b, ci);
   const el = h(
