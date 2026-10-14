@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { inferParts, inferStatus, partMetrics } from '../src/shared/rundown/infer.js';
-import { emptyMetrics } from '../src/shared/rundown/schema.js';
+import { emptyMetrics, STATUS_LABEL } from '../src/shared/rundown/schema.js';
 import { renderPage } from '../src/shared/rundown/html.js';
 import { CALLOUT_EDGE, CITY, RINGS, calloutOrder, cityLayout, columnLayout, statusMoves, towerHeight } from '../src/client/features/rundown/logic.js';
 import { NOW, sampleFacts, sampleRundown } from './support/rundown-sample.js';
@@ -53,7 +53,8 @@ test('the page is one self-contained file: no external URL, the model embedded s
   assert.equal(html.match(/<\/script>/g)?.length, 2, 'the embedded JSON never closes its script early');
   assert.doesNotMatch(html, /<img src=x/);
   assert.match(html, /Content-Security-Policy/);
-  for (const w of ['Done', 'In progress', 'Not started', 'Stuck']) assert.ok(html.includes(w), w);
+  // Status is never colour alone: each part's pill says its status in words.
+  for (const p of r.parts) assert.ok(html.includes(`: ${STATUS_LABEL[p.status]}. Open details.`), p.id);
   assert.ok(html.length < 600_000);
   assert.doesNotMatch(html.replace(/<script[\s\S]*?<\/script>/g, ''), /[–—]/, 'plain ASCII dashes');
 });

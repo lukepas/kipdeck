@@ -22,7 +22,7 @@ on:
       - 'vite.config.ts'
       - 'vite.*.config.ts'
       - 'deploy/replay/**'
-      - 'skills/**'
+      - 'plugins/**'
       - 'NOTICE'
       - '.github/workflows/release.yml'
   pull_request:
@@ -36,7 +36,7 @@ on:
       - 'vite.config.ts'
       - 'vite.*.config.ts'
       - 'deploy/replay/**'
-      - 'skills/**'
+      - 'plugins/**'
       - 'NOTICE'
       - 'install.sh'
       - '.github/workflows/release.yml'

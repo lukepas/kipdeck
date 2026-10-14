@@ -179,7 +179,7 @@ test('GET /api/rundown/<floor>/map.html: an attachment while the lab is on, sign
     }
     assert.equal(res.status, 200);
     assert.match(res.headers.get('content-disposition') ?? '', /^attachment; filename="rundown-Fixture\.html"$/);
-    assert.match(await res.text(), /<title>Rundown: Fixture<\/title>/);
+    assert.match(await res.text(), /<title>Fixture rundown<\/title>/);
     assert.equal((await fetch(`${base}/api/rundown/nope/map.html`)).status, 404);
     assert.equal((await fetch(`${base}/api/rundown/f1/state.json`)).status, 404);
   }
