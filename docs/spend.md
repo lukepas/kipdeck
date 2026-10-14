@@ -54,7 +54,7 @@ Only an admin can **Continue** an agent a budget paused, since admins set the ca
 
 ## Pause all, Resume all and Stop all
 
-The **Pause all** button in the top bar (beside Deploy agent, while any agent runs; its words show beside the pause mark from 1240px up) opens a short menu, and the same commands are in Ctrl+K. Each one acts on the project picked in the top bar, or every project under *All projects*.
+The **Pause all** button in the top bar (beside Deploy agent, while any agent runs; its words show beside the pause mark from 1240px up, or above 1600px once a project picker or Mine / Team sits in the top bar) opens a short menu, and the same commands are in Ctrl+K. Each one acts on the project picked in the top bar, or every project under *All projects*.
 
 - **Pause all working**: interrupts every agent at work and holds it in Needs you as *Paused by <you>*. A toast offers **Undo** for a few seconds, which lets them all carry on.
 - **Resume all paused**: lets every paused agent carry on. One that was at work is told to pick up where it left off.

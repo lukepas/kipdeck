@@ -114,5 +114,7 @@ test('the top bar keeps "Pause all" and "spent today" in words on a laptop scree
     assert.ok(widths.length > 0, sel);
     assert.ok(Math.max(...widths) <= 1240, `${sel} is hidden up to ${Math.max(...widths)}px`);
   }
-  assert.match(read('src/client/home/spend.ts'), /'aria-label': 'Pause all'/, 'the mark alone still has a name');
+  // A project picker or Mine / Team takes that room back below 1600px, so search never squeezes shut.
+  for (const picker of ['.hb-project', '.hb-owner']) assert.ok(css.includes(`.hb:has(> ${picker}:not(.hidden)) .hb-fleet-label`), picker);
+  assert.match(read('src/client/home/spend.ts'), /setAttribute\('aria-label', p \? `Pause all, \$\{plural\(p\)\} paused` : 'Pause all'\)/, 'the mark alone still has a name, with the paused count');
 });

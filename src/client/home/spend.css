@@ -25,4 +25,11 @@
 .hb-fleet { flex: none; height: 34px; padding: 0 10px; gap: 6px; white-space: nowrap; }
 .hb-fleet.has-paused { border-color: var(--signal); color: var(--signal); }
 @media (max-width: 1240px) { .hb-fleet-label { display: none; } .hb-fleet { padding: 0 9px; } }
+/* A project picker or Mine / Team takes that room back: up to 1600px they drop the words again, so
+   search never squeezes shut and Deploy agent stays on screen. */
+@media (min-width: 900px) and (max-width: 1600px) {
+  .hb:has(> .hb-project:not(.hidden)) .hb-pulse .p-spend span, .hb:has(> .hb-owner:not(.hidden)) .hb-pulse .p-spend span,
+  .hb:has(> .hb-project:not(.hidden)) .hb-fleet-label, .hb:has(> .hb-owner:not(.hidden)) .hb-fleet-label { display: none; }
+  .hb:has(> .hb-project:not(.hidden)) .hb-fleet, .hb:has(> .hb-owner:not(.hidden)) .hb-fleet { padding: 0 9px; }
+}
 @media (max-width: 899px) { .hb-fleet { height: 44px; width: 44px; padding: 0; justify-content: center; } }
