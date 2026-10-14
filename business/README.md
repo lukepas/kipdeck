@@ -6,13 +6,12 @@ The fork is based on [AgentSystemLabs/agent-office](https://github.com/AgentSyst
 
 ## Order of operations
 
-1. Get written clearance from your employer before any paid work, public launch or grant application: [employer-clearance-request.md](employer-clearance-request.md). Until you have it, treat everything below as private drafts.
-2. Talk to upstream before you talk to customers: [upstream-partnership.md](upstream-partnership.md). Offer the security fixes first, with nothing asked in return.
-3. Pick a name and run the trademark checks: [naming.md](naming.md). The name is picked: Kipdeck (2026-10-08). The trademark checks are still open.
-4. Put up the waitlist page: the product's landing with the team tier waitlist is [site/landing/](../site/landing/index.html) ([docs/landing.md](../docs/landing.md)); [landing/index.html](landing/index.html) is the consulting offer's page.
-5. Sell the pilot: [agent-team-lab-offer.md](agent-team-lab-offer.md), priced from [pricing-and-metrics.md](pricing-and-metrics.md), contracted with [sow-template.md](sow-template.md).
-6. Run the workshop as a lead-in or an add-on: [workshop/](workshop/README.md).
-7. Apply for vendor credits to cover model and compute costs during pilots and hackathons: [vendor-credits.md](vendor-credits.md).
+1. Talk to upstream before you talk to customers: [upstream-partnership.md](upstream-partnership.md). Offer the security fixes first, with nothing asked in return.
+2. Pick a name and run the trademark checks: [naming.md](naming.md). The name is picked: Kipdeck (2026-10-08). The trademark checks are still open.
+3. Put up the waitlist page: the product's landing with the team tier waitlist is [site/landing/](../site/landing/index.html) ([docs/landing.md](../docs/landing.md)); [landing/index.html](landing/index.html) is the consulting offer's page.
+4. Sell the pilot: [agent-team-lab-offer.md](agent-team-lab-offer.md), priced from [pricing-and-metrics.md](pricing-and-metrics.md), contracted with [sow-template.md](sow-template.md).
+5. Run the workshop as a lead-in or an add-on: [workshop/](workshop/README.md).
+6. Apply for vendor credits to cover model and compute costs during pilots and hackathons: [vendor-credits.md](vendor-credits.md).
 
 ## Calendar (as of 2026-09-30)
 
@@ -20,7 +19,7 @@ Dates were checked on 2026-09-30 against the event pages listed under each row. 
 
 | Date | What | Notes |
 | --- | --- | --- |
-| Oct 12 | Colosseum Crypto World's Fair submission | Build period Sep 14 - Oct 12. Needs employer clearance if the entry is public. https://colosseum.com/worldsfair |
+| Oct 12 | Colosseum Crypto World's Fair submission | Build period Sep 14 - Oct 12. https://colosseum.com/worldsfair |
 | Oct 23, 12:00 PT | Amazon Build Ship Shape submission (Alexa+ is one of the tracks) | Submission period Aug 31 - Oct 23; one track per entry. Alexa+ entries need a working demo and a repository: a self-hosted MCP server or an Agent Skill, or a simulated experience in a web app; video of 3 minutes or less on YouTube or Vimeo. https://amazonappdev2026.devpost.com/ |
 | Oct 30, 10:00 PT | Nebius x NVIDIA Global AI Hackathon submission | Must run on Nebius Token Factory or Nebius AI Cloud and use at least one NVIDIA open model; public repo and a demo video of 3 minutes or less. https://nebiusglobalaihackathon.devpost.com/ |
 | Nov 3-8 | Vultr Agent Rush (online build), on-site showcase Nov 8 in Salt Lake City | Each participant gets USD 200 in Vultr credits. Agent LLM calls must go through Vultr Serverless Inference, sandboxes must run as containers or separate instances, and the demo video must show one "containment moment". No separate submission deadline is stated on the page. https://lablab.ai/ai-hackathons/vultr-hackathon |
@@ -48,11 +47,10 @@ Each grant track works differently. Checked on 2026-09-30:
 - Filecoin Next Step Microgrants: USD 5,000 in FIL in two tranches, for independent developers and small teams with a working Filecoin or IPFS prototype, applied for as a GitHub issue in filecoin-project/devgrants. Unverified whether it is still open: the last wave named in its README closed in 2023.
 - Innovation Agency Lithuania (Startup Lithuania): calls open and close through the year and are listed at https://www.startuplithuania.com/open-calls/. Their funding calls have targeted companies registered in Lithuania, so a Lithuanian legal entity is likely needed; check each call.
 
-Employer clearance comes first for all of them. A legal entity is needed for the Lithuanian calls and most credit programs, but not for Solana Foundation, Base or Filecoin grants.
+A legal entity is needed for the Lithuanian calls and most credit programs, but not for Solana Foundation, Base or Filecoin grants.
 
 ## Files
 
-- [employer-clearance-request.md](employer-clearance-request.md): email to your employer about IP and side work, with an internal-offering alternative.
 - [upstream-partnership.md](upstream-partnership.md): message to webdevcody, plus PR description drafts for each security fix.
 - [agent-team-lab-offer.md](agent-team-lab-offer.md): the fixed-price 2-6 week pilot.
 - [sow-template.md](sow-template.md): statement of work for the pilot.

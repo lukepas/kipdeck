@@ -17,7 +17,6 @@ Deadline: Monday 2026-10-12, 23:59 PT, which is Tuesday 2026-10-13 09:59 in Viln
 ## 1. Before the form
 
 - Every founder: an account on https://colosseum.com/arena (arena.colosseum.org redirects there), profile complete, consent given, before the cut-off.
-- Employer permission in writing for all three (outside work, IP, prizes): the request is drafted in `business/employer-clearance-request.md`. The rules make each entrant warrant that entering breaches no employer policy.
 - Ask in the Colosseum Discord whether one project can be judged in the Solana and the Base track; paste the answer into [judge-qa.md](judge-qa.md). Until then, lead with Solana.
 
 ## 2. Commands on submit day
@@ -232,7 +231,7 @@ Upstream, agent-office (MIT): https://github.com/AgentSystemLabs/agent-office
 
 ## 5. Last checks, then submit
 
-- [ ] Every founder registered on colosseum.com; employer permission saved for all three.
+- [ ] Every founder registered on colosseum.com.
 - [ ] The stamp is the submitted commit: `git rev-parse --short=8 origin/main` matches the commit after `226452e4..` in the prior work field.
 - [ ] `npm run launch:check` clean and the launch tests pass.
 - [ ] Counts refreshed; the demand validation field matches `data/counts.json`.

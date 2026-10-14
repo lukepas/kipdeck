@@ -226,14 +226,6 @@
       "verified": true
     },
     {
-      "id": "nortal-permission",
-      "date": "2026-10-15",
-      "kind": "task",
-      "title": "Ask Nortal for written permission (outside work, IP, prizes and grants): blocks every kit",
-      "kit": "PROPOSALS.md",
-      "verified": true
-    },
-    {
       "id": "gitlab-register",
       "date": "2026-10-14",
       "kind": "task",
@@ -272,7 +264,7 @@
       "id": "openai-codex-apply",
       "date": "2026-10-16",
       "kind": "task",
-      "title": "OpenAI Codex for Open Source: apply (rolling) within 2 days of Nortal's written OK",
+      "title": "OpenAI Codex for Open Source: apply (rolling) this week",
       "kit": "openai-codex-for-oss.md",
       "url": "https://openai.com/form/codex-for-oss/",
       "verified": true

@@ -67,7 +67,6 @@ One-line justification: USD 30,000 is inside the handbook's "Small: one simple i
 
 Every box here must be ticked before submitting. The first one is open in every kit.
 
-- [ ] Employer (Nortal): written permission for outside work, IP ownership of the code and receiving award money. Unticked in every kit; the Official Rules make the participant responsible for compliance, and KYC/tax forms follow an award.
 - [ ] Team: Official Rules 1.1 and 1.2 open SCF programs to Teams and Organizations and ask for at least 2 eligible individuals for webinars and bootcamp. Decision D9 (co-founders) is open. [FOUNDERS: team]
 - [ ] Company registration: not required to apply (Teams of individuals are eligible), and entity costs cannot be budgeted. Decide whether to apply as an individual team or a registered company; KYB applies to a company.
 - [ ] Personal fields: KYC at stellar.org/bd-kyc after an award (identity, tax). Fill only from real documents; nothing invented here.
@@ -318,7 +317,6 @@ Not in this repo and not to be claimed until built: any Stellar code, testnet ru
 
 ## Submission checklist
 
-- [ ] Nortal permission in writing, saved.
 - [ ] Decide D9 enough to name a second eligible person, or ask the SCF team whether a solo representative is accepted.
 - [ ] Check active RFPs; confirm Integration track.
 - [ ] Sign in at communityfund.stellar.org/dashboard; file the interest form by 2026-10-16 with the answers above; note every field name and limit it shows and fix this file.

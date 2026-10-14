@@ -47,7 +47,6 @@ Hackathon, so no grant ask. Target, in order:
 
 Every box here must be ticked before submitting. The first one is open in every kit.
 
-- [ ] Employer permission: written permission from Nortal for outside work, IP ownership of the work and accepting prizes. Unticked in every kit. Do not register until it is in hand.
 - [ ] Rules not published: the Dubai "Prizes & Judging" section says TBD. Confirm testnet (Arbitrum Sepolia) qualifies; if only Arbitrum One counts, do not enter.
 - [ ] Prize terms: Singapore's prizes were tied to development milestones under separate Terms and Conditions; read Dubai's before accepting.
 - [ ] Company registration: none needed to enter (individual HackQuest account). If a prize is won, the payee is a personal wallet unless a Kipdeck company exists [FOUNDERS: decide payee; company not registered per available facts].
@@ -246,7 +245,6 @@ Core: about 5 working days. With the stretch: about 8. All new work must land be
 
 ## Submission checklist
 
-- [ ] Nortal permission in writing (outside work, IP, prizes), saved.
 - [ ] Dubai rules and prize terms published and read; Arbitrum Sepolia accepted.
 - [ ] HackQuest account; registered after 2026-10-31 18:01 Vilnius, before 2026-12-05 18:01.
 - [x] Repo dates updated (`deadlines.json`, `calendar.ics`, kit) with the times above (2026-10-14).

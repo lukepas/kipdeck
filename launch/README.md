@@ -34,7 +34,7 @@ Each kit has the same sections in the same order: deadline, links, eligibility c
 The risks that could sink an entry, in order:
 
 1. **The base project is someone else's, and it is new.** Upstream's first commit is 2026-09-25. Meta's Adapted division needs a project that existed before 2026-09-24, and its New division says "no pre-existing codebases", so neither fits cleanly; the others want work that is new or significantly updated during their period, and none says whether a fork of a third-party project counts. Ask each organizer in writing (task on 2026-10-01) and disclose everything regardless.
-2. **Employer permission.** Colosseum's rules make you warrant that entering does not breach your employer's policies. Get Nortal's written position on outside work, IP and prizes before registering anywhere.
+2. **Employer policy.** Colosseum's rules make you warrant that entering does not breach your employer's policies. Kipdeck is unrelated to any founder's job, so this is a plain yes.
 3. **Memberships that take time.** Meta requires Meta VR Start membership at submission time; approval time is unknown. Colosseum closes registration at the submission deadline. Apply on day one.
 4. **One demo, many rules.** Vultr requires every model call through Vultr Serverless Inference; Nebius requires Token Factory and an NVIDIA open model; Meta requires hands-only. Keep a per-event configuration rather than one demo that half-fits all.
 5. **Public demos run real agents.** Judges get a live office. Sandboxes, spending caps and a judge password are part of every checklist.
@@ -56,10 +56,9 @@ Every dated item from 2026-09-30, generated from [deadlines.json](deadlines.json
 | 2026-10-14 | GitLab Life After Code: register on Devpost and start contributor onboarding (about 24 business hours) | all day | [gitlab-life-after-code.md](gitlab-life-after-code.md) | our target |
 | 2026-10-14 | Solana Foundation grant: submit the application (rolling, reuse the Colosseum material) | all day | [chain/solana-foundation-grant.md](chain/solana-foundation-grant.md) | our target |
 | 2026-10-15 | Amazon Build Ship Shape: go or no-go on the Alexa+ build (needs 6 free days) | all day | [amazon-build-ship-shape.md](amazon-build-ship-shape.md) | our target |
-| 2026-10-15 | Ask Nortal for written permission (outside work, IP, prizes and grants): blocks every kit | all day | [PROPOSALS.md](PROPOSALS.md) | our target |
 | 2026-10-15 | Superteam Agentic Engineering: email support@superteam.fun asking when applications reopen | all day | [superteam-agentic-engineering.md](superteam-agentic-engineering.md) | our target |
 | 2026-10-15 | Vultr Agent Rush: sign up on lablab.ai, join the Discord, ask about the on-site day in Salt Lake City | all day | [vultr-agent-rush.md](vultr-agent-rush.md) | our target |
-| 2026-10-16 | OpenAI Codex for Open Source: apply (rolling) within 2 days of Nortal's written OK | all day | [openai-codex-for-oss.md](openai-codex-for-oss.md) | our target |
+| 2026-10-16 | OpenAI Codex for Open Source: apply (rolling) this week | all day | [openai-codex-for-oss.md](openai-codex-for-oss.md) | our target |
 | 2026-10-16 | Stellar SCF #46: file the interest form on the SCF dashboard (invites take about 2 weeks) | all day | [stellar-scf-46.md](stellar-scf-46.md) | our target |
 | 2026-10-20 | Amazon: record the demo video and finish the friction log | all day | [amazon-build-ship-shape.md](amazon-build-ship-shape.md) | our target |
 | 2026-10-21 | Innovation Agency Lithuania: file the foreign-event travel application in KIP as soon as the Salt Lake City flights are booked | all day | [innovation-agency-lithuania.md](innovation-agency-lithuania.md) | our target |

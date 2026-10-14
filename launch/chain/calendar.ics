@@ -379,7 +379,7 @@ DTSTAMP:20261003T000000Z
 DTSTART:20261031T150100Z
 DTEND:20261031T160100Z
 SUMMARY:Arbitrum Open House Dubai: registration opens on HackQuest (18:01 V
- ilnius)\; register once Nortal permission is in
+ ilnius)\; register
 DESCRIPTION:Closes 16:01 UTC: 2026-10-31 09:01 PT\, 2026-10-31 18:01 Europe
  /Vilnius\, 2026-10-31 16:01 UTC.\nKit: launch/chain/arbitrum-dubai.md\nhtt
  ps://www.hackquest.io/hackathons/Arbitrum-Open-House-Dubai-Online-Buildath
@@ -391,7 +391,7 @@ TRANSP:TRANSPARENT
 BEGIN:VALARM
 ACTION:DISPLAY
 DESCRIPTION:Arbitrum Open House Dubai: registration opens on HackQuest (18:
- 01 Vilnius)\; register once Nortal permission is in
+ 01 Vilnius)\; register
 TRIGGER:-PT1H
 END:VALARM
 END:VEVENT

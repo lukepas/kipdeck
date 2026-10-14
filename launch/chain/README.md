@@ -55,7 +55,7 @@ These need a browser, a person or a decision, and no script does them. Until 202
 - Devnet SOL from https://faucet.solana.com if `solana airdrop` is rate limited, for the funder wallet used on recording day.
 - The repository is public (https://github.com/zbagdzevicius/kipdeck) and its diff link is in the kits. Publish the showcase (GitHub Pages export) at https://zbagdzevicius.github.io/kipdeck/; on submission day re-stamp the commit after `226452e4..` in [disclosure.md](disclosure.md) and the Colosseum form. [SUBMIT.md](SUBMIT.md) has both commands.
 - Ask the multi-track question in the Colosseum Discord and paste the answer into [judge-qa.md](judge-qa.md).
-- Employer permission, registration on colosseum.com, recording the videos, posting.
+- Registration on colosseum.com, recording the videos, posting.
 
 ## Tools
 
@@ -98,7 +98,7 @@ Times are shown in PT and in Vilnius. All-day entries are the same date in both.
 | 2026-10-16 | Weekly leaderboard post | all day | all day | [build-in-public.md](build-in-public.md) | our target |
 | 2026-10-23 | Weekly leaderboard post | all day | all day | [build-in-public.md](build-in-public.md) | our target |
 | 2026-10-30 | Weekly leaderboard post | all day | all day | [build-in-public.md](build-in-public.md) | our target |
-| 2026-10-31 | Arbitrum Open House Dubai: registration opens on HackQuest (18:01 Vilnius); register once Nortal permission is in | 2026-10-31 09:01 | 2026-10-31 18:01 | [arbitrum-dubai.md](arbitrum-dubai.md) | our target |
+| 2026-10-31 | Arbitrum Open House Dubai: registration opens on HackQuest (18:01 Vilnius); register | 2026-10-31 09:01 | 2026-10-31 18:01 | [arbitrum-dubai.md](arbitrum-dubai.md) | our target |
 | 2026-11-02 | Base Builder Grants: revisit at 10:00 Vilnius; nominate only once every mainnet gate in the kit is green, never testnet work | all day | all day | [base-builder.md](base-builder.md) | our target |
 | 2026-11-16 to 2026-12-06 | Arbitrum Open House Dubai: submission window (new work must land in it) | all day | all day | [arbitrum-dubai.md](arbitrum-dubai.md) | confirmed 2026-10-03 |
 | 2026-12-05 | Arbitrum Open House Dubai: submit a day early (registration also closes 2026-12-05 16:01 UTC) | all day | all day | [arbitrum-dubai.md](arbitrum-dubai.md) | our target |

@@ -67,7 +67,7 @@ Optional Google Cloud bonus: up to 0.2 points (final score out of 5.2), for a pu
 
 Every box here must be ticked before submitting. The first one is open in every kit.
 
-- [ ] **Employer permission (open, blocks registering and submitting).** Written permission from Nortal for outside work, ownership of the IP in this entry, and accepting a cash prize. The rules make the entrant warrant the submission is theirs to license (section 7) and that nothing breaches another party's rights. The Rules also give GitLab a perpetual licence to use the submission and say GitLab "may use the Submission to develop, market, and commercialize products and services"; Nortal should see that line.
+- [ ] **Licence to GitLab.** The rules make the entrant warrant the submission is theirs to license (section 7) and that nothing breaches another party's rights. They also give GitLab a perpetual licence to use the submission and say GitLab "may use the Submission to develop, market, and commercialize products and services". Read that line before submitting.
 - [ ] Company registration: not needed. An individual can enter and is paid personally. If a Kipdeck company exists by then and should enter instead, it must "exist and have been organized or incorporated at the time of entry" and appoint a Representative. [FOUNDERS: individual or company entry]
 - [ ] Personal fields: Devpost account and profile, confirmation of age of majority and residence (Lithuania). For a prize: a winner affidavit within 10 business days, a W-8BEN (non-US resident), bank details or postal address, identity and role verification. Winners pay their own taxes and fees. [FOUNDERS: fill personally; do not let an agent enter them]
 - [ ] Team: founder-led; team status is undecided (decision D9). [FOUNDERS: team] Prize goes to the Representative, who splits it.
@@ -258,7 +258,6 @@ Repo rules (AGENTS.md): every change lands on GitHub `main` as a PR from fresh `
 
 ## Submission checklist
 
-- [ ] Nortal permission in writing (outside work, IP, prizes).
 - [ ] Devpost account, joined the hackathon, contributor onboarding approved, "Developer + AI" role visible.
 - [ ] Organizer answers on project visibility and third-party licences saved.
 - [ ] GitLab project public, MIT licence shown in About, `NOTICE` and the upstream credit present.

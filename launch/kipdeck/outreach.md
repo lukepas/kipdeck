@@ -11,7 +11,7 @@ A good design partner has all of these:
 - Some of that on a remote Linux box or VM, not only a laptop.
 - In the EU or the UK, so a call in the same time zone is easy and EU hosting is a plus, not a question.
 
-Where they come from: people you already know from Vilnius and the Baltic startup scene, former colleagues, and the Nortal network only with your employer's written clearance and never using client relationships. Then people who answer the launch posts, and the waitlist's `5-20` and `21-50` sign-ups.
+Where they come from: people you already know from Vilnius and the Baltic startup scene, and former colleagues. Then people who answer the launch posts, and the waitlist's `5-20` and `21-50` sign-ups.
 
 Name no team anywhere (deck, post, this repository) without its written permission. Keep the list of names in your own tracker, not in git.
 

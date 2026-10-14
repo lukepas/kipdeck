@@ -37,7 +37,6 @@ Code status on 2026-10-01: `launch/webxr-mode` and `launch/docker-sandbox` have 
 - [ ] Fully usable with hands end to end: someone must be able to finish the whole experience without ever pairing a controller.
 - [ ] English, or English subtitles.
 - [ ] Third-party code properly licensed: Agent Office is MIT, so keep `LICENSE` and credit it.
-- [ ] Employer: check Nortal's policy on outside work, IP ownership and accepting prizes before registering.
 - [ ] **Division.** Adapted / Significantly Updated is for "any build, prototype, or published app that existed prior to September 24, 2026". Upstream Agent Office's first commit is 2026-09-25, so it does not qualify as pre-existing. New is for a project "conceived of and built within the competition window" with "no pre-existing codebases", and a fork of someone else's codebase may break that. Neither fits cleanly. Ask Meta on the Devpost discussion board or by email which division they expect for a fork of a third-party project started inside the window, keep the answer, and disclose fully either way. [unverified]
 - [ ] Track: **Productivity** (multi-panel workspaces, task management). Special awards to aim for: Best Agentic Interaction ($25k) and Social and Multiplayer ($25k).
 

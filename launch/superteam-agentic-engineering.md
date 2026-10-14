@@ -51,7 +51,6 @@ Milestone budget:
 Every box here must be ticked before submitting. The first one is open in every kit.
 
 - [ ] Applications are paused (`isPaused: true` in the listing data, button reads "Applications Paused"). Nothing can be filed until Superteam reopens it.
-- [ ] Employer: written permission from Nortal for outside work, for IP in this project and for receiving grant money. Unticked; required before applying.
 - [ ] KYC on Earn is required before tranche 1. Personal details go there directly; nothing to invent here.
 - [ ] Company registration: not needed. The grant pays an individual's wallet and the receipt must carry the applicant's name or entity.
 - [ ] Personal fields to fill: Telegram username, verified X profile, Solana wallet for USDG, Earn talent profile completed. Team: founder-led [FOUNDERS: team, if co-founders are decided under D9 before applying].
@@ -229,7 +228,6 @@ The application itself needs nothing new: every claim in it is true today. The s
 ## Submission checklist
 
 - [ ] Superteam reopens applications (watch the page; ask support@superteam.fun).
-- [ ] Nortal's written permission saved.
 - [ ] Earn account, talent profile complete, X account verified on Earn.
 - [ ] Solana wallet for USDG chosen (not a devnet key).
 - [ ] Optional: solana.new output in a shared Drive link.

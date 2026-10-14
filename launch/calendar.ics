@@ -161,23 +161,6 @@ TRIGGER:PT9H
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:nortal-permission@agent-office-launch
-DTSTAMP:20260930T000000Z
-DTSTART;VALUE=DATE:20261015
-DTEND;VALUE=DATE:20261016
-SUMMARY:Ask Nortal for written permission (outside work\, IP\, prizes and g
- rants): blocks every kit
-DESCRIPTION:Kit: launch/PROPOSALS.md
-CATEGORIES:TASK
-TRANSP:TRANSPARENT
-BEGIN:VALARM
-ACTION:DISPLAY
-DESCRIPTION:Ask Nortal for written permission (outside work\, IP\, prizes a
- nd grants): blocks every kit
-TRIGGER:PT9H
-END:VALARM
-END:VEVENT
-BEGIN:VEVENT
 UID:superteam-email@agent-office-launch
 DTSTAMP:20260930T000000Z
 DTSTART;VALUE=DATE:20261015
@@ -220,8 +203,7 @@ UID:openai-codex-apply@agent-office-launch
 DTSTAMP:20260930T000000Z
 DTSTART;VALUE=DATE:20261016
 DTEND;VALUE=DATE:20261017
-SUMMARY:OpenAI Codex for Open Source: apply (rolling) within 2 days of Nort
- al's written OK
+SUMMARY:OpenAI Codex for Open Source: apply (rolling) this week
 DESCRIPTION:Kit: launch/openai-codex-for-oss.md\nhttps://openai.com/form/co
  dex-for-oss/
 URL:https://openai.com/form/codex-for-oss/
@@ -229,8 +211,7 @@ CATEGORIES:TASK
 TRANSP:TRANSPARENT
 BEGIN:VALARM
 ACTION:DISPLAY
-DESCRIPTION:OpenAI Codex for Open Source: apply (rolling) within 2 days of 
- Nortal's written OK
+DESCRIPTION:OpenAI Codex for Open Source: apply (rolling) this week
 TRIGGER:PT9H
 END:VALARM
 END:VEVENT

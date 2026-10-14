@@ -7,7 +7,7 @@ Kipdeck is built on agent-office (MIT, by webdevcody / AgentSystemLabs, https://
 ## Deadline
 
 - None. The page says "Apply today" and applications are reviewed on a rolling basis (checked 2026-10-14). There is no Vilnius cut-off time.
-- Internal target: submit within 2 days of Nortal's written OK. Submitting before M1 work starts is fine, because the form asks about plans and not results.
+- Internal target: submit this week. Submitting before M1 work starts is fine, because the form asks about plans and not results.
 
 ## Links
 
@@ -41,7 +41,6 @@ Budget arithmetic (estimate): USD 5,000 over about 100 Codex tasks across 6 mont
 
 Every box here must be ticked before submitting. The first one is open in every kit.
 
-- [ ] Employer: Nortal permission for outside work, IP ownership of Kipdeck and accepting grants or prizes. Not ticked. Do not submit until there is a written OK.
 - [ ] Company registration: not needed. The program is for individual maintainers and the benefits are personal and non-transferable. The API credits land in the OpenAI org you name, so decide whose org that is (personal now, a company later).
 - [ ] Personal fields: ChatGPT account email and OpenAI organization ID are [FOUNDERS] placeholders. Team status is undecided (D9), so the answers say "founder-led, one maintainer" with [FOUNDERS: team] to update if co-founders join.
 - [ ] Usage numbers: [FOUNDERS: real usage numbers or 'no outside users yet'] in field 7. Do not invent any.
@@ -123,7 +122,6 @@ Nothing has to be built before the form goes in. The items below are what M1 and
 
 ## Submission checklist
 
-- [ ] Nortal written OK for outside work, IP and grants/prizes
 - [ ] Signed in to ChatGPT with the account that should get Pro
 - [ ] OpenAI API org exists; org ID copied
 - [ ] Open https://openai.com/form/codex-for-oss/ in a browser and check the fields match the list above; adjust if the live form differs

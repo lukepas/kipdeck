@@ -48,7 +48,6 @@ Fit verdict: strong on "unique" and on Base primitives (x402, EAS, USDC, ERC-800
 
 Every box here must be ticked before submitting. The first one is open in every kit.
 
-- [ ] Employer: Nortal permission for outside work, for the IP in Kipdeck and the Coinbase licence in field 11, and for receiving a grant or prize personally. [ ] Not ticked. This blocks submission regardless of everything else.
 - [ ] Mainnet gate: no written mainnet decision, no contract review, no outside paid task on Base mainnet. The kit says "Do not submit testnet work."
 - [ ] Company registration: not needed for the form. Base pays to a wallet and collects a W-8BEN (individual, non-US) or W-8BEN-E (entity) from recipients for KYC and tax. [FOUNDERS: individual or company recipient; if a company, Lithuanian registration details.] Taxes on a 1 ETH grant in Lithuania: [FOUNDERS: check with an accountant].
 - [ ] Personal fields: X and Farcaster handles for the project and the builder are not in the repo. W-8BEN needs legal name, address and tax ID: [FOUNDERS: fill when Base asks; do not put them in the form].
@@ -149,7 +148,7 @@ Script under Demo video script below.
 [x] I confirm
 ```
 
-Check first: we must hold the IP in what we submit. The office visuals are agent-office's (MIT, which allows this use with the licence notice); the demo audio and any music must be ours or cleared. This licence to Coinbase is irrevocable, so it also falls under the Nortal IP question below.
+Check first: we must hold the IP in what we submit. The office visuals are agent-office's (MIT, which allows this use with the licence notice); the demo audio and any music must be ours or cleared. This licence to Coinbase is irrevocable.
 
 ### 12. Privacy notice and marketing opt-in (checkbox, required)
 
@@ -205,7 +204,6 @@ Honest total: about 1 week of build plus 2 to 4 weeks for the review and the fir
 
 ## Submission checklist
 
-- [ ] Nortal permission in writing (outside work, IP, grants and prizes).
 - [ ] Mainnet decision recorded; outside review done and findings closed.
 - [ ] Base mainnet x402, attestations and indexer merged to `main` via PR; `npm run typecheck`, `npm test`, `npm run build` green.
 - [ ] At least one outside payer on Base mainnet; counts refreshed with `launch/chain/tools/counts.ts`, links on basescan.org and base.easscan.org.

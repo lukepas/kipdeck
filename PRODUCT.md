@@ -55,7 +55,7 @@ Three critics (an investor, a first user and an engineer) reviewed the build bef
 
 ### Left for later (and why)
 
-- **npm publish and the hosted demo deploy** wait on the trademark search and an employer clearance (`launch/kipdeck/README.md`). The repository (github.com/zbagdzevicius/kipdeck) is public and kipdeck.com serves the landing page.
+- **npm publish and the hosted demo deploy** wait on the trademark search (`launch/kipdeck/README.md`). The repository (github.com/zbagdzevicius/kipdeck) is public and kipdeck.com serves the landing page.
 - **Traction row with real numbers.** There are no users yet; the page asks for five design partners instead of inventing a number.
 - **Branch prefix.** Branches still start `office/` so existing branches, prune and pull request detection keep working; renaming it is a migration.
 - **Merge all ready with passing tests** (the team headline feature) and a project filter chip are not built; the project picker covers several projects today.

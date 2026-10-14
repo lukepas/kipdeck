@@ -58,7 +58,7 @@ Realistic goal: one Honorable Mention (USD 5,000). The total pool is USD 69,750 
 
 Every box here must be ticked before submitting. The first one is open in every kit.
 
-- [ ] **Employer permission (open, unticked):** written position from Nortal on outside work, IP ownership of Kipdeck and of this entry, and accepting a cash prize. The rules make the entrant warrant the work is solely theirs; without Nortal's IP position that warranty cannot be given. Also confirm Nortal is not a PayPal or Devpost contractor or affiliate, and does not employ a judge (the rules exclude those).
+- [ ] **Sole ownership:** the rules make the entrant warrant the work is solely theirs. Confirm a fork of an MIT project counts. The rules also exclude PayPal and Devpost contractors and affiliates and a judge's employer; none of those apply to us.
 - [ ] **Company registration:** not needed. Enter as an individual. A prize is paid to the individual and is taxable in Lithuania; a W-8BEN is likely required. If a Kipdeck company is registered before entering, it could enter as an Organization instead. [FOUNDERS: decide]
 - [ ] **Personal fields (Devpost profile and winner affidavit):** legal name, address, date of birth and tax details are filled by the applicant only. [FOUNDERS: personal details]
 - [ ] **Upstream code:** the "solely owned" clause versus an MIT fork. Covered by the open source clause if the credit and the split between upstream and fork work are clear. Optionally ask the hackathon manager (email link on the page) in writing; the launch README already lists this as risk 1 for every event.
@@ -260,7 +260,6 @@ Open checks during the build:
 
 ## Submission checklist
 
-- [ ] Nortal written permission (outside work, IP, prizes) in hand
 - [ ] Devpost account, "Join hackathon" clicked, custom form questions copied into this kit
 - [ ] PayPal developer account and sandbox accounts made
 - [ ] PayPal rail PR merged to `main` (typecheck, test, build green; screenshot for visual changes)

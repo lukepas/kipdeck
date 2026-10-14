@@ -53,7 +53,7 @@ One project can win at most one track prize and one mini-challenge prize. Winner
 
 Every box here must be ticked before submitting. The first one is open in every kit.
 
-- [ ] Employer permission (unticked, blocks submitting): written OK from Nortal for outside work, IP ownership of Kipdeck and accepting a prize. Also confirm Nortal is not a parent, subsidiary or affiliate of Amazon, Devpost or a judge's employer (rules exclude those).
+- [ ] Sole ownership: confirm a fork of an MIT project counts as solely owned. The rules exclude parents, subsidiaries and affiliates of Amazon, Devpost or a judge's employer; none of those apply to us.
 - [ ] Rules fit on ownership: rules require the entry be "solely owned by the Entrant". Send this to the hackathon manager now:
   > Hi, we plan to enter the Alexa+ track with Kipdeck, a public MIT-licensed fork of agent-office (webdevcody / AgentSystemLabs). Our MCP server and voice tools are new and ours, written in October 2026, and we disclose the upstream base and list our commits. Is an entry built on an MIT fork with clearly separated additions acceptable? Thanks, Zygimantas Bagdzevicius, hello@kipdeck.com
 - [ ] Build: nothing of the Alexa+ path is on main today (see above). Needs about 6 days.
@@ -314,7 +314,6 @@ Your call (default in brackets):
 
 ## Submission checklist
 
-- [ ] Nortal written permission saved.
 - [ ] Hackathon manager answer on the fork question saved.
 - [ ] Go / no-go decided by 2026-10-15.
 - [ ] Registered on Devpost (Join hackathon).

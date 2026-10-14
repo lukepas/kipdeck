@@ -28,7 +28,6 @@ Code status on 2026-10-01: `launch/x402-base` works. With `--x402` (off by defau
 - [ ] Posted about on X or Farcaster: the team finds grantees "through Twitter, Farcaster, and nominations submitted from the community", and only reaches out to the ones it selects.
 - [ ] W-8BEN (non-US) or W-9 ready: the team collects W-8/W-9 forms from all recipients for KYC, tax, compliance and legal reasons.
 - [ ] A Base wallet to receive ETH (the 2023 post says grants range from 1 to 5 ETH).
-- [ ] Employer: Nortal's permission for outside work and for receiving the grant.
 
 ## Pre-existing code disclosure
 

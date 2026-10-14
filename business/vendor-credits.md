@@ -4,7 +4,7 @@ AI and cloud startup credit programs that could cover model and compute costs fo
 
 ## Read this first
 
-- Almost every program wants an incorporated company, a company website and an email on that domain. A personal Gmail or an employer address will not do. Sort out the legal entity first, and check with your employer that you may have one (see employer-clearance-request.md).
+- Almost every program wants an incorporated company, a company website and an email on that domain. A personal Gmail or an employer address will not do. Sort out the legal entity first.
 - Several programs exclude consulting and outsourced development firms, and some exclude crypto companies. Apply as the product company (the hosted workspace), not as a consultancy. Do not describe the pilot service as the main business in those applications, and do not misrepresent what the company does either: if the honest description is "consultancy", skip those programs.
 - The larger tiers almost always need a VC, accelerator or partner referral. Without one, expect the entry tier.
 - Credits usually expire after 6-12 months. Apply close to when you will spend them, not months ahead.

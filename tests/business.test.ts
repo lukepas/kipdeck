@@ -9,7 +9,6 @@ const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'busi
 
 const EXPECTED = [
   'README.md',
-  'employer-clearance-request.md',
   'upstream-partnership.md',
   'agent-team-lab-offer.md',
   'sow-template.md',

@@ -46,7 +46,7 @@ Kipdeck is built on agent-office (MIT, by webdevcody / AgentSystemLabs, https://
 
 Every box here must be ticked before submitting. The first one is open in every kit.
 
-- [ ] Employer (Nortal): written permission for outside work on Kipdeck, confirmation that Nortal claims no IP in it, and permission to accept a cash or hardware prize. Rules 5 require the submission to be "solely owned by you... with no other person or entity having any right or interest in it", so an IP claim by the employer would disqualify it. Not done. This is the top blocker.
+- [ ] Sole ownership: Rules 5 require the submission to be "solely owned by you... with no other person or entity having any right or interest in it". Confirm a fork of an MIT project counts (see the organiser question below).
 - [ ] Ownership and the fork: the same clause sits awkwardly with code that is MIT-licensed upstream work. Before submitting, email the hackathon manager (the "Email the hackathon manager" link on the overview page) and ask whether an MIT fork with disclosed upstream code is eligible when only our additions are claimed. Save the reply. The rules require a written clarification request for anything ambiguous.
 - [ ] Company registration: none exists. Enter as an individual (or as a team of individuals). An Organization entry needs a legal entity at the time of entry. Prize money goes to the individual, who handles Lithuanian tax on it (rules 7: winners pay all fees and taxes).
 - [ ] Team: co-founders undecided (D9). Enter as an individual for now; Devpost lets you add teammates until the deadline. [FOUNDERS: team]
@@ -175,7 +175,7 @@ None (did not attend)
 
 ### 13. Submitter type, country and team (Devpost profile and submission fields)
 
-- Submitter type: Individual, unless Nortal or a company enters (see Blockers). Organizations must "exist and have been organized or incorporated at the time of entry".
+- Submitter type: Individual, unless a company enters. Organizations must "exist and have been organized or incorporated at the time of entry".
 - Country of residence: Lithuania.
 - Team members: [FOUNDERS: team. Kipdeck is founder-led by Zygimantas Bagdzevicius (CEO/CTO). Invite any co-founder by Devpost username only after decision D9]
 - Representative (if a team): Zygimantas Bagdzevicius.
@@ -239,7 +239,6 @@ Minimum to enter: items 1, 2, 7 and the README part of 1, about 3 to 3.5 working
 
 ## Submission checklist
 
-- [ ] Nortal written permission (outside work, IP, prizes) saved.
 - [ ] Organizer's reply on the MIT fork question saved.
 - [ ] Devpost account, "Join hackathon" done. Token Factory credits redeemed (`NEBIUS-DEVPOST-GLOBAL26`) plus Builders Program. Spending cap set.
 - [ ] To build item 1 merged on `main`: Nemotron via Token Factory works from a clean `npx github:zbagdzevicius/kipdeck`.

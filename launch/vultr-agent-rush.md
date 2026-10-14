@@ -52,7 +52,6 @@ Prize targeted: 1st place, USD 5,000 cash + USD 3,000 Vultr credits. Realistic f
 
 Every box here must be ticked before submitting. The first one is open in every kit.
 
-- [ ] **Employer (Nortal) permission**: not ticked. Written OK needed for outside work, IP ownership of what is built during the week, and accepting prize money. Do not submit, and ideally do not start the build, without it.
 - [ ] Company registration: not needed to enter or win (individuals can take part). Needed only for the Lithuanian travel refund, which is why we go online only. Prize payout to an individual outside the US likely needs a tax form such as W-8BEN [unverified; lablab says payout can take up to 90 days].
 - [ ] Personal fields: lablab profile details and the team list are [FOUNDERS: ...]; never fill them from guesses.
 - [ ] Pre-existing code: the page does not address it. Get a written answer in the Discord before 2026-11-03 and keep a screenshot.
@@ -199,7 +198,6 @@ Total: about 6 working days for 6 calendar days, so there is no slack. Cut list 
 
 ## Submission checklist
 
-- [ ] Nortal written permission (outside work, IP, prizes) saved.
 - [ ] Signed up on lablab, team "Kipdeck" created, Discord joined, pre-existing code answer saved.
 - [ ] Real cut-off time copied into `launch/deadlines.json`, calendar regenerated (`npx tsx launch/tools/calendar.ts`).
 - [ ] Vultr credit coupon applied; spend cap set on the inference key.

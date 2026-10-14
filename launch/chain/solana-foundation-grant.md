@@ -55,7 +55,6 @@ By clicking Submit the applicant confirms they may act for the project and apply
 - [ ] A clear answer to "why Solana" (below).
 - [ ] A budget with measurable milestones.
 - [ ] Grant type chosen: milestone grant for the program and SDK; say plainly that a hosted office exists and is not funded by this grant.
-- [ ] Employer permission for outside work and for receiving grant money, in writing.
 - [ ] KYC and tax forms before payout [unverified].
 
 ## Pre-existing code disclosure
@@ -102,5 +101,4 @@ The form may not ask for a video [unverified]. Reuse the technical demo from [la
 - [ ] Colosseum submitted; the demo and program id ready.
 - [x] Budgets filled in (USD 15,000 total); get a quote for the M2 review before signing.
 - [ ] Grant type chosen and explained.
-- [ ] Employer permission saved.
 - [ ] Form submitted; confirmation saved; follow up if no reply in three weeks.
