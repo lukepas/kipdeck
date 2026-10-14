@@ -16,7 +16,7 @@ Everything that is not that loop is a lab, off by default (an admin can switch a
 
 ### Business model (for the pitch, not the app)
 
-- **Free and open source (MIT), single player.** The inbox, the demo, local merges, the signed log, Numbers. This is the distribution: `npx kipdeck` in any repository, once it is on npm (until then `kipdeck` from a linked clone, see the README's From source).
+- **Free and open source (MIT), single player.** The inbox, the demo, local merges, the signed log, Numbers. This is the distribution: `npx kipdeck` in any repository, once it is on npm (until then `npx` on the newest GitHub release's prebuilt tarball, or `kipdeck` from a linked clone, see the README's From source).
 - **Paid team tier (waitlist on the landing page).** A shared inbox for a team, questions routed to whoever owns them, single sign-on, an audit trail of who merged what and team-level wait-time reporting. Accounts and invite links already work in the free version; routing, SSO and audit export are the paid build.
 - **What the team built beyond the fork.** The fork gave a 3D office with terminals at desks. This team built: the attention ranking that every surface shares, the inbox, the question card, the signed shipped log and its metrics, merging without GitHub, one-command onboarding with no password on your own computer, `kipdeck attach`, the scripted demo and its read-only hosted mode, Labs, and the whole Proof of Merge track (devnet bounty escrow, Base Sepolia attestations, ERC-8004 reputation, x402 paid tasks), now parked as a lab.
 
@@ -37,7 +37,7 @@ Three critics (an investor, a first user and an engineer) reviewed the build bef
 | Toasts covered the reply box and Merge, toasted your own actions, said "hired" and Labs noise | Toasts stack at the bottom of the list's column (top on a phone). Nobody is toasted about what they just did. "Deployed", not "hired". Switching a lab toasts nobody. |
 | Review had two competing action bars and showed `.agent-office/worktrees/...` | Send back and Merge only; the Changes footer shows in the pane only while something is uncommitted, without the worktree path. To review rows say *3 files, +70 -0* and *ready 2m*. |
 | The avatar menu had four more places to manage work, and "Mission control" competed with home | The menu is Numbers, Settings, Help and keys, Sign out. Issues, Pull requests, the Task queue and Mission control are the **GitHub boards and queue** lab. Labs is at the foot of Settings > Account and in Ctrl+K. |
-| `npx kipdeck` returns 404 on npm | The README and the landing page say it isn't on npm yet and how to run it from source; the landing build drops that line with `KIPDECK_NPM_PUBLISHED=1`. Publishing waits on the trademark search (`business/naming.md`). The cold-npx timing is labelled as measured from a local `npm pack` tarball. |
+| `npx kipdeck` returns 404 on npm | The README and the landing page say it isn't on npm yet and run the newest GitHub release's prebuilt tarball instead, with the from-source steps as the fallback; the landing build drops that line with `KIPDECK_NPM_PUBLISHED=1`. Publishing waits on the trademark search (`business/naming.md`). The cold-npx timing is labelled as measured from the release tarball `deploy/release/pack.mjs` packs. |
 
 ### Shoulds and nices done
 
@@ -85,7 +85,7 @@ Measured with `design/measure-final.mjs` on an M-series Mac, headless Chromium, 
 
 | | POC (f8c708f) | Review build (ae964cad) | This build |
 | --- | --- | --- | --- |
-| Install | git clone, npm install, npm install -g (3 commands) | `npx kipdeck` (1) | `npx kipdeck` (1; from source until it is on npm) |
+| Install | git clone, npm install, npm install -g (3 commands) | `npx kipdeck` (1) | `npx kipdeck` (1; `npx` on the release tarball until it is on npm) |
 | Terminal questions | 1 to 2 | 0 | 0 |
 | Time to first agent at work | not reachable as documented; 55.6 s by the most favourable path | 3.4 s, 1 click, 1 key | 3.4 s, 1 click, 1 key |
 | Time to first merged change (a second agent asks, answered, reviewed, merged) | not reachable in the app | 10.9 s, 5 clicks, 3 keys, 2 typed fields | 10.7 s, **4 clicks**, 3 keys, 2 typed fields |

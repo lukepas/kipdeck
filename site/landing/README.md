@@ -27,7 +27,7 @@ node --import tsx --import=#tests/css --test tests/landing.test.ts tests/landing
 
 ## Change the name
 
-The name, tagline, wordmark, npm package, source repository and contact address live in one file, `site/landing/brand.ts`. The page title, the share tags, the wordmark, every sentence that names the product, every Source and Docs link, the start commands (`npx github:owner/repo`), the design-partner link, the structured data and the generated share card (`og.png`) all read from it. The logo is not in `brand.ts`: Kip's mark in the header, the mini inbox and the footer, the favicons (`favicon-alert.svg` lights his light while someone waits), `apple-touch-icon.png` and the share card's mark are written from `src/shared/logo.ts` by `npm run logo` ([the logo](../../docs/design.md#the-logo)). Edit the `kipdeck` entry in `BRANDS`, or add one and pick it at build time:
+The name, tagline, wordmark, npm package, source repository and contact address live in one file, `site/landing/brand.ts`. The page title, the share tags, the wordmark, every sentence that names the product, every Source and Docs link, the start commands (`npx` on the repository's newest release, from `site/npx.mjs`), the design-partner link, the structured data and the generated share card (`og.png`) all read from it. The logo is not in `brand.ts`: Kip's mark in the header, the mini inbox and the footer, the favicons (`favicon-alert.svg` lights his light while someone waits), `apple-touch-icon.png` and the share card's mark are written from `src/shared/logo.ts` by `npm run logo` ([the logo](../../docs/design.md#the-logo)). Edit the `kipdeck` entry in `BRANDS`, or add one and pick it at build time:
 
 ```bash
 KIPDECK_BRAND=<id> npm run build:site
@@ -45,10 +45,10 @@ npm run build:site
 | Variable | What it does | When unset |
 | --- | --- | --- |
 | `KIPDECK_SITE_URL` | Canonical link, `og:url`, absolute share-card addresses, `sitemap.xml` | None of those (a relative one would be wrong wherever the page is copied) |
-| `KIPDECK_REPO_URL` | Replaces the brand's repository everywhere, the `npx github:owner/repo` commands too | The repository in `brand.ts` |
+| `KIPDECK_REPO_URL` | Replaces the brand's repository everywhere, the `npx` release commands too | The repository in `brand.ts` |
 | `KIPDECK_WAITLIST_URL` | Shows the Team waitlist form and lets it POST `{ email, source }` there (and nowhere else) | No form; the ask is the design-partner link, an email to the brand's contact address |
 | `KIPDECK_DEMO_URL` | **Try the demo** opens a hosted read-only demo (the root `vercel.json` sets it to the replay demo, https://kipdeck-demo.vercel.app/) | **Try the demo** copies the hero's demo command |
-| `KIPDECK_NPM_PUBLISHED=1` | `npx kipdeck` replaces the `npx github:` commands | The `npx github:` commands and the "Not on npm yet" line stay |
+| `KIPDECK_NPM_PUBLISHED=1` | `npx kipdeck` replaces the release commands (`npx <repo>/releases/latest/download/kipdeck.tgz`) | The release commands and the "Not on npm yet" line stay |
 | `KIPDECK_REPO_PUBLIC=0` | For a brand whose repository is private: the hero's command, the 06 terminal and the Source and Docs links are left out, and the hero leads with the film and the design-partner email | Public (github.com/zbagdzevicius/kipdeck is): all of them are shown |
 | `KIPDECK_BRAND` | Picks an entry in `brand.ts` | `kipdeck` |
 
@@ -56,7 +56,7 @@ Every address must be `https`, or the build stops. The build draws `og.png` with
 
 ## Deploy to Vercel (automatic)
 
-The repository root has a `vercel.json` for the landing page: it installs with `npm ci --ignore-scripts`, builds with `npm run build:site`, serves `dist/site` and sends the same headers as `_headers`. In Vercel, connect the GitHub repository to the landing project and leave the root directory at `./`. Ours is the `kipdeck` project: production domain https://kipdeck.com (also https://kipdeck.vercel.app), auto-deploying from `main`. The older `kipdeck-landing` project only redirects https://kipdeck-landing.vercel.app to kipdeck.com and does not build the page. Set the production branch to the branch the page ships from and `KIPDECK_SITE_URL` (and any of the other addresses) under Environment Variables. Every push to that branch then goes live, and every other branch and pull request gets a preview address.
+The repository root has a `vercel.json` for the landing page: it installs with `npm ci --ignore-scripts`, builds with `npm run build:site`, serves `dist/site`, sends the same headers as `_headers` and redirects `/get` to the newest release's `kipdeck.tgz` (the same rule as `_redirects`), so `npx https://kipdeck.com/get` runs it. In Vercel, connect the GitHub repository to the landing project and leave the root directory at `./`. Ours is the `kipdeck` project: production domain https://kipdeck.com (also https://kipdeck.vercel.app), auto-deploying from `main`. The older `kipdeck-landing` project only redirects https://kipdeck-landing.vercel.app to kipdeck.com and does not build the page. Set the production branch to the branch the page ships from and `KIPDECK_SITE_URL` (and any of the other addresses) under Environment Variables. Every push to that branch then goes live, and every other branch and pull request gets a preview address.
 
 Vercel's builder has no Chromium, so the committed `public/og.png` is the share card there.
 
@@ -119,4 +119,4 @@ He never stands over text, a link, a button or a field: every spot is checked ag
 - No users and no revenue yet; the page says so and asks for five design partners.
 - Proof of Merge runs on testnets only (Solana devnet, Base Sepolia) with test funds; every chain value says so.
 - `npx kipdeck` is not on npm yet: the page shows the run-from-source command and says so.
-- The repository named in `brand.ts`, github.com/zbagdzevicius/kipdeck, is public, so the default build shows the Source and Docs links and the `npx github:` command. The design-partner ask is an email to `contact` in `brand.ts`, so it also works in a `KIPDECK_REPO_PUBLIC=0` build.
+- The repository named in `brand.ts`, github.com/zbagdzevicius/kipdeck, is public, so the default build shows the Source and Docs links and the `npx` release command. The design-partner ask is an email to `contact` in `brand.ts`, so it also works in a `KIPDECK_REPO_PUBLIC=0` build.

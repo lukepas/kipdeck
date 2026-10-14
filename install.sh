@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Install Kipdeck (the inbox for your AI coding agents) from npm and start it, for anyone who would
-# rather have a `kipdeck` command than type the npx command each time:
+# Install Kipdeck (the inbox for your AI coding agents) from its newest release and start it, for
+# anyone who would rather have a `kipdeck` command than type the npx command each time:
 #
 #   curl -fsSL https://raw.githubusercontent.com/zbagdzevicius/kipdeck/main/install.sh | bash
 #
@@ -8,26 +8,26 @@
 #
 #   curl -fsSL https://raw.githubusercontent.com/zbagdzevicius/kipdeck/main/install.sh | bash -s -- --port 4700
 #
-# Kipdeck is not on npm yet. Until it is, the registry install fails and this prints the steps that
-# run it from source instead (or pass KIPDECK_TARBALL, a package built with `npm pack`).
+# It installs the newest release's package, built ahead by the Release workflow (nothing is compiled
+# on your machine), into ~/.local/share/kipdeck and links a `kipdeck` command into ~/.local/bin. Run
+# it again to update. It never installs anything else: the agent CLIs (Claude Code, Codex, Cursor)
+# are yours to install. Kipdeck is not on npm yet; the newest release is
 #
-# It installs the npm package `kipdeck` (built ahead: nothing is compiled on your machine) into
-# ~/.local/share/kipdeck and links a `kipdeck` command into ~/.local/bin. Run it again to update.
-# It never installs anything else: the agent CLIs (Claude Code, Codex, Cursor) are yours to install.
+#   https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz
 #
 # Environment:
-#   KIPDECK_VERSION        install this version (e.g. 0.2.0) instead of the newest
+#   KIPDECK_VERSION        install this release (e.g. 0.1.70) instead of the newest
 #   KIPDECK_PREFIX         where the package goes (default ~/.local/share/kipdeck)
 #   KIPDECK_BIN_DIR        where the `kipdeck` command goes (default ~/.local/bin; empty: none)
 #   KIPDECK_INSTALL_ONLY   1: install, but don't start it
-#   KIPDECK_TARBALL        install this package tarball (from `npm pack`) instead of the registry's
+#   KIPDECK_TARBALL        install this package tarball (a path or an https address) instead
 set -euo pipefail
 
 KIPDECK_VERSION="${KIPDECK_VERSION:-}"
 KIPDECK_TARBALL="${KIPDECK_TARBALL:-}"
 KIPDECK_INSTALL_ONLY="${KIPDECK_INSTALL_ONLY:-}"
 
-PACKAGE="kipdeck"
+RELEASES="https://github.com/zbagdzevicius/kipdeck/releases"
 PREFIX="${KIPDECK_PREFIX:-${XDG_DATA_HOME:-$HOME/.local/share}/kipdeck}"
 BIN_DIR="${KIPDECK_BIN_DIR-$HOME/.local/bin}"
 
@@ -55,12 +55,12 @@ check_requirements() {
   fi
 }
 
-# What to run while the package is not on the registry: the README's "From source" steps.
+# What to run when the release can't be installed: the README's "From source" steps.
 from_source() {
   cat >&2 <<'EOF'
 
-Kipdeck is not on npm yet. In your repository, run it straight from GitHub
-(Node.js 20+ and git; the first run builds it, a few minutes):
+To run it straight from the repository instead (Node.js 20+ and git; the
+first run builds it, a few minutes), in your repository:
 
   cd ~/code/your-project && npx github:zbagdzevicius/kipdeck
 
@@ -75,18 +75,21 @@ EOF
 
 main() {
   check_requirements
-  local spec="$PACKAGE@${KIPDECK_VERSION:-latest}"
-  if [ -n "${KIPDECK_TARBALL:-}" ]; then
-    [ -f "$KIPDECK_TARBALL" ] || die "no such file: $KIPDECK_TARBALL"
-    spec="$(cd "$(dirname "$KIPDECK_TARBALL")" && pwd)/$(basename "$KIPDECK_TARBALL")"
+  local spec="$RELEASES/latest/download/kipdeck.tgz"
+  if [ -n "$KIPDECK_VERSION" ]; then spec="$RELEASES/download/v${KIPDECK_VERSION#v}/kipdeck.tgz"; fi
+  if [ -n "$KIPDECK_TARBALL" ]; then
+    case "$KIPDECK_TARBALL" in
+      https://*) spec="$KIPDECK_TARBALL" ;;
+      *)
+        [ -f "$KIPDECK_TARBALL" ] || die "no such file: $KIPDECK_TARBALL"
+        spec="$(cd "$(dirname "$KIPDECK_TARBALL")" && pwd)/$(basename "$KIPDECK_TARBALL")"
+        ;;
+    esac
   fi
   step "Installing $spec into $PREFIX"
   mkdir -p "$PREFIX"
   if ! npm install --global --prefix "$PREFIX" --no-audit --no-fund --loglevel=error "$spec" >&2; then
-    if [ -z "${KIPDECK_TARBALL:-}" ] && ! npm view "$PACKAGE" version >/dev/null 2>&1; then
-      from_source
-      die "$PACKAGE is not on npm yet: run it from source with the steps above"
-    fi
+    from_source
     die "npm couldn't install $spec (see above)"
   fi
   local entry="$PREFIX/bin/kipdeck"

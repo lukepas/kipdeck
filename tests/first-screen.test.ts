@@ -9,13 +9,11 @@ import { attention, STATE_LABEL, type Attention } from '../src/shared/attention.
 import { hintShown, parseHints, SECTION_HINT } from '../src/shared/hints.js';
 import { ageLabel, buildInbox, idleBreakdown, idleKind, idleStatus, INBOX_SECTIONS, sectionOf } from '../src/shared/inbox.js';
 import type { RosterEntry } from '../src/shared/protocol.js';
-import { REPO_URL } from '../src/shared/copy.js';
+import { INSTALL_COMMAND } from '../src/shared/demo.js';
 
 const root = path.join(import.meta.dirname, '..');
 const read = (f: string) => readFileSync(path.join(root, f), 'utf8');
 const MIN = 60_000;
-/** The README's one command: npx straight from the repository until the package is on npm. */
-const INSTALL_COMMAND = `npx github:${new URL(REPO_URL).pathname.slice(1)}`;
 const NOW = 1_800_000_000_000;
 
 function agent(over: Partial<RosterEntry>): RosterEntry {

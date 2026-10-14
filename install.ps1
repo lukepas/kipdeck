@@ -1,19 +1,20 @@
-# Install Kipdeck (the inbox for your AI coding agents) from npm on Windows and start it:
+# Install Kipdeck (the inbox for your AI coding agents) from its newest release on Windows and start it:
 #
 #   irm https://raw.githubusercontent.com/zbagdzevicius/kipdeck/main/install.ps1 | iex
 #
-# Kipdeck is not on npm yet. Until it is, the registry install fails and this prints the steps that
-# run it from source instead (or set KIPDECK_TARBALL to a package built with `npm pack`).
+# It installs the newest release's package, built ahead by the Release workflow (nothing is compiled
+# on your machine), with `npm install --global`, which puts a `kipdeck` command on your PATH. Run it
+# again to update. It never installs anything else: the agent CLIs (Claude Code, Codex, Cursor) are
+# yours to install. Kipdeck is not on npm yet; the newest release is
 #
-# It installs the npm package `kipdeck` (built ahead: nothing is compiled on your machine) with
-# `npm install --global`, which puts a `kipdeck` command on your PATH. Run it again to update.
-# It never installs anything else: the agent CLIs (Claude Code, Codex, Cursor) are yours to install.
-# `npx github:zbagdzevicius/kipdeck` does the same without installing anything, until it is on npm.
+#   https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz
+#
+# and `npx <that address>` runs it without installing anything.
 #
 # Environment:
-#   KIPDECK_VERSION        install this version (e.g. 0.2.0) instead of the newest
+#   KIPDECK_VERSION        install this release (e.g. 0.1.70) instead of the newest
 #   KIPDECK_INSTALL_ONLY   1: install, but don't start it
-#   KIPDECK_TARBALL        install this package tarball (from `npm pack`) instead of the registry's
+#   KIPDECK_TARBALL        install this package tarball (a path or an https address) instead
 
 
 $ErrorActionPreference = 'Stop'
@@ -36,34 +37,33 @@ if (-not ((Get-Command claude -ErrorAction SilentlyContinue) -or (Get-Command co
   Write-Host 'warning: no Claude Code, Codex or Cursor CLI on your PATH. Agents need one of them, e.g. npm install -g @anthropic-ai/claude-code' -ForegroundColor Yellow
 }
 
-$version = if ($env:KIPDECK_VERSION) { $env:KIPDECK_VERSION } else { 'latest' }
-$spec = "kipdeck@$version"
+$releases = 'https://github.com/zbagdzevicius/kipdeck/releases'
+$spec = "$releases/latest/download/kipdeck.tgz"
+if ($env:KIPDECK_VERSION) { $spec = "$releases/download/v$($env:KIPDECK_VERSION.TrimStart('v'))/kipdeck.tgz" }
 if ($env:KIPDECK_TARBALL) {
-  if (-not (Test-Path $env:KIPDECK_TARBALL)) { Fail "no such file: $($env:KIPDECK_TARBALL)" }
-  $spec = (Resolve-Path $env:KIPDECK_TARBALL).Path
+  if ($env:KIPDECK_TARBALL -like 'https://*') {
+    $spec = $env:KIPDECK_TARBALL
+  } else {
+    if (-not (Test-Path $env:KIPDECK_TARBALL)) { Fail "no such file: $($env:KIPDECK_TARBALL)" }
+    $spec = (Resolve-Path $env:KIPDECK_TARBALL).Path
+  }
 }
 
 Write-Host "==> Installing $spec" -ForegroundColor Cyan
 npm install --global --no-audit --no-fund --loglevel=error $spec
 if ($LASTEXITCODE -ne 0) {
-  if (-not $env:KIPDECK_TARBALL) {
-    npm view kipdeck version *> $null
-    if ($LASTEXITCODE -ne 0) {
-      Write-Host ''
-      Write-Host 'Kipdeck is not on npm yet. In your repository, run it straight from GitHub'
-      Write-Host '(Node.js 20+ and git; the first run builds it, a few minutes):'
-      Write-Host ''
-      Write-Host '  cd ~\code\your-project; npx github:zbagdzevicius/kipdeck'
-      Write-Host ''
-      Write-Host 'Or from a clone, with a kipdeck command on your PATH:'
-      Write-Host ''
-      Write-Host '  git clone https://github.com/zbagdzevicius/kipdeck'
-      Write-Host '  cd kipdeck; npm install; npm link'
-      Write-Host '  cd ~\code\your-project; kipdeck'
-      Write-Host ''
-      Fail 'kipdeck is not on npm yet: run it from source with the steps above'
-    }
-  }
+  Write-Host ''
+  Write-Host 'To run it straight from the repository instead (Node.js 20+ and git; the'
+  Write-Host 'first run builds it, a few minutes), in your repository:'
+  Write-Host ''
+  Write-Host '  cd ~\code\your-project; npx github:zbagdzevicius/kipdeck'
+  Write-Host ''
+  Write-Host 'Or from a clone, with a kipdeck command on your PATH:'
+  Write-Host ''
+  Write-Host '  git clone https://github.com/zbagdzevicius/kipdeck'
+  Write-Host '  cd kipdeck; npm install; npm link'
+  Write-Host '  cd ~\code\your-project; kipdeck'
+  Write-Host ''
   Fail "npm couldn't install $spec (see above)"
 }
 

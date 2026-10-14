@@ -20,7 +20,7 @@ import { buildSite } from '../site/build.mjs';
 import { serve } from '../site/serve.mjs';
 
 const dir = mkdtempSync(path.join(tmpdir(), 'landing-scenes-'));
-// Built as the page will be once the source is public: the npx github command and the terminal are on it.
+// Built as the page will be once the source is public: the npx release command and the terminal are on it.
 await buildSite({ env: {}, outDir: dir, card: false });
 const { server, url } = await serve(dir, 0);
 
@@ -141,7 +141,7 @@ test('section 06 looks finished within a second of coming into view, and its ter
   const { page, errors } = await open(t);
   // Before the terminal runs, every line is already in the accessibility tree.
   const tree = await page.locator('#from-source').ariaSnapshot();
-  assert.match(tree, /npx github:zbagdzevicius\/kipdeck/);
+  assert.match(tree, /npx https:\/\/kipdeck\.com\/get/);
   assert.match(tree, /running at\s+http:\/\/localhost:4600/);
   await page.evaluate(() => document.querySelector('#yours .measured')!.scrollIntoView({ block: 'center' }));
   await page.waitForTimeout(1200);
