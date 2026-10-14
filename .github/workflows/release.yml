@@ -63,9 +63,18 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            onchain/attest/package-lock.json
 
       - name: Install and build
         run: npm ci # its prepare script builds the client and the server
+
+      # Some tests import onchain/attest's sources (its schema, with viem), whose packages are its own,
+      # not the app's. Only the packages: its build needs forge, and the tests read src/, not dist/.
+      - name: Install onchain/attest's packages for the tests
+        working-directory: onchain/attest
+        run: npm ci --ignore-scripts
 
       - run: npm run typecheck
 
@@ -74,7 +83,11 @@ jobs:
       - name: Build the replay demo
         run: npm run build:replay
 
-      - run: npm test
+      # npm test is these two. The timing-sensitive files (tests/support/run.mjs) run on their own,
+      # one at a time, after the rest, so the parallel run can't starve them of CPU.
+      - run: npm run test:main
+
+      - run: npm run test:perf
 
       - name: Pack the release
         id: pack

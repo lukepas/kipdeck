@@ -191,10 +191,13 @@ Seven keys on the home page: **Ctrl+K** (find an agent or a command), **N** (dep
 npm install
 npm run dev          # Vite with hot reload on :5173, the server on :4600 (password: dev)
 npm run typecheck
+(cd onchain/attest && npm ci --ignore-scripts)   # once: a few tests import its sources, which need viem
 npm test
 ```
 
 The browser tests (`tests/*-e2e.test.ts`) load the built bundle, so run `npm run build` before `npm test` to include them. They skip, saying why, when there is no bundle or it is older than the sources it was built from (after an edit, a merge or a checkout).
+
+`npm test` is two runs. `npm run test:main` runs every file in parallel except the timing-sensitive ones: the landing page's CPU-throttled scroll budgets and the browser tests that drive the 3D office. `npm run test:perf` then runs those one at a time, so nothing else competes for the CPU while they measure. The list is `SERIAL` in `tests/support/run.mjs`; a new test that times the page goes there. CI runs the same two scripts as separate steps.
 
 Server edits restart the server, not the workers. After changing `ptyhost.ts`, bump `PTY_PROTOCOL` in `ptys.ts` so the next server replaces the PTY host.
 

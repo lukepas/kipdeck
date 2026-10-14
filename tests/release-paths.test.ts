@@ -69,7 +69,9 @@ test('installs never build the replay demo', () => {
 test('the Release workflow builds the replay demo before the tests', () => {
   const build = workflow.indexOf('npm run build:replay');
   assert.ok(build >= 0, 'release.yml runs npm run build:replay');
-  assert.ok(build < workflow.indexOf('run: npm test'), 'release.yml builds the replay demo before npm test, so replay-e2e runs');
+  const tests = workflow.indexOf('run: npm run test:main');
+  assert.ok(tests >= 0, 'release.yml runs npm run test:main');
+  assert.ok(build < tests, 'release.yml builds the replay demo before the tests, so replay-e2e runs');
 });
 
 for (const event of ['push', 'pull_request']) {
