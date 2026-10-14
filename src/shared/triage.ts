@@ -80,7 +80,8 @@ export function triageVerb(k: { key: string; shiftKey?: boolean }, kind: TriageK
   if (lower === 'z') return { verb: 'snooze' };
   if (lower === 'u') return { verb: 'undo' };
   if (kind === 'approval') {
-    if (lower === 'y') return { verb: k.shiftKey || key === 'Y' ? 'same' : 'once' };
+    // Shift itself, not a capital Y: Caps Lock alone never widens an allow to every agent.
+    if (lower === 'y') return { verb: k.shiftKey ? 'same' : 'once' };
     if (lower === 'a' && o.always) return { verb: 'always' };
     if (lower === 'n') return { verb: 'deny' };
     return undefined;
@@ -108,10 +109,14 @@ export function needsHold(verb: TriageVerb, risks: readonly ApprovalRisk[] = [])
   return (verb === 'once' || verb === 'always' || verb === 'same') && risks.includes('destructive');
 }
 
-/** The open requests asking for the same call as `a` (the same tool with the same input, `call` in approval.ts), `a` first. */
+/**
+ * The open requests asking for the same call as `a` (the same tool with the same input, `call` in
+ * approval.ts) with the same risk tags, `a` first: the desk allows no others (ApprovalDesk.sameAs).
+ */
 export function sameCallRequests(all: Iterable<ApprovalView>, a: ApprovalView): ApprovalView[] {
   if (!a.call) return [a];
-  return [a, ...[...all].filter((x) => x.id !== a.id && x.call === a.call)];
+  const risks = a.risks.join();
+  return [a, ...[...all].filter((x) => x.id !== a.id && x.call === a.call && x.risks.join() === risks)];
 }
 
 /** The card to show after the list changed: the same one if it's still there, else the one now in its place. */

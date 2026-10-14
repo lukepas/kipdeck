@@ -138,7 +138,7 @@ Seven of them, never while you type in a box or a terminal, or while a window is
 
 After you answer or approve, the pane moves to the next item that needs you, then the next to review. Up and Down (or j and k) move the selection. Esc in the pane's terminal comes back to the list rather than reaching the agent; the keypad's **Esc** button, or Ctrl+[, sends the agent one.
 
-**Triage** (**T**) shows the same items one card at a time, Needs you then To review. Y, A and N answer an approval; Shift+Y allows a byte-identical call for every agent waiting on it at once; 1-9 and R answer a question; M merges (with the usual Undo) and S sends back finished work; Z snoozes for an hour. Keys wait 300 ms after each card appears, and allowing a call tagged destructive takes a held key. The full list is in [controls](controls.md#triage).
+**Triage** (**T**) shows the same items one card at a time, Needs you then To review. Y, A and N answer an approval; Shift+Y allows a byte-identical call with the same risk tags for every agent waiting on it at once; 1-9 and R answer a question; M merges (with the usual Undo) and S sends back finished work; Z snoozes for an hour. Keys wait 300 ms after each card appears, and allowing a call tagged destructive takes a held key. The full list is in [controls](controls.md#triage).
 
 ## Approvals
 

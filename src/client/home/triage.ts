@@ -89,7 +89,11 @@ export function openTriage(actions: Actions) {
       b.addEventListener('pointerdown', () => startHold(verb));
       for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, () => cancelHold(verb));
       b.title = 'Hold to allow: it is tagged destructive';
-    } else b.addEventListener('click', () => run(verb, extra.choice));
+    } else
+      b.addEventListener('click', () => {
+        // A click waits out TRIAGE_ARM_MS too, so a double click never lands its second half on the next card.
+        if (triageArmed(shownAt, Date.now(), verb)) run(verb, extra.choice);
+      });
     return b;
   };
 

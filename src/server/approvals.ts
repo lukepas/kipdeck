@@ -105,13 +105,16 @@ export class ApprovalDesk {
 
   /**
    * Request `id` and every other open request for the byte-identical call (sameCall: the same tool
-   * with the same input), whichever agent asked, `id`'s first; empty when `id` is gone. Triage's
+   * with the same input) with the same risk tags, whichever agent asked, `id`'s first; empty when `id`
+   * is gone. The tags must match because they depend on each agent's folder: the same path can be
+   * inside one agent's repository and outside another's, and the person only saw `id`'s. Triage's
    * Shift+Y answers them all at once ('approval.answer' with `same`).
    */
   sameAs(id: string): ApprovalView[] {
     const h = this.held.get(id);
     if (!h) return [];
-    const others = [...this.held.values()].filter((o) => o !== h && sameCall(o.payload, h.payload)).map((o) => o.view).sort((a, b) => a.at - b.at);
+    const risks = h.view.risks.join();
+    const others = [...this.held.values()].filter((o) => o !== h && sameCall(o.payload, h.payload) && o.view.risks.join() === risks).map((o) => o.view).sort((a, b) => a.at - b.at);
     return [h.view, ...others];
   }
 

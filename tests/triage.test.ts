@@ -67,6 +67,7 @@ test('each key does one thing, and only on the card it is for', () => {
   const v = (key: string, kind: Parameters<typeof triageVerb>[1], o = {}, shiftKey = false) => triageVerb({ key, shiftKey }, kind, o)?.verb;
   assert.equal(v('y', 'approval'), 'once');
   assert.equal(v('Y', 'approval', {}, true), 'same');
+  assert.equal(v('Y', 'approval'), 'once', 'Caps Lock alone is no Shift+Y');
   assert.equal(v('a', 'approval', { always: true }), 'always');
   assert.equal(v('a', 'approval'), undefined, 'no rule offered, no always');
   assert.equal(v('n', 'approval'), 'deny');
@@ -117,6 +118,8 @@ test('the same call: by its key, the one on show first', () => {
   const all = [view({ id: 'r0', workerId: 'w0', call: 'k1' }), a, view({ id: 'r2', workerId: 'w2', call: 'k2' })];
   assert.deepEqual(sameCallRequests(all, a).map((x) => x.id), ['r1', 'r0']);
   assert.deepEqual(sameCallRequests(all, view({ id: 'r3', call: undefined })).map((x) => x.id), ['r3']);
+  const outside = view({ id: 'r4', workerId: 'w4', call: 'k1', risks: ['outside'] });
+  assert.deepEqual(sameCallRequests([...all, outside], a).map((x) => x.id), ['r1', 'r0'], 'other risk tags: not the same call to allow');
 });
 
 test('callKey agrees with sameCall, and approvalView carries it', () => {
@@ -169,4 +172,28 @@ test("the desk's sameAs: every open request for the byte-identical call, whichev
   assert.deepEqual(desk.sameAs('gone'), []);
   desk.close();
   await answers[2];
+});
+
+test("the desk's sameAs leaves out the same call with other risk tags (a path outside that agent's folder)", async () => {
+  const desk = new ApprovalDesk({ publish: () => {} });
+  const server = http.createServer((req, res) => {
+    let body = '';
+    req.on('data', (c) => (body += c));
+    req.on('end', () => {
+      if (!desk.open(String(req.url).slice(1), 'f1', JSON.parse(body), res)) res.end('{}');
+    });
+  });
+  servers.push(server);
+  await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
+  const port = (server.address() as AddressInfo).port;
+  const edit = { tool_name: 'Edit', tool_input: { file_path: '/r/w1/a.ts', old_string: 'a', new_string: 'b' } };
+  const ask = (worker: string) => fetch(`http://127.0.0.1:${port}/${worker}`, { method: 'POST', body: JSON.stringify({ ...edit, cwd: `/r/${worker}` }) }).then((r) => r.text());
+  const answers = [ask('w1'), ask('w2')];
+  for (let i = 0; i < 100 && desk.list().length < 2; i++) await new Promise((r) => setTimeout(r, 10));
+  const [w1, w2] = ['w1', 'w2'].map((w) => desk.list().find((v) => v.workerId === w)!);
+  assert.equal(w1.call, w2.call, 'the byte-identical call');
+  assert.deepEqual([w1.risks, w2.risks], [[], ['outside']]);
+  assert.deepEqual(desk.sameAs(w1.id).map((v) => v.workerId), ['w1'], 'w2 would write outside its own folder');
+  desk.close();
+  await Promise.all(answers);
 });

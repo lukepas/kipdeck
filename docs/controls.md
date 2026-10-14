@@ -39,7 +39,7 @@ While you were away and light or dark are one Ctrl+K away. Every window has a cl
 | Y | Allow the request once |
 | A | Always allow, when the request offers a rule |
 | N | Deny |
-| Shift + Y | Allow the same call for every agent waiting on it (the same tool with byte-identical input) |
+| Shift + Y | Allow the same call for every agent waiting on it (the same tool with byte-identical input, and the same risk tags, so a path outside another agent's folder still waits for its own answer) |
 | 1-9 | Pick a choice the agent's question offered |
 | R | Reply in words |
 | M | Merge, held 7 seconds with Undo, as from the pane |
@@ -49,7 +49,7 @@ While you were away and light or dark are one Ctrl+K away. Every window has a cl
 | Enter | Close triage and open the agent in the pane |
 | J, K (or the arrow keys) | Next or previous card |
 
-Keys are ignored for 300 ms after a card appears, so a key meant for the last card never lands on the next; only U, which takes back the merge and puts its card on show again, works at once. Allowing a call tagged destructive (Y, A or Shift + Y) takes a key, or a click, held for 0.7 seconds; let go early and nothing is sent. Deny never needs a hold. Esc or the close button returns to the list.
+Keys are ignored for 300 ms after a card appears, so a key meant for the last card never lands on the next; only U, which takes back the merge and puts its card on show again, works at once. Allowing a call tagged destructive (Y, A or Shift + Y) takes a key, or a click, held for 0.7 seconds; let go early and nothing is sent. Deny never needs a hold. A click on a card's button waits out the same 300 ms, so a double click never answers the next card. Shift + Y needs Shift itself: Caps Lock and Y allows once. Esc or the close button returns to the list.
 
 ## The Deck (Labs)
 
