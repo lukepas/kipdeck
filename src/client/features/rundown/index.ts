@@ -7,13 +7,14 @@
  * map, course column and waypoint plates and the heading's caption all stand down (Holo.yieldTo,
  * HoloHeading.yieldTo), so the city has the table and nothing is written over it. E at a district
  * opens the Rundown window at that part, and its close or Esc puts you straight back into mouse-look.
+ * At the orange beam E deploys an agent on the next step instead (beam.ts) and R opens the window.
  * Follows the deck you're on; draws nothing while it's down or the tab is hidden; reduced motion or Ship
  * motion Off holds it still, Low quality drops the pulses. `root.userData.built` says a city is drawn
  * (the perf probe and the shots wait for it).
  */
 import * as THREE from 'three';
 import type { Ctx } from '../../core/context';
-import { aside, hintTitle, key, onE } from '../../core/hint';
+import { aside, hintTitle, key } from '../../core/hint';
 import type { Parts } from '../../core/parts';
 import { store } from '../../state';
 import { saveSettings } from '../../state/persist';
@@ -23,6 +24,7 @@ import type { PaletteEntry } from '../../ui/palette';
 import { cityLabels } from './labels';
 import { cityLayout, STATUS_WORDS, statusMoves, type District } from './logic';
 import { statusChime } from './sound';
+import { beamDeploy, beamHint } from './beam';
 import type { RundownHolo } from './world';
 
 declare module '../../world/types' {
@@ -31,7 +33,7 @@ declare module '../../world/types' {
   }
 }
 
-export type RundownParts = Pick<Parts, 'quality' | 'settings' | 'stage'>;
+export type RundownParts = Pick<Parts, 'quality' | 'settings' | 'stage' | 'actions'>;
 
 /** How fast the city comes up and goes down (per second). */
 const FADE = 2.2;
@@ -99,6 +101,13 @@ export function installRundown(ctx: Ctx, parts: RundownParts) {
     );
   }
 
+  /** Deploys an agent on this deck's next step (at its beam's district `partId`, or anywhere without one). */
+  function deployNext(partId?: string): boolean {
+    const r = store.rundowns.get(store.floor ?? '')?.rundown;
+    const floor = store.floors.find((f) => f.id === store.floor);
+    return beamDeploy(r, partId ?? r?.nextStep?.partId ?? '', floor?.name ?? 'this project', parts.actions.boardActions().assign);
+  }
+
   store.on('rundown', rebuild);
   store.on('floor', () => {
     drawnKey = '';
@@ -112,9 +121,15 @@ export function installRundown(ctx: Ctx, parts: RundownParts) {
     reach: 7,
     hint: (it) => {
       const d = districts.find((x) => x.id === (it as (typeof usable)[number]).partId);
+      const beam = beamHint(store.rundowns.get(store.floor ?? '')?.rundown, d?.id);
+      if (beam) return { k: `rundown|${d?.id}|beam|${beam.label}`, parts: [hintTitle(d?.name ?? 'Part'), aside(beam.where), key('E', beam.label), key('R', 'Rundown')] };
       return { k: `rundown|${d?.id}|${d?.status}`, parts: [hintTitle(d?.name ?? 'Part'), aside(d ? STATUS_WORDS[d.status] : ''), key('E', 'Rundown')] };
     },
-    use: onE((it) => openWindow((it as (typeof usable)[number]).partId)),
+    use: (it, k) => {
+      const partId = (it as (typeof usable)[number]).partId;
+      if (k === 'E' && deployNext(partId)) return;
+      if (k === 'E' || k === 'R') openWindow(partId);
+    },
   });
 
   // The callouts follow the city on screen every frame, after the camera moved. They don't stand down for
@@ -155,6 +170,9 @@ export function installRundown(ctx: Ctx, parts: RundownParts) {
     up: () => wanted(),
     toggle: () => setUp(!parts.settings.rundownHolo),
     openWindow,
+    deployNext,
+    /** "Deploy on: <step>" for this deck's next step, or null without one. */
+    nextLabel: () => beamHint(store.rundowns.get(store.floor ?? '')?.rundown, store.rundowns.get(store.floor ?? '')?.rundown?.nextStep?.partId ?? undefined)?.label ?? null,
   };
 }
 
@@ -174,5 +192,6 @@ export function rundownPaletteEntries(api: RundownApi | undefined): PaletteEntry
   return [
     { icon: 'overview', kind: 'Action', title: 'Rundown', detail: "This deck's parts, milestones and decisions", keywords: ['project map', 'status', 'milestones'], open: () => api.openWindow() },
     { icon: 'plot', kind: 'Action', title: api.up() ? 'Rundown off the holo' : 'Rundown on the holo', detail: 'The project as a city over the mission table', keywords: ['project map', 'holo', 'city'], open: () => api.toggle() },
+    ...(api.nextLabel() ? [{ icon: 'plus' as const, kind: 'Action' as const, title: api.nextLabel()!, detail: "This deck's next step, from its map", keywords: ['next step', 'deploy', 'rundown'], open: () => void api.deployNext() }] : []),
   ];
 }

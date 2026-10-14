@@ -4,6 +4,7 @@ import { ROSTER_TICK_MS } from './roster.js';
 import { REMINDER_SWEEP_MS } from './reminders.js';
 import { TELEMETRY_SWEEP_MS } from '../telemetry.js';
 import { startFirstMaps } from '../rundown/first.js';
+import { startYourCall } from '../rundown/yourcall.js';
 import { SPEND_SWEEP_MS } from '../spend/service.js';
 
 /** How often the people in the office are stamped as here (Accounts.seenAll), so a crash loses at most this much of it. */
@@ -60,11 +61,14 @@ export function startTimers(ctx: Ctx): () => void {
   const stopDemo = ctx.demo?.start();
   // Each project's first map, in the background, while the Rundown lab is on (rundown/first.ts).
   const stopFirstMaps = startFirstMaps(ctx);
+  // Every project's open decisions and next step, to the pages that listen (rundown/yourcall.ts).
+  const stopYourCall = startYourCall(ctx);
   // Spend against the budget caps, and paused agents that went back to work (spend/service.ts).
   const spend = setInterval(() => ctx.spend.sweep(), SPEND_SWEEP_MS);
 
   return () => {
     stopFirstMaps();
+    stopYourCall();
     clearInterval(spend);
     stopDemo?.();
     clearInterval(usage);

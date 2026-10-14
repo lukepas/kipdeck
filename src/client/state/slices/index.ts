@@ -34,6 +34,7 @@ import { timeline } from './timeline';
 import { upgrade } from './upgrade';
 import { usage } from './usage';
 import { whiteboard } from './whiteboard';
+import { yourCall } from './yourcall';
 
 export const SLICES: readonly Slice[] = [
   presence,
@@ -65,4 +66,5 @@ export const SLICES: readonly Slice[] = [
   approvals,
   gate,
   spend,
+  yourCall,
 ];

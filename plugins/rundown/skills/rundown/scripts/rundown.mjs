@@ -2,11 +2,11 @@
 // rundown-version: 1.4.0
 import { execFile, spawn, spawnSync } from "node:child_process";
 import { appendFileSync, copyFileSync, cpSync, existsSync, mkdirSync, promises, readFileSync, readdirSync, renameSync, rmSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+import { randomBytes } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { lstat, open, realpath } from "node:fs/promises";
-import { randomBytes } from "node:crypto";
 //#region src/shared/rundown/schema.ts
 var STATUSES = [
 	"done",
@@ -4332,8 +4332,8 @@ var readJson = (file) => {
 };
 /** A file written whole or not at all: a failed run leaves the old one. */
 function writeAtomic(file, text) {
-	const tmp = `${file}.${process.pid}.tmp`;
-	writeFileSync(tmp, text);
+	const tmp = `${file}.${process.pid}.${randomBytes(4).toString("hex")}.tmp`;
+	writeFileSync(tmp, text, { flag: "wx" });
 	renameSync(tmp, file);
 }
 /** The first run after the project-map agent: its milestones and decisions come along, once. */

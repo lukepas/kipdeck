@@ -8,6 +8,7 @@ import { MAX_WORKER_LIMIT, parseWorkerLimit } from './machine.js';
 import { parseAllowedHosts } from './hosts.js';
 import { splitEnvNames, validEnvPattern, type WorkerEnvConfig } from './worker-env.js';
 import { readStateJson, stateDirProblem, untrustedState, writeState } from './safefs.js';
+import { COMMANDS_HELP } from './commands.js';
 import { CHAIN_HELP, chainFlagsFromEnv, takeChainFlag, type ChainFlags } from './chain/flags.js';
 import { parseLabList, type LabId } from '../shared/labs.js';
 import { commandLineLabs } from './labs.js';
@@ -104,6 +105,7 @@ Usage:
   kipdeck accounts [list|invite|revoke|role|password] ...
   kipdeck tunnel [office@address | url]
   kipdeck rundown [path] | install [--dry-run]
+  kipdeck decide "<question>" --options A,B [--default A]
 
 Runs the inbox for your coding agents, at http://localhost:4600 (or the next
 free port). Each project is a git checkout, and every agent works on a branch of
@@ -118,27 +120,7 @@ started in a project where Kipdeck already ran), it keeps its data in
 <dir>/.agent-office as it always has, and that project is its first project
 (an admin can remove it from the project list like any other).
 
-Commands:
-  open                    Open the running Kipdeck in your browser, signed in
-                          (a new sign-in link; see open --help)
-  attach                  Move an agent you started in a terminal (Claude Code,
-                          Codex, Cursor) into the inbox: its session carries on
-                          as one of Kipdeck's agents (see attach --help)
-  setup                   Pick the folder projects are cloned into and clone
-                          projects into it: a walkthrough in a terminal, or
-                          just --projects / --project for scripts (see setup --help)
-  prune                   Remove leftover agent worktrees (.agent-office/worktrees/)
-                          and their office/* branches. Anything with uncommitted
-                          changes or unpushed commits is kept unless --force is given.
-  accounts                Invite, list and revoke people's own accounts, and switch
-                          the shared password off or on (see accounts --help)
-  tunnel                  On your own computer, for a Kipdeck that runs somewhere
-                          else: every web server an agent starts there opens on the
-                          same port here, by itself (see tunnel --help)
-  rundown                 Write or refresh a checkout's project map in .rundown/,
-                          no Claude needed; rundown install adds the /rundown
-                          skill to Claude Code (see rundown --help)
-
+${COMMANDS_HELP}
 Options:
       --home <dir>        Where Kipdeck keeps its data when no [dir] is given
                           (default ~/agent-office, env AGENT_OFFICE_HOME)
