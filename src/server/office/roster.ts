@@ -21,6 +21,8 @@ export function rosterFloor(f: Floor): RosterFloor {
       const w = f.workers.get(id);
       return w && f.work.get(w);
     },
+    land: (id) => f.land.get(id),
+    overlap: (id) => f.land.overlapOf(id),
   };
 }
 
