@@ -1,5 +1,6 @@
-// Allow or deny from the lock screen. An approval push to the agent owner's own device, for a request
-// with no risk tags, carries Allow once and Deny buttons and a token for them. The token is random,
+// Allow or deny from the lock screen. An approval push to the agent owner's own device, for a short
+// shell command or a file read with no risk tags (shared/push-approve.ts quickApprovable), carries
+// Allow once and Deny buttons, the request word for word, and a token for them. The token is random,
 // kept here (in memory only), good for one answer, for one request id, from one device, for
 // PUSH_APPROVE_MS. The answer goes through the approvals desk by that id, as an answer from the inbox
 // does, so a request that was answered, moved on from or replaced is refused. Each person can turn the
@@ -74,7 +75,7 @@ export class PushApprove {
   /**
    * The push as `device` gets it: with Allow once and Deny when it's an approval push, the device is
    * the agent owner's, its owner has the buttons on, and the agent has exactly one request open and
-   * it has no risk tags. Anything else goes as it was.
+   * it's quickApprovable. Anything else goes as it was.
    */
   dress(payload: PushPayload, device: Device, owner: string | undefined): PushPayload {
     if (payload.kind !== 'approval' || !payload.worker || !owner || device.person !== owner || !this.on(owner)) return payload;
@@ -83,7 +84,7 @@ export class PushApprove {
     this.sweep();
     const token = randomBytes(24).toString('base64url');
     this.tickets.set(token, { approval: open[0].id, worker: payload.worker, device: device.id, person: owner, exp: this.now() + PUSH_APPROVE_MS });
-    return withPushApprove(payload, token);
+    return withPushApprove(payload, token, open[0]);
   }
 
   /**

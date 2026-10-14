@@ -41,7 +41,7 @@ Answering a question always happens in the inbox, and so does any approval with 
 
 ## Allow or deny from the lock screen
 
-When an agent you deployed asks to run something with no risk tags (nothing destructive, no network, nothing outside its project, no secrets, the same tags the approval card shows), the push to your own devices has **Allow once** and **Deny** in place of Review request and Snooze 1h. A tap answers the agent without opening Kipdeck, and a toast on the agent's floor says which device answered. Anything with a risk tag keeps the buttons that open the inbox.
+When an agent you deployed asks to run a shell command or read a file, and the request has no risk tags (nothing destructive, no network, nothing outside its project, no secrets, the same tags the approval card shows), the push to your own devices has **Allow once** and **Deny** in place of Review request and Snooze 1h. The notification shows the whole request (`Run npm test`), so the command has to be one line of plain text, 120 characters at most. A tap answers the agent without opening Kipdeck, and a toast on the agent's floor says which device answered. Anything with a risk tag, an edit or write (its content can't fit on a lock screen), an MCP tool or any other tool keeps the buttons that open the inbox.
 
 A button works once, from the device it was sent to, for that one request, for 10 minutes. It goes through the same approvals desk as the inbox, so if the request was answered somewhere else, the agent moved on or asked again, the button is refused and the notification comes back with the reason; a tap on it opens the agent. There is no Allow always from a notification: it would change the agent's rules without you reading them.
 

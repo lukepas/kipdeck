@@ -17,8 +17,8 @@ import { EXPIRED, GONE, PushApprove } from '../src/server/push/approve.js';
 import type { Device } from '../src/server/push/devices.js';
 import { Presence } from '../src/server/push/presence.js';
 import { pushPayload, type PushPayload } from '../src/shared/push.js';
-import { PUSH_APPROVE_MAX, PUSH_APPROVE_MS, quickApprovable } from '../src/shared/push-approve.js';
-import type { WorkerInfo } from '../src/shared/protocol.js';
+import { PUSH_APPROVE_COMMAND_MAX, PUSH_APPROVE_MAX, PUSH_APPROVE_MS, quickApprovable } from '../src/shared/push-approve.js';
+import type { ApprovalRisk, WorkerInfo } from '../src/shared/protocol.js';
 
 const SAFE = { tool_name: 'Bash', tool_input: { command: 'npm test' }, cwd: '/repo' };
 const RISKY = { tool_name: 'Bash', tool_input: { command: 'rm -rf dist' }, cwd: '/repo' };
@@ -64,9 +64,46 @@ function rig() {
 
 const decision = (res: { body?: string }) => (res.body ? JSON.parse(res.body).hookSpecificOutput.decision.behavior : undefined);
 
-test('only a request with no risk tags can be answered from a notification', () => {
-  assert.equal(quickApprovable({ risks: [] }), true);
-  for (const r of ['destructive', 'network', 'outside', 'secrets'] as const) assert.equal(quickApprovable({ risks: [r] }), false, r);
+test('only a request with no risk tags, that the notification can show whole, can be answered from it', () => {
+  const sh = { tool: 'Bash', command: 'npm test', cwd: '/repo', risks: [] as ApprovalRisk[] };
+  assert.equal(quickApprovable(sh), true);
+  for (const r of ['destructive', 'network', 'outside', 'secrets'] as const) assert.equal(quickApprovable({ ...sh, risks: [r] }), false, r);
+  assert.equal(quickApprovable({ tool: 'Read', cwd: '/repo', risks: [] }), true, 'reading a file in the project');
+  // An MCP tool can post, pay or deploy with no tag saying so; an edit's content isn't on the lock screen.
+  for (const tool of ['mcp__slack__post_message', 'mcp__wallet__transfer', 'Edit', 'Write', 'MultiEdit', 'NotebookEdit', 'Task', 'Skill']) {
+    assert.equal(quickApprovable({ tool, cwd: '/repo', risks: [] }), false, tool);
+  }
+  // A command the notification can't show whole, or with no working folder to judge "outside" by.
+  assert.equal(quickApprovable({ ...sh, command: 'npm test\nnode -e "x"' }), false, 'more than one line');
+  assert.equal(quickApprovable({ ...sh, command: `echo ${'a'.repeat(PUSH_APPROVE_COMMAND_MAX)}` }), false, 'too long to show');
+  assert.equal(quickApprovable({ ...sh, command: 'npm test \u202e;hsab | lru' }), false, 'a right-to-left mark hiding part of it');
+  assert.equal(quickApprovable({ ...sh, command: 'npm test\rnode x' }), false, 'a carriage return');
+  assert.equal(quickApprovable({ ...sh, cwd: undefined }), false, 'no cwd');
+  assert.equal(quickApprovable({ tool: 'Bash', cwd: '/repo', risks: [] }), false, 'no command');
+});
+
+test('the notification says the request it answers, not what the agent last said it was doing', (t) => {
+  const r = rig();
+  t.after(r.done);
+  r.ask('w1', { ...SAFE, tool_input: { command: 'npm run build' } });
+  const p = r.approve.dress(pushPayload({ kind: 'approval', worker: 'w1', task: 'Run the tests', project: 'shop', detail: 'Wants permission: Bash' }), device('a:tess'), 'a:tess');
+  assert.equal(p.body, 'Wants your approval in shop\nRun npm run build');
+});
+
+test('an MCP tool, an edit or a multi-line command keeps the buttons that open Kipdeck', (t) => {
+  const r = rig();
+  t.after(r.done);
+  const calls = [
+    { tool_name: 'mcp__wallet__transfer', tool_input: { to: 'x', amount: 5 }, cwd: '/repo' },
+    { tool_name: 'Edit', tool_input: { file_path: '/repo/src/app.ts', old_string: 'a', new_string: 'b' }, cwd: '/repo' },
+    { tool_name: 'Bash', tool_input: { command: 'npm test\nnode build.js' }, cwd: '/repo' },
+  ];
+  calls.forEach((c, i) => {
+    r.ask(`m${i}`, c);
+    const p = r.approve.dress(r.push(`m${i}`), device('a:tess'), 'a:tess');
+    assert.equal(p.approve, undefined, c.tool_name);
+  });
+  assert.equal(r.approve.size, 0);
 });
 
 test("a safe request's push to the owner's device gets Allow once and Deny with a token", (t) => {

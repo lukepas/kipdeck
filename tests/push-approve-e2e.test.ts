@@ -184,6 +184,7 @@ test('Allow once and Deny from a notification: safe requests only, once, through
     { action: 'deny', title: 'Deny' },
   ]);
   assert.ok(safe.approve);
+  assert.match(safe.body, /\nRun npm test$/, 'the notification shows the request a tap allows, word for word');
   assert.equal((await answer(sw, { endpoint: ENDPOINT, token: safe.approve, decision: 'always' })).status, 400, 'never Allow always');
   assert.equal((await answer(sw, { endpoint: ENDPOINT, token: safe.approve, decision: 'once' })).status, 200);
   assert.deepEqual(await answer(sw, { endpoint: ENDPOINT, token: safe.approve, decision: 'once' }), { status: 410, body: { error: 'That button has expired. Open Kipdeck to answer.' } }, 'one use');

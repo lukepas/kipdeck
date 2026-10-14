@@ -1,5 +1,5 @@
 // Settings > Notifications > Allow or deny from a notification: whether an approval push to your own
-// devices, for a request with no risk tags, carries Allow once and Deny. On until you turn it off.
+// devices, for a short command or a file read with no risk tags, carries Allow once and Deny. On until you turn it off.
 // The server side is server/push/approve.ts; why it is safe enough is docs/security.md.
 
 import { pushName } from '../pwa';
@@ -25,11 +25,11 @@ async function write(name: string, on: boolean): Promise<boolean | undefined> {
 }
 
 export function pushApproveSetting(): HTMLElement {
-  const row = h('div.seg');
+  const row = h('div.seg', { role: 'radiogroup', 'aria-label': 'Allow or deny from a notification' });
   const note = h(
     'p.setting-note',
     {},
-    'When an agent you deployed asks to run something with no risk tags (nothing destructive, no network, nothing outside its project, no secrets), the push to your devices has Allow once and Deny. Anything with a risk tag opens Kipdeck instead. A button works once, for that request only, for 10 minutes.',
+    'When an agent you deployed asks to run a short command or read a file, with no risk tags (nothing destructive, no network, nothing outside its project, no secrets), the push to your devices shows the whole request with Allow once and Deny. Edits, other tools and anything with a risk tag open Kipdeck instead. A button works once, for that request only, for 10 minutes.',
   );
   const paint = (on: boolean | undefined) => {
     row.replaceChildren(
