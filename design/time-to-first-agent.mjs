@@ -1,24 +1,31 @@
-// The stage's exit check, timed: a clean account goes from `npx kipdeck` to its first agent at work.
-// A throwaway home with an empty npm cache (so npx downloads everything, as on a new machine), a
-// demo git repository, and the package as `npm pack` makes it (the registry's would be the same
-// tarball). The command runs in a pseudo-terminal from inside the repository; the link it prints is
+// The stage's exit check, timed: a clean account goes from the README's first command (npx on the
+// newest release's prebuilt package) to its first agent at work. A throwaway home with an empty npm
+// cache (so npx downloads everything, as on a new machine), a demo git repository, and the release
+// tarball as deploy/release/pack.mjs packs it from this tree, the same file the Release workflow
+// publishes; with --release it times the published one at releases/latest/download/kipdeck.tgz
+// instead. The command runs in a pseudo-terminal from inside the repository; the link it prints is
 // opened in a fresh headless browser; the setup card's button deploys the first agent on its
 // starter task; the clock stops when that agent's row is under Working. The agent is the stand-in
 // from tests/support/standin.mjs (no model runs), counted as signed in by a demo ~/.claude.json.
 //
-//   npm run build && node design/time-to-first-agent.mjs [out-dir]
+//   npm run build && node design/time-to-first-agent.mjs [out-dir] [--release]
 //
 // Writes timings.json (and a shot of the end) to out-dir (default design/shots/fundable/stage-4/timed).
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pty from '@lydell/node-pty';
 import { writeStandIn } from '../tests/support/standin.mjs';
+import { packRelease } from '../deploy/release/pack.mjs';
+import { npxSpec } from '../site/npx.mjs';
 
 const HERE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const OUT = path.resolve(process.argv[2] ?? path.join(HERE, 'design', 'shots', 'fundable', 'stage-4', 'timed'));
+const args = process.argv.slice(2);
+const fromRelease = args.includes('--release');
+const outArg = args.find((a) => !a.startsWith('--'));
+const OUT = path.resolve(outArg ?? path.join(HERE, 'design', 'shots', 'fundable', 'stage-4', 'timed'));
 mkdirSync(OUT, { recursive: true });
 const PORT = Number(process.env.SHOOT_PORT ?? 4688);
 
@@ -36,9 +43,12 @@ execFileSync('git', ['commit', '-q', '-m', '[demo] start'], { cwd: repo, env: { 
 writeStandIn(bin);
 writeFileSync(path.join(home, '.claude.json'), JSON.stringify({ oauthAccount: { emailAddress: 'demo@example.invalid' } }));
 
-console.log('packing...');
-execFileSync('npm', ['pack', '--ignore-scripts', '--pack-destination', pack], { cwd: HERE, stdio: ['ignore', 'ignore', 'inherit'] });
-const tarball = path.join(pack, readdirSync(pack).find((f) => f.endsWith('.tgz')));
+// The published release: the README's first command (src/shared/demo.ts RELEASE_TARBALL).
+let tarball = npxSpec('https://github.com/zbagdzevicius/kipdeck');
+if (!fromRelease) {
+  console.log('packing...');
+  tarball = packRelease({ root: HERE, out: pack });
+}
 
 const nodeDir = path.dirname(process.execPath);
 const env = {
@@ -49,8 +59,9 @@ const env = {
   npm_config_cache: path.join(tmp, 'npm-cache'),
   npm_config_update_notifier: 'false',
 };
+// npx takes a local tarball by --package (a bare path would run as a command); the address as is.
 const t0 = Date.now();
-const term = pty.spawn(path.join(nodeDir, 'npx'), ['--yes', `--package=${tarball}`, 'kipdeck', '--host', '127.0.0.1', '--port', String(PORT), '--no-open'], { cwd: repo, env, cols: 120, rows: 40, name: 'xterm-256color' });
+const term = pty.spawn(path.join(nodeDir, 'npx'), ['--yes', ...(fromRelease ? [tarball] : [`--package=${tarball}`, 'kipdeck']), '--host', '127.0.0.1', '--port', String(PORT), '--no-open'], { cwd: repo, env, cols: 120, rows: 40, name: 'xterm-256color' });
 let raw = '';
 term.onData((d) => (raw += d));
 const clean = (s) => s.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '').replace(/\r/g, '');
@@ -101,7 +112,7 @@ try {
 const result = {
   ...t,
   underTwoMinutes: t.firstAgentMs < 120_000,
-  tarball: path.basename(tarball),
+  tarball: fromRelease ? tarball : path.basename(tarball),
   node: process.version,
   note: 'Clean HOME and empty npm cache, so npx downloaded every dependency. Stand-in agent; no model ran.',
 };

@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { SERIAL, allTestFiles, group } from './support/run.mjs';
+import { SERIAL, allTestFiles, filters, group, pick } from './support/run.mjs';
 
 const root = path.join(import.meta.dirname, '..');
 const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')) as { scripts: Record<string, string> };
@@ -41,4 +41,16 @@ test('npm test runs both groups, and so does the Release workflow, after install
   assert.ok(!/run: npm test\b/.test(workflow), 'the workflow runs the two groups as separate steps');
   assert.ok(at('working-directory: onchain/attest') > 0 && at('working-directory: onchain/attest') < at('run: npm run test:main'));
   assert.match(workflow, /onchain\/attest\/package-lock\.json/);
+});
+
+test('--skip= and --only= split a group by path prefix, so the two halves are the whole group', () => {
+  assert.deepEqual(filters(['--skip=tests/landing', '--test-name-pattern=x']), { skip: ['tests/landing'], only: [], flags: ['--test-name-pattern=x'] });
+  for (const name of ['main', 'perf']) {
+    const files = group(name).files as string[];
+    const skipped = pick(files, filters(['--skip=tests/landing']));
+    const only = pick(files, filters(['--only=tests/landing']));
+    assert.ok(only.length > 0 && only.every((f: string) => f.startsWith('tests/landing')), `${name} has landing files`);
+    assert.ok(skipped.every((f: string) => !f.startsWith('tests/landing')));
+    assert.deepEqual([...skipped, ...only].sort(), [...files].sort());
+  }
 });

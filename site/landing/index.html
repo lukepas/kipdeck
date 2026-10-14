@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-repo="{{repo}}">
+<html lang="en" data-repo="{{repo}}" data-npx="{{npx}}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -94,7 +94,7 @@
           <button class="copy" type="button" data-copy="npx {{pkg}} --demo" aria-label="Copy npx {{pkg}} --demo">Copy</button>
         </div>
         <p class="small demo-note">The demo: five scripted agents on a throwaway repository. No agent CLI, sign-in or model needed. <span class="warm">Kip shows you around.</span></p>
-        <p class="small mono unpublished" data-unpublished>Not on npm yet: npx runs it straight from <a data-link="repo-run" href="{{repo}}#from-source" rel="noopener noreferrer">the source</a>, and the first run builds it (a few minutes). <code>npx {{pkg}}</code> comes with the release.</p>
+        <p class="small mono unpublished" data-unpublished>Not on npm yet: npx runs the newest release, built ahead, so nothing compiles on your machine. Or run it from <a data-link="repo-run" href="{{repo}}#from-source" rel="noopener noreferrer">the source</a>. <code>npx {{pkg}}</code> comes with the npm release.</p>
       </div>
       <!-- /runnable -->
 
@@ -353,7 +353,7 @@
   <div class="wrap yours-grid">
     <!-- runnable -->
     <div class="term-win" id="from-source" role="group" aria-label="Running {{name}} on your own project">
-      <div class="term-bar mono"><span class="term-tab on" data-unpublished>your project, from GitHub</span><span class="term-tab on" data-published hidden>your project</span></div>
+      <div class="term-bar mono"><span class="term-tab on" data-unpublished>your project, newest release</span><span class="term-tab on" data-published hidden>your project</span></div>
 <pre class="term-body mono" data-unpublished><span class="tl"><span class="p">$</span> cd ~/code/your-project</span>
 <span class="tl"><span class="p">$</span> npx {{npx}}</span>
 <span class="tl dim">Starting {{name}}...</span>

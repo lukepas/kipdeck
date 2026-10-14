@@ -70,6 +70,7 @@ html.js:not(.agent-waiting) .hero-h .waiting { color: var(--text); }
 /* A command breaks only between its && steps (ui/controls.ts commandSteps), and a long address
    only after a slash, never in the middle of a word. */
 .cmd-text .step { display: inline-block; max-width: 100%; }
+.cmd-text .nb { white-space: nowrap; }
 .cmd-text::-webkit-scrollbar { display: none; }
 .copy { flex: none; height: 38px; min-width: 88px; padding: 0 14px; text-align: center; border: 1px solid var(--term-edge); border-radius: var(--radius); background: var(--term-raised); color: var(--term-ink); font: 500 13px/1 var(--font-ui); cursor: pointer; transition: border-color var(--t-ui) var(--ease), background-color var(--t-ui) var(--ease); }
 .copy:hover { border-color: var(--term-dim); }

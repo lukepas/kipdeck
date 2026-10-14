@@ -7,6 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CLI } from '../shared/copy.js';
+import { FROM_SOURCE_COMMAND, INSTALL_COMMAND } from '../shared/demo.js';
 import { binScript, findOnPath, WIN } from './workers/process.js';
 
 /** Where this install is, how it was started and what is on the PATH: all a command depends on. */
@@ -111,10 +112,19 @@ export function localCommand(env: RunEnv = runEnv()): string {
   return onPath(env) ?? nodeCommand(env);
 }
 
+/** For --help: how to run it with nothing installed, the newest release first and the repository as the fallback. */
+export const RUN_HELP = `
+With nothing installed, the newest release runs with npx (built ahead, nothing
+to compile):
+  ${INSTALL_COMMAND}
+From the repository instead, which builds it first (a few minutes):
+  ${FROM_SOURCE_COMMAND}
+`;
+
 /** For --help: `kipdeck` is on the PATH only once linked or installed, so it says what to type instead. */
 export function startedAs(env: RunEnv = runEnv()): string {
   const run = launchCommand(env);
-  return run === CLI ? '' : `\nNot on your PATH as ${CLI}: you started it as \`${run}\`. Type that where this help says ${CLI}.\n`;
+  return (run === CLI ? '' : `\nNot on your PATH as ${CLI}: you started it as \`${run}\`. Type that where this help says ${CLI}.\n`) + RUN_HELP;
 }
 
 /** The office folder `open` and the other commands find without being told: ~/agent-office. */
