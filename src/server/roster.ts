@@ -5,6 +5,7 @@ import { rosterActivity, type TurnFacts } from '../shared/doing.js';
 import { pullReview } from '../shared/review.js';
 import { DESK_BY_ID } from '../shared/layout.js';
 import { workerPr } from '../shared/status.js';
+import type { LandState, OverlapState } from '../shared/landqueue.js';
 
 /** What the roster knows about the floor a worker is on. */
 export interface RosterFloor {
@@ -17,6 +18,9 @@ export interface RosterFloor {
   goalTitle(id: string | undefined): string | undefined;
   /** What a worker at rest changed, once the office has looked (see server/review.ts). */
   work?(workerId: string): WorkSummary | undefined;
+  /** How its branch would land on its base, and who else changes the same files (see server/landqueue.ts). */
+  land?(workerId: string): LandState | undefined;
+  overlap?(workerId: string): OverlapState | undefined;
   /** A worker at work's turn so far, from its review brief's journal (shared/doing.ts). */
   turn?(workerId: string): TurnFacts | undefined;
 }
@@ -42,6 +46,8 @@ export function rosterEntry(f: RosterFloor, w: WorkerInfo): RosterEntry {
   const activity = line(rosterActivity(w.activity, w.status === 'working'), 80);
   const review = pull && pr.state === 'open' ? pullReview(pull.reviewDecision) : undefined;
   const work = w.kind === 'agent' ? f.work?.(w.id) : undefined;
+  const land = w.kind === 'agent' ? f.land?.(w.id) : undefined;
+  const overlap = w.kind === 'agent' ? f.overlap?.(w.id) : undefined;
   const turn = w.kind === 'agent' && w.status === 'working' ? f.turn?.(w.id) : undefined;
   return {
     id: w.id,
@@ -71,6 +77,8 @@ export function rosterEntry(f: RosterFloor, w: WorkerInfo): RosterEntry {
     ...(activity ? { activity } : {}),
     ...(pr ? { pr: { number: pr.number, state: pr.state, ...(pull ? { checks: pull.checks } : {}), ...(review ? { review } : {}), ...(pr.state === 'open' && pull?.mergeable === 'CONFLICTING' ? { conflicting: true } : {}) } } : {}),
     ...(work ? { work: { ...work } } : {}),
+    ...(land ? { land: { ...land, conflicts: [...land.conflicts] } } : {}),
+    ...(overlap ? { overlap: { ...overlap, with: [...overlap.with], files: [...overlap.files] } } : {}),
     ...(task?.outcome === 'failed' ? { taskFailed: true } : {}),
     ...(w.issue ? { issue: w.issue } : {}),
     ...(w.goal && goalTitle ? { goal: w.goal, goalTitle } : {}),

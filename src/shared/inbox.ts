@@ -131,7 +131,7 @@ export interface InboxView {
 
 /**
  * The ranked roster sorted into sections, keeping the ranking's order within each, except that in To
- * review the work whose verdict is ready (shared/brief/row-verdict.ts) comes first: `project` for one
+ * review the work whose verdict is ready (shared/brief/row-verdict.ts) and that doesn't conflict comes first: `project` for one
  * project's agents, `query` to search, and `owner` for only the agents that person deployed (Mine).
  */
 export function buildInbox(ranked: readonly Ranked[], opts: { project?: string; query?: string; owner?: string } = {}): InboxView {
@@ -142,8 +142,10 @@ export function buildInbox(ranked: readonly Ranked[], opts: { project?: string; 
     if (opts.query && !matches(r.entry, opts.query)) continue;
     sections[sectionOf(r.att)].push(r);
   }
-  // Ready first, the ranking's order kept within each half (the sort is stable).
-  sections.review.sort((a, b) => Number(!!b.entry.verdict?.ready) - Number(!!a.entry.verdict?.ready));
+  // Ready first, the ranking's order kept within each half (the sort is stable). Work that conflicts
+  // with its base is never ready, whatever its verdict says: it can't merge until it is restacked.
+  const ready = (r: Ranked) => Number(!!r.entry.verdict?.ready && !r.att.blocked);
+  sections.review.sort((a, b) => ready(b) - ready(a));
   const counts = Object.fromEntries(INBOX_SECTIONS.map((s) => [s, sections[s].length])) as Record<InboxSection, number>;
   return { sections, counts };
 }
