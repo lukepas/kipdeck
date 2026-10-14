@@ -4,9 +4,12 @@
 
 import type { RosterEntry } from './protocol.js';
 import { holdLabel } from './spend.js';
+import { conflictLabel, conflicts, landReason } from './landqueue.js';
 
 /** Working, but no hook event and no terminal output for this long: it may be stuck. */
 export const SILENT_MS = 10 * 60_000;
+/** Working and no sign of life for this long: still Working, but its row's clock says "quiet 4m" (shared/doing.ts). */
+export const QUIET_MS = 3 * 60_000;
 /**
  * Silent this long with a tool call open, for an agent whose hooks can't say it's asking permission
  * (Cursor): its terminal is most likely showing the prompt, so it's stuck sooner.
@@ -55,7 +58,7 @@ export const STATE_LABEL: Readonly<Record<AttentionLevel, string>> = {
 export const LEVEL_LABEL = STATE_LABEL;
 
 /** The one thing to do next about a worker. */
-export type NextAction = 'answer' | 'unpause' | 'look' | 'review' | 'open-pr' | 'fix-checks' | 'merge' | 'hand-back' | 'resume' | 'rebuild' | 'send-home' | 'give-task' | 'approve-payout' | 'set-wallet';
+export type NextAction = 'answer' | 'unpause' | 'look' | 'review' | 'open-pr' | 'fix-checks' | 'merge' | 'hand-back' | 'resume' | 'rebuild' | 'send-home' | 'give-task' | 'approve-payout' | 'set-wallet' | 'restack';
 
 export const ACTION_LABEL: Record<NextAction, string> = {
   answer: 'Answer',
@@ -72,6 +75,7 @@ export const ACTION_LABEL: Record<NextAction, string> = {
   'give-task': 'Give it a task',
   'approve-payout': 'Approve payout',
   'set-wallet': 'Set payout wallet',
+  restack: 'Restack',
 };
 
 export interface Attention {
@@ -88,6 +92,11 @@ export interface Attention {
   action: NextAction;
   /** Put aside on purpose (see Snooze): shown, but not counted and never notified. */
   snoozed: boolean;
+  /**
+   * Its work won't merge as it is (it conflicts with its base): still to review, but ranked after the
+   * work that lands, so the next thing the inbox offers is always something Merge can finish.
+   */
+  blocked?: boolean;
 }
 
 /** "12 min", "2 h 5 min", "just now". */
@@ -151,6 +160,10 @@ export function attention(e: RosterEntry, now: number): Attention {
   if (e.kind === 'agent' && e.status === 'idle' && !e.tasked && now - e.createdAt >= IDLE_NO_TASK_MS) return at('stuck', 'give-task', e.createdAt, 'No task yet', 'hired but never given a task');
   const busy = e.status === 'working' || e.status === 'starting';
   const pr = e.pr;
+  // Its branch conflicts with its base (server/landqueue.ts): Restack hands it back to rebase first.
+  if (!busy && e.kind === 'agent' && pr?.state !== 'merged' && conflicts(e.land)) {
+    return { ...at('review', 'restack', waited, conflictLabel(e.land!), landReason(e.land!, e.into ?? "the project's branch")), blocked: true };
+  }
   if (pr?.state === 'open' && pr.checks === 'fail' && !busy) return at('review', 'fix-checks', waited, `PR #${pr.number} checks failing`, `PR #${pr.number} checks failing`);
   if (e.status === 'done' && !e.acked) {
     const ago = now - waited;
@@ -159,7 +172,7 @@ export function attention(e: RosterEntry, now: number): Attention {
   }
   if (pr?.state === 'merged' && !busy) return at('review', 'send-home', waited, `PR #${pr.number} merged`, `PR #${pr.number} merged: it can be archived`);
   if (pr?.state === 'open' && !busy) {
-    if (pr.conflicting) return at('review', 'hand-back', waited, `PR #${pr.number} has conflicts`, `PR #${pr.number} has merge conflicts`);
+    if (pr.conflicting) return { ...at('review', 'hand-back', waited, `PR #${pr.number} has conflicts`, `PR #${pr.number} has merge conflicts`), blocked: true };
     if (pr.review === 'changes') return at('review', 'hand-back', waited, `PR #${pr.number}: changes asked`, `PR #${pr.number}: changes requested`);
     if (pr.review === 'approved' && pr.checks !== 'pending') return at('review', 'merge', waited, `PR #${pr.number} approved`, `PR #${pr.number} approved: ready to merge`);
     return at('review', 'open-pr', waited, `PR #${pr.number} waits for review`, `PR #${pr.number} waits for a review`);
@@ -188,14 +201,15 @@ export interface Ranked {
 }
 
 /**
- * The roster, most in need first: by level, the snoozed ones after the rest of their level, and
- * whoever has waited longest first within that (as N goes, see nextup.ts).
+ * The roster, most in need first: by level, the snoozed ones after the rest of their level, then
+ * the blocked ones (work that conflicts) after the work that lands, and whoever has waited longest
+ * first within that (as N goes, see nextup.ts).
  */
 export function rankRoster(entries: Iterable<RosterEntry>, now: number): Ranked[] {
   const rank = (l: AttentionLevel) => ATTENTION_LEVELS.indexOf(l);
   return [...entries]
     .map((entry) => ({ entry, att: attention(entry, now) }))
-    .sort((a, b) => rank(a.att.level) - rank(b.att.level) || Number(a.att.snoozed) - Number(b.att.snoozed) || a.att.since - b.att.since || a.entry.createdAt - b.entry.createdAt || a.entry.id.localeCompare(b.entry.id));
+    .sort((a, b) => rank(a.att.level) - rank(b.att.level) || Number(a.att.snoozed) - Number(b.att.snoozed) || Number(!!a.att.blocked) - Number(!!b.att.blocked) || a.att.since - b.att.since || a.entry.createdAt - b.entry.createdAt || a.entry.id.localeCompare(b.entry.id));
 }
 
 export type AttentionCounts = Record<AttentionLevel, number>;

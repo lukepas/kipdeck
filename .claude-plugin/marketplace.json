@@ -1,0 +1,14 @@
+{
+  "name": "kipdeck",
+  "owner": { "name": "Kipdeck", "url": "https://github.com/zbagdzevicius/kipdeck" },
+  "metadata": { "description": "Kipdeck's Claude Code plugins." },
+  "plugins": [
+    {
+      "name": "rundown",
+      "source": "./plugins/rundown",
+      "description": "A project map of any git repo (/rundown) and a short brief from it at the start of every session.",
+      "version": "1.4.0",
+      "category": "productivity"
+    }
+  ]
+}

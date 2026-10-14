@@ -269,6 +269,10 @@ button.sec-h:hover { color: var(--text); }
 .keys-help dl { display: grid; grid-template-columns: auto 1fr; gap: 10px 16px; margin: 0; font-size: 14px; }
 .keys-help dt { display: flex; gap: 4px; }
 .keys-help dd { margin: 0; color: var(--muted); }
+.help-triage { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0; padding: 0; list-style: none; font-size: 13px; }
+.help-triage li { display: contents; }
+.help-triage .keys-k { display: flex; gap: 4px; }
+.help-triage span:last-child { color: var(--muted); }
 .keys-help kbd { font: 500 12px/20px var(--font-mono); padding: 0 6px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); background: var(--surface-2); }
 .keys-note { margin: 14px 0 0; font-size: 12px; color: var(--muted); }
 .keys-note + .help-h { margin-top: 22px; }

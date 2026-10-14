@@ -61,7 +61,8 @@ writeFileSync(
     ],
   }),
 );
-execFileSync(process.execPath, [path.join(ROOT, 'dist', 'rundown', 'rundown.mjs'), 'quick', '--no-gh', '--root', project], { stdio: 'ignore' });
+// RUNDOWN_HOME keeps this throwaway project out of your own index of every rundown.
+execFileSync(process.execPath, [path.join(ROOT, 'plugins', 'rundown', 'skills', 'rundown', 'scripts', 'rundown.mjs'), 'quick', '--no-gh', '--root', project], { stdio: 'ignore', env: { ...process.env, RUNDOWN_HOME: path.join(home, 'rundown-home') } });
 
 const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--labs', 'rundown,bridge', '--home', path.join(home, '.agent-office')], {
   env: { ...process.env, HOME: home },
