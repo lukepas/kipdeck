@@ -1,7 +1,7 @@
-// `rundown.mjs session-start`: the plugin's SessionStart hook (hooks/hooks.json). It reads the hook's
-// input on stdin for the session's folder, finds the nearest .rundown/rundown.json at or above it (up to
-// the git top, never above the home folder), and prints the brief as the hook's JSON when the map is
-// under a week old. It never writes, never runs git and never fails a session: any problem prints
+// `rundown.mjs session-start`: the plugin's SessionStart hook (plugins/rundown/hooks/hooks.json). It
+// reads the hook's input on stdin for the session's folder, finds the map at its git top (findRundown:
+// never one the repository tracks; outside git the nearest, never above the home folder), and prints
+// the brief as the hook's JSON when the map is under a week old. It never writes, never runs git and never fails a session: any problem prints
 // nothing and exits 0.
 
 import { existsSync, readFileSync, statSync } from 'node:fs';
@@ -13,15 +13,46 @@ import { sessionBrief, sessionStartOutput } from '../../shared/rundown/session-b
 /** rundown.json is read up to this size; the page's model is far smaller. */
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
 
-/** The nearest .rundown/rundown.json from `start` up to the git top, the home folder or /. */
+/**
+ * Whether the .rundown/ at git top `top` is this machine's own: the script keeps it out of git with a
+ * line in the common info/exclude when it first renders, and a .rundown/ that the repository tracks
+ * (one that came with a clone) is never briefed from, so a repository can't put words in the session.
+ * Reads files only; anything it can't read counts as not ours.
+ */
+export function ownRundown(top: string): boolean {
+  try {
+    const dotGit = path.join(top, '.git');
+    let gitDir = dotGit;
+    if (statSync(dotGit).isFile()) {
+      const m = /^gitdir:\s*(.+?)\s*$/m.exec(readFileSync(dotGit, 'utf8'));
+      if (!m) return false;
+      gitDir = path.resolve(top, m[1]);
+    }
+    const commonFile = path.join(gitDir, 'commondir');
+    const common = existsSync(commonFile) ? path.resolve(gitDir, readFileSync(commonFile, 'utf8').trim()) : gitDir;
+    const exclude = path.join(common, 'info', 'exclude');
+    if (!existsSync(exclude) || !/^\/?\.rundown\/?\s*$/m.test(readFileSync(exclude, 'utf8'))) return false;
+    const index = path.join(gitDir, 'index');
+    return !existsSync(index) || !readFileSync(index).includes('.rundown/');
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The .rundown/rundown.json to brief from for a session in `start`: inside a git repository only the one
+ * at its top (where the script writes it), and only when ownRundown says it is this machine's; outside
+ * git the nearest at or above `start`, never above the home folder.
+ */
 export function findRundown(start: string, home = os.homedir()): string | null {
   let dir = path.resolve(start);
+  let nearest: string | null = null;
   for (;;) {
     const file = path.join(dir, '.rundown', 'rundown.json');
-    if (existsSync(file)) return file;
-    if (existsSync(path.join(dir, '.git')) || dir === home) return null;
+    if (existsSync(path.join(dir, '.git'))) return existsSync(file) && ownRundown(dir) ? file : null;
+    if (!nearest && existsSync(file)) nearest = file;
     const up = path.dirname(dir);
-    if (up === dir) return null;
+    if (dir === home || up === dir) return nearest;
     dir = up;
   }
 }

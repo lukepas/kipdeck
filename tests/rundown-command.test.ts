@@ -65,13 +65,13 @@ test("the package's skill files: found from the source and from the bundled scri
   assert.match((packagedFiles(empty) as { missing: string }).missing, /rundown\.mjs \(run npm run build:rundown/);
   // The bundled script finds SKILL.md and README.md one folder up, as the package and the plugin lay them out...
   const pkg = path.join(tmp, 'pkg');
-  mkdirSync(path.join(pkg, 'skills', 'rundown', 'scripts'), { recursive: true });
-  writeFileSync(path.join(pkg, 'skills', 'rundown', 'scripts', 'rundown.mjs'), '');
-  writeFileSync(path.join(pkg, 'skills', 'rundown', 'SKILL.md'), '');
-  assert.deepEqual(packagedSkill(path.join(pkg, 'skills', 'rundown', 'scripts', 'rundown.mjs')), { skill: path.join(pkg, 'skills', 'rundown', 'SKILL.md') });
-  writeFileSync(path.join(pkg, 'skills', 'rundown', 'README.md'), '');
-  assert.equal(packagedSkill(path.join(pkg, 'skills', 'rundown', 'scripts', 'rundown.mjs'))?.readme, path.join(pkg, 'skills', 'rundown', 'README.md'));
-  assert.equal((packagedFiles(pkg) as { script: string }).script, path.join(pkg, 'skills', 'rundown', 'scripts', 'rundown.mjs'));
+  mkdirSync(path.join(pkg, 'plugins', 'rundown', 'skills', 'rundown', 'scripts'), { recursive: true });
+  writeFileSync(path.join(pkg, 'plugins', 'rundown', 'skills', 'rundown', 'scripts', 'rundown.mjs'), '');
+  writeFileSync(path.join(pkg, 'plugins', 'rundown', 'skills', 'rundown', 'SKILL.md'), '');
+  assert.deepEqual(packagedSkill(path.join(pkg, 'plugins', 'rundown', 'skills', 'rundown', 'scripts', 'rundown.mjs')), { skill: path.join(pkg, 'plugins', 'rundown', 'skills', 'rundown', 'SKILL.md') });
+  writeFileSync(path.join(pkg, 'plugins', 'rundown', 'skills', 'rundown', 'README.md'), '');
+  assert.equal(packagedSkill(path.join(pkg, 'plugins', 'rundown', 'skills', 'rundown', 'scripts', 'rundown.mjs'))?.readme, path.join(pkg, 'plugins', 'rundown', 'skills', 'rundown', 'README.md'));
+  assert.equal((packagedFiles(pkg) as { script: string }).script, path.join(pkg, 'plugins', 'rundown', 'skills', 'rundown', 'scripts', 'rundown.mjs'));
   // ...and the installed copy, with none beside it, finds none.
   assert.equal(packagedSkill(path.join(tmp, '.claude', 'skills', 'rundown', 'scripts', 'rundown.mjs')), null);
 });

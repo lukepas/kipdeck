@@ -204,7 +204,7 @@ The rules for coding agents working on this repository are in [`AGENTS.md`](AGEN
 
 ### Publishing to npm
 
-The npm package ships the built `dist/` and the /rundown skill (`files` in `package.json`: the app, the server, the showcase, and `skills/rundown/` with its committed script), so an install from npm builds nothing on the user's machine. `prepare` runs `npm run build` on `npm pack`, `npm publish` and a GitHub install (`npx github:zbagdzevicius/kipdeck`), and `publishConfig.access` is `public`, which a scoped name needs. Both bin names (`kipdeck`, `agent-office`) run the same script, so `npx <any name>` finds it. To publish under a scope you own, for example `@kipdeck/kipdeck`:
+The npm package ships the built `dist/` and the /rundown skill (`files` in `package.json`: the app, the server, the showcase, and `plugins/rundown/skills/rundown/` with its committed script), so an install from npm builds nothing on the user's machine. `prepare` runs `npm run build` on `npm pack`, `npm publish` and a GitHub install (`npx github:zbagdzevicius/kipdeck`), and `publishConfig.access` is `public`, which a scoped name needs. Both bin names (`kipdeck`, `agent-office`) run the same script, so `npx <any name>` finds it. To publish under a scope you own, for example `@kipdeck/kipdeck`:
 
 ```bash
 npm login

@@ -81,7 +81,7 @@ export function planInstall(dir: string, files: Map<string, string>): InstallPla
 
 /**
  * The skill's own files beside this script: SKILL.md and README.md one folder up, as the package and
- * the plugin ship them (skills/rundown/scripts/rundown.mjs). Null when there is no SKILL.md there.
+ * the plugin ship them (plugins/rundown/skills/rundown/scripts/rundown.mjs). Null when there is no SKILL.md there.
  */
 export function packagedSkill(self: string): { skill: string; readme?: string } | null {
   const dir = path.resolve(path.dirname(self), '..');

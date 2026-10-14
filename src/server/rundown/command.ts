@@ -2,8 +2,8 @@
 // Claude. `kipdeck rundown [path]` writes or refreshes a checkout's map (the facts and the parts
 // inferred from them, or the last judgement of the /rundown skill when it left one) through the same
 // script the skill runs (cli.ts, `quick`), and `kipdeck rundown install` puts the /rundown skill into
-// ~/.claude/skills/rundown/ from the files this package ships (skills/rundown/scripts/rundown.mjs and
-// skills/rundown/), with the installer's list, backup and diff.
+// ~/.claude/skills/rundown/ from the files this package ships (plugins/rundown/skills/rundown/scripts/rundown.mjs and
+// plugins/rundown/skills/rundown/), with the installer's list, backup and diff.
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, statSync } from 'node:fs';
@@ -88,9 +88,9 @@ export function packageRoot(from = fileURLToPath(import.meta.url)): string | nul
 
 /** The skill's three files as the package ships them, or what's missing. */
 export function packagedFiles(root: string): { script: string; skill: string; readme: string } | { missing: string } {
-  const script = path.join(root, 'skills', 'rundown', 'scripts', 'rundown.mjs');
-  const skill = path.join(root, 'skills', 'rundown', 'SKILL.md');
-  const readme = path.join(root, 'skills', 'rundown', 'README.md');
+  const script = path.join(root, 'plugins', 'rundown', 'skills', 'rundown', 'scripts', 'rundown.mjs');
+  const skill = path.join(root, 'plugins', 'rundown', 'skills', 'rundown', 'SKILL.md');
+  const readme = path.join(root, 'plugins', 'rundown', 'skills', 'rundown', 'README.md');
   if (!existsSync(script)) return { missing: `${script} (run npm run build:rundown in a source checkout)` };
   if (!existsSync(skill)) return { missing: skill };
   return { script, skill, readme };

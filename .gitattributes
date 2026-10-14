@@ -5,4 +5,4 @@
 launch/chain/calendar.ics -text
 launch/calendar.ics -text
 # The /rundown script is committed for the Claude Code plugin and compared byte for byte with its build.
-skills/rundown/scripts/rundown.mjs text eol=lf
+plugins/rundown/skills/rundown/scripts/rundown.mjs text eol=lf

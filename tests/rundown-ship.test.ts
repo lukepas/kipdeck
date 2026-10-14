@@ -1,5 +1,5 @@
-// Rundown as it ships: the npm package carries the /rundown skill (skills/rundown/SKILL.md and
-// README.md) and its bundled script (skills/rundown/scripts/rundown.mjs), `kipdeck rundown install` from an
+// Rundown as it ships: the npm package carries the /rundown skill (plugins/rundown/skills/rundown/SKILL.md and
+// README.md) and its bundled script (plugins/rundown/skills/rundown/scripts/rundown.mjs), `kipdeck rundown install` from an
 // unpacked package puts all three into ~/.claude/skills/rundown/ of a throwaway HOME (a dry run writes
 // nothing, a second run backs up what it replaces, a newer copy is kept unless forced), and
 // `kipdeck rundown <path>` writes a fixture
@@ -25,7 +25,7 @@ import { makeRundownFixture } from './support/rundown-fixture.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const why =
-  bundleWhy(path.join(ROOT, 'skills', 'rundown', 'scripts', 'rundown.mjs'), [path.join(ROOT, 'src', 'server', 'rundown'), path.join(ROOT, 'src', 'shared', 'rundown')], 'rundown script') ||
+  bundleWhy(path.join(ROOT, 'plugins', 'rundown', 'skills', 'rundown', 'scripts', 'rundown.mjs'), [path.join(ROOT, 'src', 'server', 'rundown'), path.join(ROOT, 'src', 'shared', 'rundown')], 'rundown script') ||
   bundleWhy(path.join(ROOT, 'dist', 'server', 'server', 'rundown', 'command.js'), [path.join(ROOT, 'src', 'server'), path.join(ROOT, 'src', 'shared')], 'server build');
 const tmp = mkdtempSync(path.join(tmpdir(), 'rundown-ship-'));
 const fx = makeRundownFixture();
@@ -41,7 +41,7 @@ function stage(): string {
   delete pkg.scripts;
   mkdirSync(dir, { recursive: true });
   writeFileSync(path.join(dir, 'package.json'), JSON.stringify(pkg, null, 2));
-  for (const f of ['bin', 'skills', 'NOTICE', 'LICENSE', 'README.md', 'dist/server']) cpSync(path.join(ROOT, f), path.join(dir, f), { recursive: true });
+  for (const f of ['bin', 'plugins', 'NOTICE', 'LICENSE', 'README.md', 'dist/server']) cpSync(path.join(ROOT, f), path.join(dir, f), { recursive: true });
   mkdirSync(path.join(dir, 'dist', 'public'), { recursive: true });
   writeFileSync(path.join(dir, 'dist', 'public', 'index.html'), '<!doctype html>');
   // A source file the package must not ship.
@@ -58,11 +58,11 @@ test('the npm package ships the skill and its bundled script', (t) => {
   staged = stage();
   const [packed] = JSON.parse(npm(['pack', '--dry-run', '--json'], staged)) as { files: { path: string }[] }[];
   const files = packed.files.map((f) => f.path);
-  for (const f of ['skills/rundown/SKILL.md', 'skills/rundown/README.md', 'skills/rundown/scripts/rundown.mjs', 'dist/server/server/rundown/command.js', 'dist/server/server/commands.js', 'bin/agent-office.js']) assert.ok(files.includes(f), `${f} is in the package`);
+  for (const f of ['plugins/rundown/skills/rundown/SKILL.md', 'plugins/rundown/skills/rundown/README.md', 'plugins/rundown/skills/rundown/scripts/rundown.mjs', 'dist/server/server/rundown/command.js', 'dist/server/server/commands.js', 'bin/agent-office.js']) assert.ok(files.includes(f), `${f} is in the package`);
   assert.ok(!files.some((f) => f.startsWith('src/')), 'no sources');
   // The skill runs the script beside it, wherever it is installed (the global folder or the plugin).
-  assert.match(readFileSync(path.join(ROOT, 'skills', 'rundown', 'SKILL.md'), 'utf8'), /RUNDOWN=<this skill's base directory>\/scripts\/rundown\.mjs/);
-  assert.match(readFileSync(path.join(ROOT, 'skills', 'rundown', 'SKILL.md'), 'utf8'), /kipdeck rundown install/);
+  assert.match(readFileSync(path.join(ROOT, 'plugins', 'rundown', 'skills', 'rundown', 'SKILL.md'), 'utf8'), /RUNDOWN=<this skill's base directory>\/scripts\/rundown\.mjs/);
+  assert.match(readFileSync(path.join(ROOT, 'plugins', 'rundown', 'skills', 'rundown', 'SKILL.md'), 'utf8'), /kipdeck rundown install/);
 });
 
 test('kipdeck rundown install, from the unpacked package, into a throwaway HOME', (t) => {
@@ -89,7 +89,7 @@ test('kipdeck rundown install, from the unpacked package, into a throwaway HOME'
   const real = run('install');
   assert.equal(real.status, 0, real.stderr);
   assert.match(real.stdout, /Installed rundown \d+\.\d+\.\d+ in ~\/\.claude\/skills\/rundown/);
-  for (const [rel, src] of [['scripts/rundown.mjs', 'skills/rundown/scripts/rundown.mjs'], ['SKILL.md', 'skills/rundown/SKILL.md'], ['README.md', 'skills/rundown/README.md']]) assert.ok(readFileSync(path.join(skillDir, rel)).equals(readFileSync(path.join(pkg, src))), rel);
+  for (const [rel, src] of [['scripts/rundown.mjs', 'plugins/rundown/skills/rundown/scripts/rundown.mjs'], ['SKILL.md', 'plugins/rundown/skills/rundown/SKILL.md'], ['README.md', 'plugins/rundown/skills/rundown/README.md']]) assert.ok(readFileSync(path.join(skillDir, rel)).equals(readFileSync(path.join(pkg, src))), rel);
 
   // A changed copy is backed up before it's replaced, and the installed script still runs.
   writeFileSync(path.join(skillDir, 'SKILL.md'), 'an edited copy\n');
@@ -100,7 +100,7 @@ test('kipdeck rundown install, from the unpacked package, into a throwaway HOME'
   const backups = readdirSync(path.join(home, '.claude', 'backups'));
   assert.equal(readFileSync(path.join(home, '.claude', 'backups', backups[0], 'SKILL.md'), 'utf8'), 'an edited copy\n');
   // The bundled script alone finds the skill's files beside it in the package, too.
-  const alone = spawnSync(process.execPath, [path.join(pkg, 'skills', 'rundown', 'scripts', 'rundown.mjs'), 'install', '--dry-run'], { encoding: 'utf8', env: { ...process.env, HOME: home }, timeout: 60_000 });
+  const alone = spawnSync(process.execPath, [path.join(pkg, 'plugins', 'rundown', 'skills', 'rundown', 'scripts', 'rundown.mjs'), 'install', '--dry-run'], { encoding: 'utf8', env: { ...process.env, HOME: home }, timeout: 60_000 });
   assert.match(alone.stdout, /unchanged: scripts\/rundown\.mjs, SKILL\.md, README\.md/);
   const help = spawnSync(process.execPath, [path.join(skillDir, 'scripts', 'rundown.mjs'), 'help'], { encoding: 'utf8', timeout: 30_000 });
   assert.equal(help.status, 0);
@@ -115,7 +115,7 @@ test('kipdeck rundown install, from the unpacked package, into a throwaway HOME'
   const forced = run('install', '--force');
   assert.equal(forced.status, 0, forced.stderr);
   assert.match(forced.stdout, /Replacing a newer copy \(--force\)/);
-  assert.ok(readFileSync(script).equals(readFileSync(path.join(pkg, 'skills', 'rundown', 'scripts', 'rundown.mjs'))));
+  assert.ok(readFileSync(script).equals(readFileSync(path.join(pkg, 'plugins', 'rundown', 'skills', 'rundown', 'scripts', 'rundown.mjs'))));
 });
 
 test('kipdeck rundown <path> writes the map of a checkout with no Claude, kept out of git', async () => {

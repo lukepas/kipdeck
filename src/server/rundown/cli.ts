@@ -1,5 +1,5 @@
 // rundown.mjs: the /rundown skill's script, built from this file into one dependency-free ESM file
-// (vite.rundown.config.ts, skills/rundown/scripts/rundown.mjs, Node 18 or newer). The same collector and page the
+// (vite.rundown.config.ts, plugins/rundown/skills/rundown/scripts/rundown.mjs, Node 18 or newer). The same collector and page the
 // office uses, run in any git checkout:
 //
 //   node rundown.mjs collect [--root <dir>] [--no-gh]   facts into .rundown/facts.json, and a summary

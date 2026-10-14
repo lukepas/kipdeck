@@ -210,7 +210,7 @@ files. `kipdeck rundown [path]` writes the same inferred map from a terminal, wi
 ## Updating this skill
 
 This file, README.md and the built script ship in the `kipdeck` npm package and in the plugin
-(`skills/rundown/`). `kipdeck rundown install` copies all three into `~/.claude/skills/rundown/`:
+(`plugins/rundown/skills/rundown/`). `kipdeck rundown install` copies all three into `~/.claude/skills/rundown/`:
 it lists what changes first, refuses to replace a newer installed copy unless given `--force`,
 backs the old folder up to `~/.claude/backups/rundown-<time>/`, and takes out the scripts of an
 older install (they stay in the backup). `--dry-run` only shows the list and this file's diff. In a

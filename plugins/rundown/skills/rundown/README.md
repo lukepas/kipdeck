@@ -127,9 +127,9 @@ for a run. The page also has a theme toggle, remembered per browser.
 
 ## Where it comes from
 
-The source is `skills/rundown/` and `src/server/rundown/` with `src/shared/rundown/` in the
+The source is `plugins/rundown/skills/rundown/` and `src/server/rundown/` with `src/shared/rundown/` in the
 Kipdeck repository. `npm run build:rundown` bundles the script into
-`skills/rundown/scripts/rundown.mjs`, which is committed so the plugin installs straight from git;
+`plugins/rundown/skills/rundown/scripts/rundown.mjs`, which is committed so the plugin installs straight from git;
 its second line carries the version. The `kipdeck` npm package ships the same three files. In a
 source checkout, `npm run rundown:install` builds the script first and installs it
 (`-- --dry-run` only shows the list).

@@ -1,4 +1,4 @@
-// End to end: the /rundown skill's built script (skills/rundown/scripts/rundown.mjs) collects and renders a real
+// End to end: the /rundown skill's built script (plugins/rundown/skills/rundown/scripts/rundown.mjs) collects and renders a real
 // repository, keeps .rundown/ out of git without touching .gitignore, writes the person's files once,
 // diffs the next run against the last, updates the index of every project (in a temp RUNDOWN_HOME), and
 // the page and the index it writes open in a headless browser with no request of any kind and no console
@@ -14,7 +14,7 @@ import { bundleWhy } from './support/bundle.js';
 import { makeRundownFixture } from './support/rundown-fixture.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const SCRIPT = path.join(ROOT, 'skills', 'rundown', 'scripts', 'rundown.mjs');
+const SCRIPT = path.join(ROOT, 'plugins', 'rundown', 'skills', 'rundown', 'scripts', 'rundown.mjs');
 const stale = bundleWhy(SCRIPT, [path.join(ROOT, 'src', 'server', 'rundown'), path.join(ROOT, 'src', 'shared', 'rundown')], 'rundown script');
 const fx = makeRundownFixture();
 after(() => rmSync(fx.tmp, { recursive: true, force: true }));

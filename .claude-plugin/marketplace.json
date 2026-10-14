@@ -5,7 +5,7 @@
   "plugins": [
     {
       "name": "rundown",
-      "source": "./",
+      "source": "./plugins/rundown",
       "description": "A project map of any git repo (/rundown) and a short brief from it at the start of every session.",
       "version": "1.4.0",
       "category": "productivity"

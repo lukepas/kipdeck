@@ -4012,7 +4012,7 @@ function planInstall(dir, files) {
 }
 /**
 * The skill's own files beside this script: SKILL.md and README.md one folder up, as the package and
-* the plugin ship them (skills/rundown/scripts/rundown.mjs). Null when there is no SKILL.md there.
+* the plugin ship them (plugins/rundown/skills/rundown/scripts/rundown.mjs). Null when there is no SKILL.md there.
 */
 function packagedSkill(self) {
 	const dir = path.resolve(path.dirname(self), "..");
@@ -4143,15 +4143,45 @@ function sessionStartOutput(brief) {
 //#region src/server/rundown/session-start.ts
 /** rundown.json is read up to this size; the page's model is far smaller. */
 var MAX_FILE_BYTES = 8388608;
-/** The nearest .rundown/rundown.json from `start` up to the git top, the home folder or /. */
+/**
+* Whether the .rundown/ at git top `top` is this machine's own: the script keeps it out of git with a
+* line in the common info/exclude when it first renders, and a .rundown/ that the repository tracks
+* (one that came with a clone) is never briefed from, so a repository can't put words in the session.
+* Reads files only; anything it can't read counts as not ours.
+*/
+function ownRundown(top) {
+	try {
+		const dotGit = path.join(top, ".git");
+		let gitDir = dotGit;
+		if (statSync(dotGit).isFile()) {
+			const m = /^gitdir:\s*(.+?)\s*$/m.exec(readFileSync(dotGit, "utf8"));
+			if (!m) return false;
+			gitDir = path.resolve(top, m[1]);
+		}
+		const commonFile = path.join(gitDir, "commondir");
+		const common = existsSync(commonFile) ? path.resolve(gitDir, readFileSync(commonFile, "utf8").trim()) : gitDir;
+		const exclude = path.join(common, "info", "exclude");
+		if (!existsSync(exclude) || !/^\/?\.rundown\/?\s*$/m.test(readFileSync(exclude, "utf8"))) return false;
+		const index = path.join(gitDir, "index");
+		return !existsSync(index) || !readFileSync(index).includes(".rundown/");
+	} catch {
+		return false;
+	}
+}
+/**
+* The .rundown/rundown.json to brief from for a session in `start`: inside a git repository only the one
+* at its top (where the script writes it), and only when ownRundown says it is this machine's; outside
+* git the nearest at or above `start`, never above the home folder.
+*/
 function findRundown(start, home = os.homedir()) {
 	let dir = path.resolve(start);
+	let nearest = null;
 	for (;;) {
 		const file = path.join(dir, ".rundown", "rundown.json");
-		if (existsSync(file)) return file;
-		if (existsSync(path.join(dir, ".git")) || dir === home) return null;
+		if (existsSync(path.join(dir, ".git"))) return existsSync(file) && ownRundown(dir) ? file : null;
+		if (!nearest && existsSync(file)) nearest = file;
 		const up = path.dirname(dir);
-		if (up === dir) return null;
+		if (dir === home || up === dir) return nearest;
 		dir = up;
 	}
 }
