@@ -74,23 +74,23 @@ function road(e: IndexEntry): string {
 }
 
 /** One project's card; `href` is its page as a file: URL and `pathLabel` its root, tildified. */
-function card(e: IndexEntry & { href: string; pathLabel: string }, now: number): string {
-  const t = Date.parse(e.generatedAt);
+function card(pc: IndexEntry & { href: string; pathLabel: string }, now: number): string {
+  const t = Date.parse(pc.generatedAt);
   const stale = Number.isFinite(t) && now - t > STALE_DAYS * DAY_MS;
-  const waiting = e.needs.decisions + e.needs.stuck;
-  const needsBits = [e.needs.decisions ? plural(e.needs.decisions, 'open decision') : '', e.needs.stuck ? `${num(e.needs.stuck)} stuck` : ''].filter(Boolean).join(', ');
-  const counts = STATUS_ORDER.filter((s) => e.counts?.[s])
-    .map((s) => `<span><span class="st-${s}" aria-hidden="true">${GLYPH[s]}</span> ${num(e.counts[s])} ${STATUS_LABEL[s].toLowerCase()}</span>`)
+  const waiting = pc.needs.decisions + pc.needs.stuck;
+  const needsBits = [pc.needs.decisions ? plural(pc.needs.decisions, 'open decision') : '', pc.needs.stuck ? `${num(pc.needs.stuck)} stuck` : ''].filter(Boolean).join(', ');
+  const counts = STATUS_ORDER.filter((s) => pc.counts?.[s])
+    .map((s) => `<span><span class="st-${s}" aria-hidden="true">${GLYPH[s]}</span> ${num(pc.counts[s])} ${STATUS_LABEL[s].toLowerCase()}</span>`)
     .join('');
-  const at = Number.isFinite(t) ? `updated ${e.generatedAt.slice(0, 16).replace('T', ' ')}` : '';
+  const at = Number.isFinite(t) ? `updated ${pc.generatedAt.slice(0, 16).replace('T', ' ')}` : '';
   // The name link covers the whole card, so its title carries what the rows may cut off.
-  const tip = [e.name, e.description, e.pathLabel, at, needsBits && `needs you: ${needsBits}`].filter(Boolean).join('\n');
-  return `<li class="pc${stale ? ' stale' : ''}" data-q="${esc(`${e.name} ${e.pathLabel} ${e.branch ?? ''}`.toLowerCase())}">
-<div class="pc-top"><a class="pc-name" href="${esc(e.href)}" title="${esc(tip)}">${esc(e.name)}</a>${waiting ? `<span class="needs-b">${icon('person')}needs you ${num(waiting)}<span class="sr">: ${esc(needsBits)}</span></span>` : ''}<span class="pc-age">${stale ? '<span class="stale-m">stale</span>' : ''}${time(e.generatedAt, now)}</span></div>
-<div class="pc-path"><span class="pp"><bdi>${esc(e.pathLabel)}</bdi></span>${e.branch ? `<span class="pc-br">${esc(e.branch)}</span>` : ''}</div>
-<div class="pc-road">${road(e)}</div>
-${e.next ? `<p class="pc-next clamp1"><span class="arrow" aria-hidden="true">→</span> ${esc(e.next)}</p>` : ''}
-${e.judged && counts ? `<div class="pc-parts">${counts}</div>` : ''}
+  const tip = [pc.name, pc.description, pc.pathLabel, at, needsBits && `needs you: ${needsBits}`].filter(Boolean).join('\n');
+  return `<li class="pc${stale ? ' stale' : ''}" data-q="${esc(`${pc.name} ${pc.pathLabel} ${pc.branch ?? ''}`.toLowerCase())}">
+<div class="pc-top"><a class="pc-name" href="${esc(pc.href)}" title="${esc(tip)}">${esc(pc.name)}</a>${waiting ? `<span class="needs-b">${icon('person')}needs you ${num(waiting)}<span class="sr">: ${esc(needsBits)}</span></span>` : ''}<span class="pc-age">${stale ? '<span class="stale-m">stale</span>' : ''}${time(pc.generatedAt, now)}</span></div>
+<div class="pc-path"><span class="pp"><bdi>${esc(pc.pathLabel)}</bdi></span>${pc.branch ? `<span class="pc-br">${esc(pc.branch)}</span>` : ''}</div>
+<div class="pc-road">${road(pc)}</div>
+${pc.next ? `<p class="pc-next clamp1"><span class="arrow" aria-hidden="true">→</span> ${esc(pc.next)}</p>` : ''}
+${pc.judged && counts ? `<div class="pc-parts">${counts}</div>` : ''}
 </li>`;
 }
 

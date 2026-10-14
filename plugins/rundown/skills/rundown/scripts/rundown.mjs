@@ -2063,26 +2063,26 @@ function road(e) {
 	return `<b class="ms-id">${esc(m.id)}</b> <span class="ms-n">${esc(m.name)}</span><span class="pbar" role="img" aria-label="${num(m.done)} of ${num(m.total)} done"><span style="width:${pct}%"></span></span><span class="ms-c">${num(m.done)}/${num(m.total)}</span>${m.due ? `<span class="muted">due ${esc(fmtDay(m.due))}</span>` : ""}`;
 }
 /** One project's card; `href` is its page as a file: URL and `pathLabel` its root, tildified. */
-function card(e, now) {
-	const t = Date.parse(e.generatedAt);
+function card(pc, now) {
+	const t = Date.parse(pc.generatedAt);
 	const stale = Number.isFinite(t) && now - t > 14 * DAY_MS;
-	const waiting = e.needs.decisions + e.needs.stuck;
-	const needsBits = [e.needs.decisions ? plural(e.needs.decisions, "open decision") : "", e.needs.stuck ? `${num(e.needs.stuck)} stuck` : ""].filter(Boolean).join(", ");
-	const counts = STATUS_ORDER.filter((s) => e.counts?.[s]).map((s) => `<span><span class="st-${s}" aria-hidden="true">${GLYPH[s]}</span> ${num(e.counts[s])} ${STATUS_LABEL[s].toLowerCase()}</span>`).join("");
-	const at = Number.isFinite(t) ? `updated ${e.generatedAt.slice(0, 16).replace("T", " ")}` : "";
+	const waiting = pc.needs.decisions + pc.needs.stuck;
+	const needsBits = [pc.needs.decisions ? plural(pc.needs.decisions, "open decision") : "", pc.needs.stuck ? `${num(pc.needs.stuck)} stuck` : ""].filter(Boolean).join(", ");
+	const counts = STATUS_ORDER.filter((s) => pc.counts?.[s]).map((s) => `<span><span class="st-${s}" aria-hidden="true">${GLYPH[s]}</span> ${num(pc.counts[s])} ${STATUS_LABEL[s].toLowerCase()}</span>`).join("");
+	const at = Number.isFinite(t) ? `updated ${pc.generatedAt.slice(0, 16).replace("T", " ")}` : "";
 	const tip = [
-		e.name,
-		e.description,
-		e.pathLabel,
+		pc.name,
+		pc.description,
+		pc.pathLabel,
 		at,
 		needsBits && `needs you: ${needsBits}`
 	].filter(Boolean).join("\n");
-	return `<li class="pc${stale ? " stale" : ""}" data-q="${esc(`${e.name} ${e.pathLabel} ${e.branch ?? ""}`.toLowerCase())}">
-<div class="pc-top"><a class="pc-name" href="${esc(e.href)}" title="${esc(tip)}">${esc(e.name)}</a>${waiting ? `<span class="needs-b">${icon("person")}needs you ${num(waiting)}<span class="sr">: ${esc(needsBits)}</span></span>` : ""}<span class="pc-age">${stale ? "<span class=\"stale-m\">stale</span>" : ""}${time(e.generatedAt, now)}</span></div>
-<div class="pc-path"><span class="pp"><bdi>${esc(e.pathLabel)}</bdi></span>${e.branch ? `<span class="pc-br">${esc(e.branch)}</span>` : ""}</div>
-<div class="pc-road">${road(e)}</div>
-${e.next ? `<p class="pc-next clamp1"><span class="arrow" aria-hidden="true">→</span> ${esc(e.next)}</p>` : ""}
-${e.judged && counts ? `<div class="pc-parts">${counts}</div>` : ""}
+	return `<li class="pc${stale ? " stale" : ""}" data-q="${esc(`${pc.name} ${pc.pathLabel} ${pc.branch ?? ""}`.toLowerCase())}">
+<div class="pc-top"><a class="pc-name" href="${esc(pc.href)}" title="${esc(tip)}">${esc(pc.name)}</a>${waiting ? `<span class="needs-b">${icon("person")}needs you ${num(waiting)}<span class="sr">: ${esc(needsBits)}</span></span>` : ""}<span class="pc-age">${stale ? "<span class=\"stale-m\">stale</span>" : ""}${time(pc.generatedAt, now)}</span></div>
+<div class="pc-path"><span class="pp"><bdi>${esc(pc.pathLabel)}</bdi></span>${pc.branch ? `<span class="pc-br">${esc(pc.branch)}</span>` : ""}</div>
+<div class="pc-road">${road(pc)}</div>
+${pc.next ? `<p class="pc-next clamp1"><span class="arrow" aria-hidden="true">→</span> ${esc(pc.next)}</p>` : ""}
+${pc.judged && counts ? `<div class="pc-parts">${counts}</div>` : ""}
 </li>`;
 }
 /** The index page; `entries` newest first, each with its href and pathLabel set. */
