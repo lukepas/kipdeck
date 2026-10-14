@@ -28,6 +28,7 @@ export class DebriefPanel {
   private readonly title = h('p.debrief-title');
   private readonly body = h('div.debrief-body');
   private timer = 0;
+  private frame = 0;
   private open: Debrief | null = null;
 
   constructor(private readonly deps: DebriefDeps) {
@@ -71,13 +72,19 @@ export class DebriefPanel {
     }
     this.body.replaceChildren(...parts);
     this.el.hidden = false;
-    requestAnimationFrame(() => this.el.classList.add('on'));
-    this.timer = window.setTimeout(() => this.close(false), ms);
+    cancelAnimationFrame(this.frame);
+    // Its time up counts from the frame that draws it, not from the call: at load the office can
+    // hold the page for seconds, and a debrief timed from the call would go before it was read.
+    this.frame = requestAnimationFrame(() => {
+      this.el.classList.add('on');
+      this.timer = window.setTimeout(() => this.close(false), ms);
+    });
   }
 
   /** Puts it away; `byHand` (its close button or Esc) also gives the view the mouse back. */
   close(byHand: boolean) {
     if (!this.open) return;
+    cancelAnimationFrame(this.frame);
     clearTimeout(this.timer);
     this.open = null;
     this.el.classList.remove('on');
