@@ -4,6 +4,10 @@
 //   - one watches the way a page does and asks for nothing (the tape's `stream`);
 //   - one attaches to every terminal, watches every agent's changes and asks for every diff, brief
 //     and log as they change (the `answers` a page's own requests are answered from).
+// The Deck's city and the inbox's Signal chip are answered from the tape too, though the hosted demo
+// never sends them: the recorder works out the demo project's rundown and Signal's gist of it itself,
+// with the office's own code (dist/server), when the round starts and after each merge (a shipped record), and the tape's
+// welcome has the Deck and Rundown labs on.
 // The tape is scrubbed (scrub.mjs): the folders become the hosted demo's, and a secret-shaped string or
 // a name of this computer fails the recording. Build first (npm run build). Then:
 //
@@ -17,6 +21,9 @@ import WebSocket from 'ws';
 import { leaks, scrub } from './scrub.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const SERVER = path.join(ROOT, 'dist', 'server', 'server');
+const { computeMap } = await import(path.join(SERVER, 'rundown', 'service.js'));
+const { signalGist } = await import(path.join(SERVER, 'signal', 'gist.js'));
 const arg = (name, fallback) => {
   const i = process.argv.indexOf(`--${name}`);
   return i > 0 ? process.argv[i + 1] : fallback;
@@ -104,6 +111,7 @@ async function main() {
     if (msg.t === 'inbox.log' && msg.records.length === 0) {
       rounds.push(at);
       console.log(`record: round ${rounds.length} starts at ${(at / 1000).toFixed(1)} s`);
+      if (rounds.length === 1) map();
       if (rounds.length === 2) finish();
     }
   });
@@ -154,6 +162,26 @@ async function main() {
       send({ t: 'brief.get', workerId: msg.state.workerId });
     }
   });
+  // The demo project's map and Signal's gist of it, as the office would send them to a page watching it
+  // (server/rundown/service.ts computeMap, server/signal/gist.ts), one at a time, onto the answers.
+  let mapping = Promise.resolve();
+  let shown;
+  const map = () => {
+    const def = shown?.floors?.find((f) => f.id === (shown.floor ?? shown.floors[0]?.id));
+    if (!def) return;
+    mapping = mapping.then(async () => {
+      const floor = { id: def.id, dir: def.dir, def, workers: { list: () => [] }, github: { pulls: { fetchedAt: 0, items: [] }, issues: { fetchedAt: 0, items: [] } } };
+      const { rundown } = await computeMap(floor, new Map(), Date.now());
+      const gist = await signalGist({ ...floor, mission: { state: () => shown.mission }, timeline: { list: () => ({ events: [] }) } }, { ops: false, rundown: true }, Date.now(), rundown);
+      const at = Date.now() - t0;
+      answers.push({ at, msg: { t: 'rundown.state', floor: def.id, rundown, computing: false } }, { at, msg: { t: 'signal.gist', gist } });
+    }).catch((err) => stop(1, `the demo project's rundown: ${err.message}`));
+  };
+  look.on('message', (raw) => {
+    const msg = JSON.parse(String(raw));
+    if (msg.t === 'welcome') shown = msg;
+    if (msg.t === 'welcome' || msg.t === 'inbox.record') map();
+  });
   const asking = setInterval(askStates, ASK_MS);
   const limit = setTimeout(() => stop(1, `two rounds didn't start in ${LIMIT_MS / 60000} minutes`), LIMIT_MS);
   for (const s of [watch, look]) s.on('error', (err) => stop(1, `socket: ${err.message}`));
@@ -161,12 +189,15 @@ async function main() {
   function finish() {
     clearInterval(asking);
     clearTimeout(limit);
-    // A moment more for the answers asked for at the boundary.
-    setTimeout(() => {
+    // A moment more for the answers asked for at the boundary, and the last map.
+    setTimeout(async () => {
+      await mapping;
       watch.close();
       look.close();
       const [loopFrom, loopTo] = rounds;
-      const tape = { version: 1, recordedAt: t0, loopFrom, loopTo, welcome, whoami, stream: stream.filter((e) => e.at < loopTo), answers: answers.filter((e) => e.at <= loopTo + 1000) };
+      // The Deck and its city are on in the replay (the hosted demo is the inbox alone).
+      const labs = { ...welcome.labs, on: { ...welcome.labs.on, bridge: true, rundown: true } };
+      const tape = { version: 1, recordedAt: t0, loopFrom, loopTo, welcome: { ...welcome, labs }, whoami, stream: stream.filter((e) => e.at < loopTo), answers: answers.filter((e) => e.at <= loopTo + 1000) };
       // The folders this recording ran in read as the hosted demo's (deploy/demo/Dockerfile).
       const tmp = os.tmpdir();
       const text = scrub(JSON.stringify(tape), [
