@@ -11,7 +11,7 @@ import './styles/loop.css';
 import './styles/scenes.css';
 import './styles/labs.css';
 import './styles/perf.css';
-import { SCENES, preloadScenes } from './scenes/index';
+import { SCENES, EARLY, preloadScenes } from './scenes/index';
 import { mountHero } from './scenes/hero';
 import { countUp } from './engine/count';
 import { env, tier } from './engine/env';
@@ -61,23 +61,32 @@ copyButtons((btn) => {
   heroScene?.attend(r.left + r.width / 2, r.top + r.height / 2);
 });
 
+const mounted = new WeakSet<HTMLElement>();
+function mountScene(el: HTMLElement) {
+  if (mounted.has(el)) return;
+  mounted.add(el);
+  near.unobserve(el);
+  const id = el.dataset.scene!;
+  if (id !== 'hero') void SCENES[id]?.().then((mount) => mount(el));
+}
 const near = new IntersectionObserver(
   (entries) => {
-    for (const e of entries) {
-      if (!e.isIntersecting) continue;
-      near.unobserve(e.target);
-      const el = e.target as HTMLElement;
-      const id = el.dataset.scene!;
-      if (id !== 'hero') void SCENES[id]?.().then((mount) => mount(el));
-    }
+    for (const e of entries) if (e.isIntersecting) mountScene(e.target as HTMLElement);
   },
   { rootMargin: '100% 0px' },
 );
 const sections = [...document.querySelectorAll<HTMLElement>('[data-scene]')];
 sections.forEach((s) => near.observe(s));
 // Every other scene's chunk, fetched while the browser is idle once the opening has played, so none
-// is fetched as its section arrives. With less motion no scene stages anything, so none is fetched.
-if (!env.reduced) addEventListener('load', () => setTimeout(() => preloadScenes(sections.map((s) => s.dataset.scene!)), 2600), { once: true });
+// is fetched as its section arrives; the few costly to mount (EARLY) are mounted in idle moments too.
+// With less motion no scene stages anything, so none is fetched ahead.
+if (!env.reduced) {
+  addEventListener('load', () => setTimeout(() => {
+    preloadScenes(sections.map((s) => s.dataset.scene!));
+    const idle = (fn: () => void) => ('requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 2000 }) : setTimeout(fn, 200));
+    for (const s of sections) if (EARLY.has(s.dataset.scene!)) idle(() => mountScene(s));
+  }, 2600), { once: true });
+}
 // The merge's ring (its canvas, context and compiled program) is made in the first idle moment
 // after the opening, while the page is still at its top, so neither a scroll nor the merge pays for it.
 if (!env.reduced && tier !== 'min') {

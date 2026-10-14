@@ -181,7 +181,7 @@ test('the footer tells the truth about the wait, and answering there clears it',
 });
 
 for (const [name, size] of [['a laptop', { width: 1440, height: 900 }], ['a phone', { width: 390, height: 844 }]] as const) {
-  test(`on ${name}, every section that skips rendering is rendered once while idle after the opening, so none pays for its first layout mid-scroll`, { skip: why || false, timeout: 60_000 }, async (t) => {
+  test(`on ${name}, every section that skips rendering is rendered once while idle after the opening, and the loop and the merge's ring are made ready, so none of it lands mid-scroll`, { skip: why || false, timeout: 60_000 }, async (t) => {
     const { page, errors } = await open(t, size);
     // What each deferred section measures without being rendered: its remembered size, which is the
     // estimate in styles/perf.css until it has been rendered once.
@@ -220,6 +220,14 @@ for (const [name, size] of [['a laptop', { width: 1440, height: 900 }], ['a phon
     assert.notDeepEqual(before, real, 'at load they held the estimates');
     // And they still skip rendering off screen.
     assert.deepEqual(after.map(([id]) => id), before.map(([id]) => id));
+    // In the same idle time: the loop, the costliest scene to mount, is mounted (scenes/index.ts,
+    // EARLY), and the merge's ring has shown its one empty frame and is hidden again (fx/shockwave.ts).
+    await page.waitForFunction(() => !!document.querySelector('#loop .staged'), null, { timeout: 30_000 });
+    await page.waitForFunction(() => {
+      const c = document.querySelector<HTMLCanvasElement>('canvas.shockwave');
+      return !!c && getComputedStyle(c).visibility === 'hidden';
+    }, null, { timeout: 30_000 });
+    assert.equal(await page.evaluate(() => scrollY), 0, 'mounted ahead of the reader, not by a visit');
     assert.deepEqual(errors, []);
   });
 }
