@@ -355,12 +355,15 @@ export function direct(kit: Kit, doc: Host, fixed: Host, lite: boolean): Directo
     ktl = timeline().add(leave(prev, d)).call(w ? go : () => (pending = false));
   }
 
-  /** Calls `fn` once the page's height is the same two frames running (at most ten frames on). */
+  /** Calls `fn` once the page's height is the same two frames running (at most ten frames on). `fn`
+   *  measures what is on screen and stages his entrance, the costliest thing he does, so it runs in a
+   *  task of its own rather than inside the frame: on a slow phone the two together made a frame over
+   *  50 ms mid-scroll. */
   function settled(fn: () => void) {
     let last = -1, n = 0;
     const check = () => {
       const h = document.documentElement.scrollHeight;
-      if (h === last || ++n > 10) fn();
+      if (h === last || ++n > 10) setTimeout(fn, 0);
       else {
         last = h;
         requestAnimationFrame(check);

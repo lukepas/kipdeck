@@ -24,3 +24,6 @@ main > :is(#loop, #why, #yours, #phone, #numbers, #labs, #teams), #end { content
   #teams { contain-intrinsic-size: auto 1535px; }
   #end { contain-intrinsic-size: auto 656px; }
 }
+/* For the moment engine/warm.ts lays a section out once, ahead of its arrival (important: the rule
+   above names sections by id, which a class alone would not outweigh). */
+main > .warming { content-visibility: visible !important; }
