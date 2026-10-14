@@ -1,0 +1,7 @@
+/* The one-time section hints (hints.ts): one quiet line under a section's header, with Got it. */
+.sec-hint { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; padding: 6px 8px 6px 10px; border-left: 2px solid var(--line-strong); border-radius: 0 var(--radius) var(--radius) 0; background: var(--surface-1); color: var(--muted); font-size: 12px; line-height: 1.4; }
+.sec-hint > span { flex: 1; min-width: 0; }
+.sec-hint-ok { flex: none; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: none; color: var(--text); font: 500 12px var(--font-ui); cursor: pointer; }
+.sec-hint-ok:hover { border-color: var(--line-strong); }
+.sec-hint-ok:focus-visible { outline: 2px solid var(--act); outline-offset: 1px; }
+@media (max-width: 899px) { .sec-hint-ok { min-height: 32px; } }

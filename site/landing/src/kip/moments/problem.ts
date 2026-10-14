@@ -52,6 +52,10 @@ function glyphs(el: Element): { l: number; r: number; t: number } | null {
 
 const state = new WeakMap<Run, { beat: (p: number) => void; b: () => Spot | null; rise: (p: number) => void }>();
 
+/** One canvas to measure text with, made on first use: a new one per measure (ten a second while
+ *  he is here) was garbage, and on a slow phone a context made mid-scroll costs a frame. */
+let probe: CanvasRenderingContext2D | null | undefined;
+
 /** The baseline of an element's first line of text (viewport px), and its glyphs' right end. */
 function baselineOf(el: Element): { y: number; r: number } | null {
   const range = document.createRange();
@@ -59,7 +63,7 @@ function baselineOf(el: Element): { y: number; r: number } | null {
   const r = [...range.getClientRects()].find((x) => x.width > 0);
   if (!r) return null;
   const cs = getComputedStyle(el);
-  const c = document.createElement('canvas').getContext('2d');
+  const c = (probe ??= document.createElement('canvas').getContext('2d'));
   if (!c) return null;
   c.font = `${cs.fontStyle} ${cs.fontWeight} 100px ${cs.fontFamily}`;
   const m = c.measureText(el.textContent ?? '');

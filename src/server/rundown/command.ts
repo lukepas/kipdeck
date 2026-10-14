@@ -2,8 +2,8 @@
 // Claude. `kipdeck rundown [path]` writes or refreshes a checkout's map (the facts and the parts
 // inferred from them, or the last judgement of the /rundown skill when it left one) through the same
 // script the skill runs (cli.ts, `quick`), and `kipdeck rundown install` puts the /rundown skill into
-// ~/.claude/skills/rundown/ from the files this package ships (dist/rundown/rundown.mjs and
-// skills/rundown/), with the installer's list, backup and diff.
+// ~/.claude/skills/rundown/ from the files this package ships (plugins/rundown/skills/rundown/scripts/rundown.mjs and
+// plugins/rundown/skills/rundown/), with the installer's list, backup and diff.
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, statSync } from 'node:fs';
@@ -17,7 +17,7 @@ export const RUNDOWN_HELP = `${CLI} rundown - the project map, without Claude
 
 Usage:
   ${CLI} rundown [path] [--open] [--no-gh]
-  ${CLI} rundown install [--dry-run]
+  ${CLI} rundown install [--dry-run] [--force]
 
 Writes or refreshes the map of the git checkout at [path] (default: the current
 folder) in <checkout>/.rundown/, kept out of git through .git/info/exclude: the
@@ -27,27 +27,33 @@ and where the page is.
 
 install puts the /rundown skill into ~/.claude/skills/rundown/, so Claude Code
 has /rundown in every folder. It lists what changes first, backs up what was
-there to ~/.claude/backups/rundown-<time>/ and prints a diff command.
+there to ~/.claude/backups/rundown-<time>/ and prints a diff command. It never
+replaces a newer installed copy with this one unless you add --force. The
+Claude Code plugin is the other way in, and it adds the session brief:
+/plugin marketplace add zbagdzevicius/kipdeck, then /plugin install rundown@kipdeck.
 
 Options:
       --open        Open the page when it's written
       --no-gh       Leave out GitHub's open issues and pull requests
   -n, --dry-run     install: show what would change and change nothing
+      --force       install: replace a newer installed copy (it is backed up first)
   -h, --help        Show this help
 `;
 
-export type RundownArgs = { cmd: 'map'; path?: string; open: boolean; gh: boolean } | { cmd: 'install'; dryRun: boolean } | { cmd: 'help' } | { cmd: 'error'; error: string };
+export type RundownArgs = { cmd: 'map'; path?: string; open: boolean; gh: boolean } | { cmd: 'install'; dryRun: boolean; force: boolean } | { cmd: 'help' } | { cmd: 'error'; error: string };
 
 /** What `kipdeck rundown ...` asks for. */
 export function parseRundownArgs(argv: readonly string[]): RundownArgs {
   if (argv.some((a) => a === '-h' || a === '--help')) return { cmd: 'help' };
   if (argv[0] === 'install') {
     let dryRun = false;
+    let force = false;
     for (const a of argv.slice(1)) {
       if (a === '--dry-run' || a === '-n') dryRun = true;
+      else if (a === '--force') force = true;
       else return { cmd: 'error', error: `unknown option for install: ${a}` };
     }
-    return { cmd: 'install', dryRun };
+    return { cmd: 'install', dryRun, force };
   }
   let where: string | undefined;
   let open = false;
@@ -82,9 +88,9 @@ export function packageRoot(from = fileURLToPath(import.meta.url)): string | nul
 
 /** The skill's three files as the package ships them, or what's missing. */
 export function packagedFiles(root: string): { script: string; skill: string; readme: string } | { missing: string } {
-  const script = path.join(root, 'dist', 'rundown', 'rundown.mjs');
-  const skill = path.join(root, 'skills', 'rundown', 'SKILL.md');
-  const readme = path.join(root, 'skills', 'rundown', 'README.md');
+  const script = path.join(root, 'plugins', 'rundown', 'skills', 'rundown', 'scripts', 'rundown.mjs');
+  const skill = path.join(root, 'plugins', 'rundown', 'skills', 'rundown', 'SKILL.md');
+  const readme = path.join(root, 'plugins', 'rundown', 'skills', 'rundown', 'README.md');
   if (!existsSync(script)) return { missing: `${script} (run npm run build:rundown in a source checkout)` };
   if (!existsSync(skill)) return { missing: skill };
   return { script, skill, readme };
@@ -118,7 +124,7 @@ export async function rundownCommand(argv: string[], root = packageRoot()): Prom
       console.error(`${CLI} rundown install: not found: ${files.missing}`);
       return 1;
     }
-    const code = install({ skill: files.skill, readme: existsSync(files.readme) ? files.readme : undefined, dryRun: a.dryRun }, undefined, undefined, files.script);
+    const code = install({ skill: files.skill, readme: existsSync(files.readme) ? files.readme : undefined, dryRun: a.dryRun, force: a.force }, undefined, undefined, files.script);
     if (code === 0 && !a.dryRun) console.log('Type /rundown in Claude Code, in any git checkout, for the full map with Claude\'s read.');
     return code;
   }

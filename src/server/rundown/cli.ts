@@ -1,5 +1,5 @@
 // rundown.mjs: the /rundown skill's script, built from this file into one dependency-free ESM file
-// (vite.rundown.config.ts, dist/rundown/rundown.mjs, Node 18 or newer). The same collector and page the
+// (vite.rundown.config.ts, plugins/rundown/skills/rundown/scripts/rundown.mjs, Node 18 or newer). The same collector and page the
 // office uses, run in any git checkout:
 //
 //   node rundown.mjs collect [--root <dir>] [--no-gh]   facts into .rundown/facts.json, and a summary
@@ -7,10 +7,16 @@
 //   node rundown.mjs brief   [--root <dir>]             a compact digest for Claude to judge from
 //   node rundown.mjs render  [--root <dir>] [--mode full|quick] [--open] [--theme dark|light] [--accent <name|#hex>]
 //   node rundown.mjs quick   [--root <dir>] [--open]    collect, then render with the last judgement
-//   node rundown.mjs install [--skill <SKILL.md>] [--readme <README.md>] [--dry-run]
+//   node rundown.mjs index   [--open]                   rebuild the index of every project's rundown
+//   node rundown.mjs session-start                      the plugin's SessionStart hook: a short brief on stdout
+//   node rundown.mjs install [--skill <SKILL.md>] [--readme <README.md>] [--dry-run] [--force]
 //                                                       itself, SKILL.md and README.md into ~/.claude/skills/rundown/,
 //                                                       after a diff and a backup of what was there (SKILL.md and
-//                                                       README.md default to the package's skills/rundown/)
+//                                                       README.md default to the ones beside it); never over a
+//                                                       newer copy without --force
+//
+// Every render also updates the index of every project's rundown, ~/.claude/rundown/index.html
+// (RUNDOWN_HOME moves it), and a failure there never fails the render.
 //
 // Everything it writes is in <git top>/.rundown/ (kept out of git through .git/info/exclude, never
 // .gitignore): the page as rundown.html and map.html, rundown.json, state.json and history/. It never
@@ -18,25 +24,31 @@
 // folder is an error (exit 2), never created; the home folder and / are mapped only when named with
 // --root, and outside git nothing is listed or opened at all.
 
-import { execFile, spawn, spawnSync } from 'node:child_process';
-import { appendFileSync, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { execFile, spawn } from 'node:child_process';
+import { appendFileSync, copyFileSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readState, type Since } from '../../shared/rundown/diff.js';
 import { accentHex, renderPage, type PageStyle } from '../../shared/rundown/html.js';
+import { indexEntry } from '../../shared/rundown/index-page.js';
 import { appendDecisions, writeDecisions, writeMilestones } from '../../shared/rundown/markdown.js';
-import { inferredNext, partCounts, partsLine } from '../../shared/signal-parts.js';
-import { buildRundown, isoLocal, itemsLeft } from '../../shared/rundown/model.js';
+import { buildRundown, isoLocal } from '../../shared/rundown/model.js';
+import { replyBlock } from '../../shared/rundown/reply.js';
+import { RUNDOWN_VERSION } from '../../shared/rundown/version.js';
 import { LIMITS, type Facts, type Judgement, type Rundown, type RundownProject } from '../../shared/rundown/schema.js';
 import { validateJudgement } from '../../shared/rundown/validate.js';
 import { plural } from '../../shared/rundown/html-sections.js';
 import { toState } from '../../shared/rundown/diff.js';
 import { collect } from './collect.js';
 import { commitsSince, gitRunner } from './git.js';
+import { devOf, indexHome, indexHref, indexPaths, rebuildIndex, updateIndex } from './index-file.js';
+import { install } from './install.js';
+import { hookCwd, readStdin, sessionStart } from './session-start.js';
 
-export const VERSION = '1.0.0';
+export { install, packagedSkill, planInstall, type InstallPlan } from './install.js';
+export const VERSION = RUNDOWN_VERSION;
 
 interface Args {
   cmd: string;
@@ -51,10 +63,11 @@ interface Args {
   skill?: string;
   readme?: string;
   dryRun: boolean;
+  force: boolean;
 }
 
 export function parseArgs(argv: string[], cwd = process.cwd()): Args {
-  const a: Args = { cmd: argv[0] ?? 'help', root: cwd, named: false, mode: 'full', open: false, gh: true, dryRun: false };
+  const a: Args = { cmd: argv[0] ?? 'help', root: cwd, named: false, mode: 'full', open: false, gh: true, dryRun: false, force: false };
   const named = (v: string | undefined) => {
     a.root = path.resolve(cwd, v ?? '.');
     a.named = true;
@@ -72,6 +85,7 @@ export function parseArgs(argv: string[], cwd = process.cwd()): Args {
     else if (v === '--skill') a.skill = argv[++i];
     else if (v === '--readme') a.readme = argv[++i];
     else if (v === '--dry-run') a.dryRun = true;
+    else if (v === '--force') a.force = true;
     else if (!v.startsWith('-')) named(v);
   }
   return a;
@@ -220,7 +234,7 @@ function brief(root: string, out: string, c: { facts: Facts; project: RundownPro
   return L.join('\n');
 }
 
-async function render(a: Args, root: string, out: string, repo: boolean, collected?: { facts: Facts; project: RundownProject }): Promise<Rundown> {
+async function render(a: Args, root: string, out: string, repo: boolean, collected?: { facts: Facts; project: RundownProject }): Promise<{ r: Rundown; index: { html: string; count: number } | null }> {
   if (a.accent && !accentHex(a.accent)) console.error(`--accent ${a.accent}: not a colour name or #rrggbb, the saved accent is used`);
   const c = collected ?? ((readJson(path.join(out, 'facts.json')) as { facts: Facts; project: RundownProject } | null) || (await runCollect(a, root, out)));
   let judgement: Judgement | null = null;
@@ -237,9 +251,28 @@ async function render(a: Args, root: string, out: string, repo: boolean, collect
   const decPath = path.join(out, 'decisions.md');
   const r = buildRundown({ facts: c.facts, project: c.project, generator: { name: 'rundown-skill', version: VERSION, mode: a.mode }, judgement, milestonesMd: read(msPath), decisionsMd: read(decPath), prev, since, now: new Date() });
   writeAtomic(path.join(out, 'rundown.json'), `${JSON.stringify(r, null, 1)}\n`);
-  const page = renderPage(r, new Date(), readStyle(a));
-  writeAtomic(path.join(out, 'rundown.html'), page);
-  writeAtomic(path.join(out, 'map.html'), page);
+  const style = readStyle(a);
+  let judgedAt: string | null = null;
+  if (judgement) {
+    try {
+      judgedAt = statSync(path.join(out, 'judgement.json')).mtime.toISOString();
+    } catch {
+      // gone since it was read
+    }
+  }
+  let href: string | null = null;
+  try {
+    href = indexHref();
+  } catch {
+    // a bad RUNDOWN_HOME: shown as an index gap below
+  }
+  const htmlPath = path.join(out, 'rundown.html');
+  const writePage = (indexLink: string | null) => {
+    const page = renderPage(r, new Date(), style, { prev, judgedAt, indexHref: indexLink });
+    writeAtomic(htmlPath, page);
+    writeAtomic(path.join(out, 'map.html'), page);
+  };
+  writePage(href);
   // The person's files: written once, then only theirs to change (a new decision is added, nothing else).
   if (!existsSync(msPath) && r.milestones.length) writeAtomic(msPath, writeMilestones(r.milestones, { proposed: r.milestones.some((m) => m.source === 'proposed') }));
   const decMd = read(decPath);
@@ -259,7 +292,22 @@ async function render(a: Args, root: string, out: string, repo: boolean, collect
     for (const f of old.slice(0, Math.max(0, old.length - 20))) unlinkSync(path.join(hist, f));
   }
   writeAtomic(statePath, `${JSON.stringify(toState(r), null, 1)}\n`);
-  return r;
+  // The index of every project comes after: a failure there never fails this project's page. Without an
+  // index page to point at, the page is written again without its link.
+  let index: { html: string; count: number } | null = null;
+  try {
+    index = await updateIndex(indexEntry(r, { root, htmlPath, dev: devOf(root) }), style);
+  } catch (e) {
+    r.facts.gaps.push(`index: ${e instanceof Error ? e.message : String(e)}`);
+    let there = false;
+    try {
+      there = existsSync(indexPaths(indexHome()).html);
+    } catch {
+      // a bad RUNDOWN_HOME
+    }
+    if (href && !there) writePage(null);
+  }
+  return { r, index };
 }
 
 /** What a render in .rundown/ reads, writes or prunes. */
@@ -285,26 +333,12 @@ export async function renderQuick(root: string): Promise<Rundown | null> {
   // reads or writes (history/ is pruned) could send it outside the checkout, so it draws nothing then.
   if ([out, ...QUICK_FILES.map((f) => path.join(out, f))].some(isLink)) throw new Error('.rundown/ holds a symlink: not drawn');
   const a = parseArgs(['render', '--mode', 'quick', '--root', root, '--no-gh']);
-  return render(a, root, out, (await topOf(root)).repo);
+  return (await render(a, root, out, (await topOf(root)).repo)).r;
 }
 
-/** The reply's shape: where the map is, the next milestone, the next step, what changed, what's open. */
-export function summary(r: Rundown, mapPath: string): string {
-  const L = [`Rundown: ${mapPath}`];
-  const ms = r.milestones.find((m) => m.id === r.nextMilestone);
-  L.push(ms ? `Next milestone: ${ms.id} ${ms.name}, ${itemsLeft(r)} item${itemsLeft(r) === 1 ? '' : 's'} left${ms.due ? ` (due ${ms.due})` : ''}${ms.source === 'proposed' ? ' [proposed: edit .rundown/milestones.md]' : ''}` : 'Next milestone: none');
-  // Without Claude's next step, the one the office's window and Signal's card work out from the code.
-  const guess = r.nextStep ? null : inferredNext(r);
-  L.push(r.nextStep ? `Next step: ${r.nextStep.text} (${r.nextStep.why})` : guess ? `Next step: ${guess} (inferred from the code)` : 'Next step: none yet (run the full /rundown for one)');
-  L.push(r.previous ? (r.changes.length ? `Changed since ${r.previous.generatedAt.slice(0, 16).replace('T', ' ')}:\n${r.changes.slice(0, 8).map((c) => `  - ${c.text}`).join('\n')}` : 'Nothing changed since the last rundown') : 'First rundown');
-  const open = r.decisions.filter((d) => !d.answer);
-  L.push(open.length ? `Your call:\n${open.map((d) => `  - ${d.id}. ${d.question} Default: ${d.default}`).join('\n')}` : 'Your call: nothing open');
-  const parts = r.parts.map((p) => `${p.name} ${p.status}${p.waitingOn ? ` (waiting on ${p.waitingOn})` : ''}`).join('; ');
-  const counts = partsLine(partCounts(r.parts));
-  if (counts) L.push(counts);
-  L.push(`Parts: ${parts}${r.parts.some((p) => p.statusSource === 'inferred') ? ' [inferred]' : ''}`);
-  if (r.facts.gaps.length) L.push(`Gaps: ${r.facts.gaps.join('; ')}`);
-  return L.join('\n');
+/** The reply block Claude relays (reply.ts), with the index's path shown from home. */
+export function summary(r: Rundown, mapPath: string, index: { html: string; count: number } | null = null): string {
+  return replyBlock(r, mapPath, index ? { html: tildify(index.html), count: index.count } : null);
 }
 
 function openFile(file: string) {
@@ -316,108 +350,37 @@ function openFile(file: string) {
   }
 }
 
-/** Every file under `dir`, relative, with '/'. */
-function filesUnder(dir: string, rel = ''): string[] {
-  if (!existsSync(dir)) return [];
-  return readdirSync(path.join(dir, rel), { withFileTypes: true }).flatMap((e) => {
-    const r = rel ? `${rel}/${e.name}` : e.name;
-    return e.isDirectory() ? filesUnder(dir, r) : e.isFile() ? [r] : [];
-  });
-}
-
-export interface InstallPlan {
-  dir: string;
-  /** What goes in, by its path in the skill. */
-  files: Map<string, string>;
-  added: string[];
-  changed: string[];
-  same: string[];
-  /** There now and not in this build (the old scripts): backed up, then taken out. Screenshots in examples/ stay. */
-  stale: string[];
-}
-
-/** What installing would do to `dir`: nothing is written. */
-export function planInstall(dir: string, files: Map<string, string>): InstallPlan {
-  const plan: InstallPlan = { dir, files, added: [], changed: [], same: [], stale: [] };
-  for (const [rel, src] of files) {
-    const dst = path.join(dir, rel);
-    if (!existsSync(dst)) plan.added.push(rel);
-    else if (readFileSync(dst).equals(readFileSync(src))) plan.same.push(rel);
-    else plan.changed.push(rel);
-  }
-  plan.stale = filesUnder(dir).filter((rel) => !files.has(rel) && !rel.startsWith('examples/') && !rel.endsWith('.DS_Store'));
-  return plan;
-}
-
-/**
- * The skill's own files that ship beside this script in the kipdeck package (dist/rundown/rundown.mjs
- * and skills/rundown/), so an install from the package needs no --skill. Null for a copy that has none
- * beside it (the installed one in ~/.claude/skills/rundown/scripts/).
- */
-export function packagedSkill(self: string): { skill: string; readme?: string } | null {
-  const dir = path.resolve(path.dirname(self), '..', '..', 'skills', 'rundown');
-  const skill = path.join(dir, 'SKILL.md');
-  if (!existsSync(skill)) return null;
-  const readme = path.join(dir, 'README.md');
-  return { skill, ...(existsSync(readme) ? { readme } : {}) };
-}
-
-/**
- * Puts this build, SKILL.md and README.md into ~/.claude/skills/rundown/ (or `dir`). It says first what
- * changes; with --dry-run that's all, and SKILL.md's diff is shown. Otherwise the whole folder is copied
- * to ~/.claude/backups/rundown-<time>/ before anything in it changes, the stale scripts of an older
- * install go (they're in the backup), and the backup's path and a diff command are printed.
- */
-export function install(a: Pick<Args, 'skill' | 'readme' | 'dryRun'>, dir = path.join(os.homedir(), '.claude', 'skills', 'rundown'), backups = path.join(os.homedir(), '.claude', 'backups'), self = fileURLToPath(import.meta.url)): number {
-  const files = new Map<string, string>([['scripts/rundown.mjs', self]]);
-  const packaged = packagedSkill(self);
-  for (const [rel, src] of [['SKILL.md', a.skill ?? packaged?.skill], ['README.md', a.readme ?? packaged?.readme]] as const) {
-    if (!src) continue;
-    if (!existsSync(src)) {
-      console.error(`rundown: no such file: ${src}`);
-      return 2;
-    }
-    files.set(rel, path.resolve(src));
-  }
-  const plan = planInstall(dir, files);
-  const list = (label: string, xs: string[]) => xs.length && console.log(`  ${label}: ${xs.join(', ')}`);
-  console.log(`${a.dryRun ? 'Would install' : 'Installing'} into ${tildify(dir)}:`);
-  list('new', plan.added);
-  list('changed', plan.changed);
-  list('unchanged', plan.same);
-  list('taken out (an older install, kept in the backup)', plan.stale);
-  if (a.dryRun) {
-    if (plan.changed.includes('SKILL.md') && a.skill) {
-      const d = spawnSync('diff', ['-u', path.join(dir, 'SKILL.md'), path.resolve(a.skill)], { encoding: 'utf8', timeout: 10_000 });
-      if (d.stdout) console.log(d.stdout.split('\n').slice(0, 80).join('\n'));
-    }
-    return 0;
-  }
-  if (!plan.added.length && !plan.changed.length && !plan.stale.length) {
-    console.log('Nothing to change.');
-    return 0;
-  }
-  if (existsSync(dir) && (plan.changed.length || plan.stale.length)) {
-    const backup = path.join(backups, `rundown-${isoLocal(new Date()).slice(0, 19).replace(/[-:]/g, '')}`);
-    mkdirSync(backups, { recursive: true });
-    cpSync(dir, backup, { recursive: true, errorOnExist: true, force: false });
-    console.log(`Backed up the old copy to ${tildify(backup)}  (diff -ru ${tildify(backup)} ${tildify(dir)})`);
-  }
-  for (const [rel, src] of files) {
-    mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
-    copyFileSync(src, path.join(dir, rel));
-  }
-  for (const rel of plan.stale) unlinkSync(path.join(dir, rel));
-  console.log(`Installed ${tildify(dir)}`);
-  return 0;
-}
-
 /** Runs a command; `rendered` hears the map a render or quick run wrote, and where its page is. */
 export async function main(argv: string[], rendered?: (r: Rundown, map: string) => void): Promise<number> {
   const a = parseArgs(argv);
-  if (a.cmd === 'install') return install(a);
+  if (a.cmd === 'install') return install(a, undefined, undefined, fileURLToPath(import.meta.url));
+  if (a.cmd === 'session-start') {
+    // The plugin's hook: prints the brief or nothing, and never fails the session.
+    const text = sessionStart(hookCwd(await readStdin()));
+    if (text) console.log(text);
+    return 0;
+  }
+  if (a.cmd === 'index') {
+    if (a.named) {
+      console.error('rundown: index covers every project and takes no --root or path');
+      return 2;
+    }
+    try {
+      const ix = await rebuildIndex(readStyle(a));
+      console.log(`Index  ${tildify(ix.html)} · ${plural(ix.count, 'project')}`);
+      if (a.open) openFile(ix.html);
+      return 0;
+    } catch (e) {
+      console.error(`rundown: ${e instanceof Error ? e.message : String(e)}`);
+      return 2;
+    }
+  }
+  if (a.cmd === 'version' || a.cmd === '--version') {
+    console.log(VERSION);
+    return 0;
+  }
   if (!['collect', 'facts', 'brief', 'render', 'quick'].includes(a.cmd)) {
-    console.log(`rundown ${VERSION}: collect | facts | brief | render [--mode full|quick] | quick | install  [--root <dir>] [--open] [--no-gh] [--theme dark|light] [--accent <name|#hex>]`);
+    console.log(`rundown ${VERSION}: collect | facts | brief | render [--mode full|quick] | quick | index | session-start | install [--dry-run] [--force] | version  [--root <dir>] [--open] [--no-gh] [--theme dark|light] [--accent <name|#hex>]`);
     return a.cmd === 'help' || a.cmd === '--help' ? 0 : 2;
   }
   const problem = rootProblem(a);
@@ -444,9 +407,9 @@ export async function main(argv: string[], rendered?: (r: Rundown, map: string) 
     return 0;
   }
   const collected = a.cmd === 'quick' ? await runCollect(a, root, out) : undefined;
-  const r = await render({ ...a, mode: a.cmd === 'quick' ? 'quick' : a.mode }, root, out, repo, collected);
+  const { r, index } = await render({ ...a, mode: a.cmd === 'quick' ? 'quick' : a.mode }, root, out, repo, collected);
   const map = path.join(out, 'rundown.html');
-  console.log(summary(r, tildify(map)));
+  console.log(summary(r, tildify(map), index));
   rendered?.(r, map);
   if (a.open) openFile(map);
   return 0;

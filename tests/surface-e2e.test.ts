@@ -1,7 +1,7 @@
 // End to end: the home page's surface beyond the inbox, in the built office with `--demo` (its
 // scripted agents, at six times the script's pace) in a headless browser. The avatar menu is short and
 // in the inbox's words; Settings has exactly three panes (Account, Agents, Notifications) and nothing
-// of the 3D Deck; Numbers counts a merge the moment it lands; Help (?) has the loop and the six keys
+// of the 3D Deck; Numbers counts a merge the moment it lands; Help (?) has the loop and the seven keys
 // and D; and every one of these windows closes with its top-right ✕ and with Esc. Enter the Deck in the
 // top bar (a row over the list on a phone): never Signal orange, D and Go to Deck take you to /deck,
 // and it hides when an admin switches the Deck lab off. Settings' panes, Labs, the palette and the sign-in
@@ -159,8 +159,8 @@ test('the avatar menu, three-pane Settings, Numbers after a merge, and Help, eac
   const help = page.locator('.modal.keys-help');
   await help.waitFor();
   assert.equal(await help.locator('.help-loop li').count(), 4);
-  // The six keys; D for the Deck only while its lab is on, and it ships off.
-  assert.equal(await help.locator('dt').count(), 6);
+  // The seven keys (T for triage among them); D for the Deck only while its lab is on, and it ships off.
+  assert.equal(await help.locator('dt').count(), 7);
   assert.doesNotMatch(await help.locator('dl').innerText(), /Enter the Deck/);
   await help.locator('header .close').click();
   assert.equal(await modals(), 0, 'the ✕ closes Help');

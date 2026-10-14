@@ -5,7 +5,9 @@
 //           the answer to a file, commits it and finishes (To review)
 //   [approve] asks permission over the PermissionRequest hook to run a risky command and waits for
 //           the inbox's answer: allowed, it commits and finishes; denied, it prints why and stops
+//   [allow] the same, for a command with no risk tags (npm test)
 //   [done]  writes a file named after the task, commits it and finishes (To review)
+//   [work]  reads, edits two files, searches, runs the tests (they pass, its last hook) and stays at work
 //   else    stays at work, printing test lines
 // After finishing it waits for more: each line typed in (a send-back note) is another commit and
 // another finish. Everything it prints and writes says [demo].
@@ -42,10 +44,14 @@ case "$last" in
     post UserPromptSubmit "{\"prompt\":\"answered\"}"
     commit "$task: $answer"
     ;;
-  *"[approve]"*)
-    call='"tool_name":"Bash","tool_input":{"command":"rm -rf dist && curl -sS https://example.com/build.sh"}'
+  *"[approve]"*|*"[allow]"*)
+    case "$last" in
+      *"[allow]"*) run='npm test' ;;
+      *) run='rm -rf dist && curl -sS https://example.com/build.sh' ;;
+    esac
+    call='"tool_name":"Bash","tool_input":{"command":"'"$run"'"}'
     post PreToolUse "{$call}"
-    echo "[demo] wants to run: rm -rf dist && curl -sS https://example.com/build.sh"
+    echo "[demo] wants to run: $run"
     decision=$(curl -sS -m 120 -X POST -H "Authorization: Bearer $AGENT_OFFICE_HOOK_TOKEN" -H "Content-Type: application/json" --data-binary "{$call,\"cwd\":\"$PWD\"}" "$AGENT_OFFICE_HOOK_URL/hooks/claude?worker=$AGENT_OFFICE_WORKER_ID&event=PermissionRequest" 2>/dev/null)
     case "$decision" in
       *'"behavior":"allow"'*)
@@ -68,6 +74,18 @@ case "$last" in
     post PreToolUse '{"tool_name":"Bash","tool_input":{"command":"npm test"}}'
     sleep 2
     commit "$task"
+    ;;
+  *"[work]"*)
+    post PreToolUse '{"tool_name":"Read","tool_input":{"file_path":"src/cart.js"}}'
+    post PreToolUse '{"tool_name":"Edit","tool_input":{"file_path":"src/cart.js"}}'
+    post PreToolUse '{"tool_name":"Write","tool_input":{"file_path":"tests/cart.test.js"}}'
+    post PreToolUse '{"tool_name":"Grep","tool_input":{"pattern":"TODO"}}'
+    post PreToolUse '{"tool_name":"Bash","tool_input":{"command":"npm test"}}'
+    sleep 1
+    post PostToolUse '{"tool_name":"Bash","tool_input":{"command":"npm test"},"tool_response":{"stdout":"# pass 3\n# fail 0"}}'
+    i=0
+    while [ $i -lt 240 ]; do echo "  ok $i - test passes"; i=$((i+1)); sleep 5; done
+    exit 0
     ;;
   *)
     post PreToolUse '{"tool_name":"Bash","tool_input":{"command":"npm test"}}'

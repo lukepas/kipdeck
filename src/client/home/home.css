@@ -21,6 +21,7 @@ button.sec-h:hover { color: var(--text); }
 .sec-needs-you .sec-n { background: var(--signal); color: var(--on-signal); }
 .sec-review .sec-n { background: var(--review-tint); color: var(--review); box-shadow: inset 0 0 0 1px var(--review); }
 .sec-fold, .sec-total { margin-left: auto; font: 500 12px var(--font-ui); color: var(--muted); }
+.sec-kinds { min-width: 0; overflow: hidden; font: 400 12px var(--font-ui); color: var(--muted); white-space: nowrap; text-overflow: ellipsis; }
 .sec-total { font-family: var(--font-mono); font-size: 11px; }
 .sec-empty { display: flex; align-items: center; gap: 8px; margin: 0; padding: 12px 14px; border: 1px dashed var(--line); border-radius: var(--radius-panel); color: var(--muted); font-size: 13px; }
 .sec-empty.e-needs-you .ico, .sec-empty.e-nobody .ico { color: var(--settled); }
@@ -268,6 +269,10 @@ button.sec-h:hover { color: var(--text); }
 .keys-help dl { display: grid; grid-template-columns: auto 1fr; gap: 10px 16px; margin: 0; font-size: 14px; }
 .keys-help dt { display: flex; gap: 4px; }
 .keys-help dd { margin: 0; color: var(--muted); }
+.help-triage { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0; padding: 0; list-style: none; font-size: 13px; }
+.help-triage li { display: contents; }
+.help-triage .keys-k { display: flex; gap: 4px; }
+.help-triage span:last-child { color: var(--muted); }
 .keys-help kbd { font: 500 12px/20px var(--font-mono); padding: 0 6px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); background: var(--surface-2); }
 .keys-note { margin: 14px 0 0; font-size: 12px; color: var(--muted); }
 .keys-note + .help-h { margin-top: 22px; }

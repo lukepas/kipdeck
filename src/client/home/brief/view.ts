@@ -3,11 +3,13 @@
 // brief is shown (with comments.ts and the stylesheet), so the inbox draws without it.
 
 import { verdict, type CiState, type Verdict } from '../../../shared/brief/verdict';
+import { ciOf } from '../../../shared/brief/row-verdict';
 import { duration } from '../../../shared/attention';
 import type { ReviewBrief, RosterEntry } from '../../../shared/protocol';
 import { h } from '../../ui/dom';
 import { icon } from '../../ui/icons';
 import { commentsOf } from './store';
+import { landGap, landLine } from '../land';
 import type { BriefView } from './index';
 import './brief.css';
 
@@ -61,9 +63,12 @@ function checked(b: ReviewBrief, v: Verdict, ci: CiState | undefined): HTMLEleme
 
 /** Draws `b`, the brief for `e`. */
 export function renderBrief(e: RosterEntry, b: ReviewBrief): BriefView {
-  const ci = e.pr && e.pr.state !== 'merged' ? (e.pr.checks ?? 'none') : undefined;
+  const ci = ciOf(e);
   const comments = commentsOf(e.id);
-  const v = verdict(b, ci);
+  const found = verdict(b, ci);
+  // Work that conflicts with its base can't be merged as it is, whatever its tests say (land.ts).
+  const clash = landGap(e);
+  const v = clash ? { ...found, ready: false, gaps: [`${clash}.`, ...found.gaps] } : found;
   const el = h(
     'section.rv-brief',
     { 'aria-label': 'Review brief' },
@@ -75,6 +80,7 @@ export function renderBrief(e: RosterEntry, b: ReviewBrief): BriefView {
       row('It says', b.summary ? clamp('rb-summary', b.summary) : h('span.rb-dim', {}, 'It left no summary of what it did.')),
       b.qa.length ? row('Asked', h('ul.rb-qa', {}, ...b.qa.map((q) => h('li', {}, h('span.rb-q', {}, q.question), h('span.rb-a', {}, q.answer ? `You said: ${q.answer}` : 'Answered in its terminal'))))) : null,
       checked(b, v, ci),
+      landLine(e),
       row('Comments', h('span', { class: comments.length ? 'rb-count' : 'rb-dim' }, comments.length ? `${comments.length} on the diff, sent with Send back.` : 'Click a line number in the diff (or Tab to one and press Enter) to comment on it.')),
     ),
   );

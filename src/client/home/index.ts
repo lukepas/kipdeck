@@ -11,13 +11,13 @@ import type { Net } from '../net';
 import { store } from '../state';
 import { $, h } from '../ui/dom';
 import { icon } from '../ui/icons';
-import { digestCard, recallDigest, watchAway } from '../ui/mission/digest';
+import { digestCard, recallDigest, watchAway } from '../ui/mission/away';
 import type { DesktopNotifier } from '../notify';
 import type { Settings } from '../state';
 import { applyLight, toggleLight } from '../lite-theme';
 import { createActions, type Actions } from './actions';
 import { startClocks, tickClocks } from './clock';
-import { installKeys, openHelp } from './keys';
+import { installKeys, openHelp, openTriage } from './keys';
 import * as lazy from './lazy';
 import { rewatch, routeLazy } from './lazy';
 import { currentView, renderList } from './list';
@@ -109,6 +109,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     { label: 'Deploy agent', hint: 'N', icon: 'plus', run: () => actions.deploy() },
     ...(spendUi()?.spendCommands() ?? []),
     { label: 'Search agents', hint: '/', icon: 'search', run: () => search.focus() },
+    { label: 'Triage', hint: 'T: one card at a time, from the keyboard', icon: 'queue', run: () => openTriage(actions) },
     { label: 'Numbers', hint: 'Wait time, merges, merge rate', icon: 'plot', run: openNumbers },
     { label: 'Signal', hint: 'Project status: on track, at risk or off track', icon: 'target', run: openSignal },
     { label: 'While you were away', icon: 'clock', run: () => recallDigest(showDigest) },
@@ -185,7 +186,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
       const next = nextUp(currentView());
       home.select(next?.id, next?.status === 'needs_input' ? 'terminal' : 'changes');
     };
-    const card = digestShown ? digestCard(actions.deps, showNext, () => ((digestShown = false), renderAll())) : null;
+    const card = digestShown ? digestCard(showNext, () => ((digestShown = false), renderAll())) : null;
     // Back after a night away, a line over it says so (warm.ts).
     const welcome = card ? welcomeLine(store.away?.since, showNext) : null;
     digest.replaceChildren(...(welcome ? [welcome] : []), ...(card ? [h('ul.digest', {}, card)] : []));

@@ -1,15 +1,18 @@
 import { attention } from '../../shared/attention.js';
+import { turnFacts } from '../../shared/doing.js';
+import type { BriefLog } from '../brief/log.js';
 import type { ReviewPull, RosterEntry } from '../../shared/protocol.js';
 import type { Floor } from '../floor.js';
 import { onRoster, rosterEntry, type RosterFloor } from '../roster.js';
 import { reviewQueue } from '../review.js';
+import { RowVerdicts } from '../brief/verdicts.js';
 import type { Ctx, RosterHelpers } from './context.js';
 
 /** How often the roster is looked at again even when nothing changed: a worker goes silent by not changing. */
 export const ROSTER_TICK_MS = 30_000;
 
-/** What the roster knows about a floor. */
-export function rosterFloor(f: Floor): RosterFloor {
+/** What the roster knows about a floor; `briefs` for what its agents at work did this turn. */
+export function rosterFloor(f: Floor, briefs?: Pick<BriefLog, 'journal'>): RosterFloor {
   return {
     id: f.id,
     name: f.def.name,
@@ -21,6 +24,9 @@ export function rosterFloor(f: Floor): RosterFloor {
       const w = f.workers.get(id);
       return w && f.work.get(w);
     },
+    land: (id) => f.land.get(id),
+    overlap: (id) => f.land.overlapOf(id),
+    turn: (id) => turnFacts(briefs?.journal(id)),
   };
 }
 
@@ -30,18 +36,25 @@ export function rosterFloor(f: Floor): RosterFloor {
  * time it goes out, a worker that just got stuck is passed to the alerts (push, then the team's channel).
  */
 export function rosterHelpers(ctx: Ctx): RosterHelpers {
+  // Each To review row's verdict, its diff's flags read once per piece of work (brief/verdicts.ts).
+  const verdicts = new RowVerdicts((id) => ctx.workerFloor(id)?.changes, (id) => ctx.briefs.journal(id), () => rosterChanged());
+  const withVerdict = (e: RosterEntry): RosterEntry => {
+    const verdict = verdicts.verdict(e);
+    return verdict ? { ...e, verdict } : e;
+  };
   const rosterEntries = (): RosterEntry[] => {
     const out: RosterEntry[] = [];
     for (const f of ctx.floors.values()) {
-      const rf = rosterFloor(f);
-      for (const w of f.workers.list()) if (onRoster(w)) out.push(rosterEntry(rf, w));
+      const rf = rosterFloor(f, ctx.briefs);
+      for (const w of f.workers.list()) if (onRoster(w)) out.push(withVerdict(rosterEntry(rf, w)));
     }
+    verdicts.keep(new Set(out.map((e) => e.id)));
     return out;
   };
   const entryOf = (workerId: string): RosterEntry | undefined => {
     const f = ctx.workerFloor(workerId);
     const w = f?.workers.get(workerId);
-    return f && w ? rosterEntry(rosterFloor(f), w) : undefined;
+    return f && w ? withVerdict(rosterEntry(rosterFloor(f, ctx.briefs), w)) : undefined;
   };
 
   /** Workers stuck as of the last look; undefined before the first, which only takes note (no posts on a restart). */

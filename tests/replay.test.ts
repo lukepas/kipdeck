@@ -6,8 +6,10 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { Follows, answer, shiftTimes, tapePosition, terminalAt, type Tape } from '../src/shared/replay.js';
-import { DEMO_COMMAND, READ_ONLY_ALLOWS, demoNote } from '../src/shared/demo.js';
+import { Follows, REPLAY_ALSO_ANSWERS, answer, isPhone, shiftTimes, tapePosition, terminalAt, type Tape } from '../src/shared/replay.js';
+import { DEMO_COMMAND, READ_ONLY_ALLOWS, READ_ONLY_QUIET, demoNote } from '../src/shared/demo.js';
+import { cityOnInReplay } from '../src/client/features/replay/logic.js';
+import { route } from './support/replay-host.js';
 import { leaks, scrub } from '../deploy/replay/scrub.mjs';
 import type { ServerMsg } from '../src/shared/protocol.js';
 
@@ -39,6 +41,23 @@ test('the recorded times move to now, and nothing else does', () => {
   assert.deepEqual(moved.list, [T0 + 3_600_000]);
   assert.equal(moved.nested.when, T0 + 3_600_000);
   assert.equal(shiftTimes(msg, 0, t), msg);
+});
+
+test("a rundown's git times and days move too: an offset ISO time, a bare day and a day in a sentence", () => {
+  const t = tape();
+  const day = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+  const week = 7 * 86_400_000;
+  const local = new Date(T0).toISOString().replace('Z', '+00:00');
+  const msg = { date: local, day: day(T0), text: `Carry on with web (last commit ${day(T0)})`, old: 'since 2020-01-01', iso: '2020-01-01T00:00:00+03:00' };
+  const moved = shiftTimes(msg, week, t);
+  assert.equal(moved.date, new Date(T0 + week).toISOString());
+  assert.equal(moved.day, day(T0 + week));
+  assert.equal(moved.text, `Carry on with web (last commit ${day(T0 + week)})`);
+  assert.equal(moved.old, msg.old, 'a day far from the recording stays');
+  assert.equal(moved.iso, msg.iso);
+  // Late in the day it is played on, the recorded day still reads as that day, not the next.
+  const late = Date.UTC(2026, 9, 20, 23, 30) - T0;
+  assert.equal(shiftTimes({ day: day(T0) }, late, t).day, '2026-10-20');
 });
 
 test("a terminal is its last snapshot with what was written after it, as it stood at that moment", () => {
@@ -98,6 +117,61 @@ test("every request the replay answers is one the read-only demo takes", () => {
   for (const t of ['worker.attach', 'worker.worktree', 'changes.watch', 'changes.diff', 'brief.get', 'inbox.log', 'pace.get', 'timeline.get', 'team.get', 'approvals.get', 'spend.get']) assert.ok(READ_ONLY_ALLOWS.has(t), t);
 });
 
+test('beyond those, only the Deck\'s city and the Signal peek, which the hosted demo drops without a word', () => {
+  assert.deepEqual([...REPLAY_ALSO_ANSWERS].sort(), ['rundown.unwatch', 'rundown.watch', 'signal.peek']);
+  for (const t of REPLAY_ALSO_ANSWERS) assert.ok(READ_ONLY_QUIET.has(t) && !READ_ONLY_ALLOWS.has(t), t);
+});
+
+test("the city's rundown and Signal's gist are answered from the tape, and the watched floor's rundown keeps coming", () => {
+  const state = (floor: string, generatedAt: string) => ({ t: 'rundown.state', floor, rundown: { generatedAt, parts: [] }, computing: false });
+  const t = tape([
+    { at: 100, msg: state('acme-shop', 'one') },
+    { at: 120, msg: { t: 'signal.gist', gist: { floor: 'acme-shop', goal: null, burn: null, rundown: { source: 'inferred' } } } },
+    { at: 150, msg: state('other', 'x') },
+    { at: 300, msg: state('acme-shop', 'two') },
+  ]);
+  const one = (m: ServerMsg[]) => (assert.equal(m.length, 1), m[0] as any);
+  assert.deepEqual(answer(t, { t: 'rundown.watch', floor: 'acme-shop' }, 50), [], 'nothing before the first map');
+  assert.equal(one(answer(t, { t: 'rundown.watch', floor: 'acme-shop' }, 200)).rundown.generatedAt, 'one');
+  assert.equal(one(answer(t, { t: 'rundown.watch', floor: 'acme-shop' }, 400)).rundown.generatedAt, 'two');
+  assert.equal(one(answer(t, { t: 'signal.peek', floor: 'acme-shop' }, 400)).gist.rundown.source, 'inferred');
+  assert.deepEqual(answer(t, { t: 'signal.peek', floor: 'other' }, 400), []);
+
+  const f = new Follows();
+  const later = state('acme-shop', 'two') as ServerMsg;
+  assert.equal(f.wants(later, new Set()), false);
+  f.note({ t: 'rundown.watch', floor: 'acme-shop' });
+  assert.equal(f.wants(later, new Set()), true);
+  assert.equal(f.wants(state('other', 'x') as ServerMsg, new Set()), false, 'one floor at a time');
+  f.note({ t: 'rundown.unwatch' });
+  assert.equal(f.wants(later, new Set()), false);
+});
+
+test('a phone is a touch screen with a short side of 640 px or less, either way up; it gets the inbox, not the Deck', () => {
+  assert.equal(isPhone({ coarse: true, width: 390, height: 844 }), true);
+  assert.equal(isPhone({ coarse: true, width: 844, height: 390 }), true);
+  assert.equal(isPhone({ coarse: true, width: 820, height: 1180 }), false, 'a tablet');
+  assert.equal(isPhone({ coarse: false, width: 500, height: 700 }), false, 'a narrow desktop window');
+});
+
+test('the city is up in the replay whatever the visitor saved, and as they left it everywhere else', () => {
+  assert.equal(cityOnInReplay({ readOnly: true, replay: true, project: 'acme-shop' }, false), true);
+  assert.equal(cityOnInReplay({ readOnly: true, project: 'acme-shop' }, false), false);
+  assert.equal(cityOnInReplay(undefined, false), false);
+  assert.equal(cityOnInReplay(undefined, true), true);
+});
+
+test('the replay host sends /deck and /bridge to the Deck in demo mode, and keeps a demo=0 the visitor chose', () => {
+  const rules = JSON.parse(readFileSync(path.join(ROOT, 'deploy/replay/vercel.json'), 'utf8'));
+  const at = (u: string) => route(new URL(u, 'http://x'), rules);
+  assert.deepEqual(at('/deck'), { redirect: '/deck?demo=1' });
+  assert.deepEqual(at('/bridge'), { redirect: '/deck?demo=1' });
+  assert.deepEqual(at('/deck?demo=1'), { file: '/bridge.html' });
+  assert.deepEqual(at('/deck?demo=0'), { file: '/bridge.html' });
+  assert.deepEqual(at('/'), { file: '/index.html' });
+  assert.deepEqual(at('/replay/tape.json'), { file: '/replay/tape.json' });
+});
+
 test("the replay's note says it's a recording with nothing live, and gives the command to run it", () => {
   const note = demoNote({ readOnly: true, replay: true, project: 'acme-shop' });
   assert.match(note.text, /recording/i);
@@ -140,4 +214,11 @@ test('the committed tape loops one whole round and publishes nothing it should n
   assert.ok(statuses.includes('needs_input'), 'an agent asks');
   assert.ok(t.stream.some((e) => e.at >= t.loopFrom && e.msg.t === 'inbox.record'), 'a change is merged');
   assert.ok(text.length < 3_000_000, `the tape is small enough to load fast (${text.length} bytes)`);
+  // The Deck: its lab and Rundown's are on, and the city's map and Signal's gist of it are there from the loop's start.
+  assert.ok(t.welcome.t === 'welcome' && t.welcome.labs?.on.bridge && t.welcome.labs.on.rundown, 'the Deck and Rundown labs are on');
+  const floor = t.welcome.t === 'welcome' ? t.welcome.floor : undefined;
+  const map = answer(t, { t: 'rundown.watch', floor: floor! }, t.loopFrom + 2000)[0] as Extract<ServerMsg, { t: 'rundown.state' }> | undefined;
+  assert.ok(map?.rundown && map.rundown.parts.length > 0, 'the demo project has a map with parts by the loop\'s start');
+  const gist = answer(t, { t: 'signal.peek', floor: floor! }, t.loopFrom + 2000)[0] as Extract<ServerMsg, { t: 'signal.gist' }> | undefined;
+  assert.ok(gist?.gist.rundown, "Signal's gist reads that map");
 });
