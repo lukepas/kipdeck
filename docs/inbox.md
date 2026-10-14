@@ -104,7 +104,7 @@ The office keeps each agent's journal from the hook events its CLI already posts
 - **Avatar menu**: the core rows first, **Numbers**, **Signal**, **Settings**, **Pair a phone**, **Help and keys** and Sign out, then the **Labs** group last: Issues, Pull requests, the Task queue and Mission control while the GitHub boards and queue lab is on, **Rundown** and **Enter the Deck** (with how many agents are at work) while theirs are, and **Labs** itself, which says how many are on. Mission control is a lab on purpose: the inbox is the one place to see and act on every agent, across every project (the project picker) and every teammate (Mine / Team), so there is no second board to keep in step with it. Labs is also at the foot of Settings > Account and in Ctrl+K; While you were away and light or dark are in Ctrl+K. Ctrl+K lists the loop's commands first, then the other core windows, then the labs, then the agents; typing narrows it with a match on a label ahead of a match on a hint (`src/client/home/palette-match.ts`), so *labs* finds Labs first.
 - **Numbers**: human wait time (the median time finished work waited on a person before its review, in the same words as the rows), changes merged, the merge rate and agent-hours for the last 7 days against the 7 days before, merges per day for the last 14 days, and the merge rate per agent and model over the last 30 days with its N, for the project picked or all of them. A merge rate shows from 5 reviews; below that it says *-*. **Copy as Markdown** puts the table on the clipboard. See [metrics](metrics.md).
 - **Settings**: **Account** (who you're signed in as, your password, light or dark, your paired devices; for admins, teammates and anonymous usage numbers), **Agents** (the default agent and model, how many run at once, each project's default permission mode, the budget caps per agent and per day, what happens after a merge, where new projects are cloned, the prompts, what agents may do to each other without asking, and the record of what they did) and **Notifications** (push to your devices, desktop notifications, and the team's Slack or Discord channel). It opens on the pane you left it on.
-- **Help** (**?**): the loop in four verbs, the six keys, a link to the docs, and About, with the upstream credit (*Built on agent-office (AgentSystemLabs / webdevcody), MIT*; NOTICE and LICENSE ship with every copy). The sign-in pages carry only their card, with Kip waving over it (*Welcome back*; *Welcome aboard* when an office is first claimed) on a sunset glow in the dark set. A failure is plain: while the card shows an error (a wrong password, a link that didn't work) Kip and the glow step out without moving the card, and a claim link that fails is headed *This link didn't work*.
+- **Help** (**?**): the loop in four verbs, the seven keys, triage's keys, a link to the docs, and About, with the upstream credit (*Built on agent-office (AgentSystemLabs / webdevcody), MIT*; NOTICE and LICENSE ship with every copy). The sign-in pages carry only their card, with Kip waving over it (*Welcome back*; *Welcome aboard* when an office is first claimed) on a sunset glow in the dark set. A failure is plain: while the card shows an error (a wrong password, a link that didn't work) Kip and the glow step out without moving the card, and a claim link that fails is headed *This link didn't work*.
 
 On a phone (under 900px wide) the list is the page, and a row is one tap target: it opens the agent over the list with **Inbox** to go back, with its question card or its diff ready. Send, Send back and Merge are large tap targets, every control in the pane and the question card is at least 44px to tap on a touch screen, and keyboard hints are left off a touch screen. On the terminal's **Keys**, Esc and ^C sit last, away from the answers, and take a second tap (*Tap again*) on a touch screen, so a slipped thumb doesn't interrupt an agent. Deploy says only *Deploy* on a narrow phone, so the search box keeps room for its word. Toasts come in at the foot of the screen on a phone (lifted over the reply box while an agent is open) and at the bottom of the list's column on a wide screen, never over the pulse, the reply box or Merge. Every control in the phone's top bar is at least 44px to tap. A toast about what you just did yourself is only ever the merge hold with its Undo, or a settled beat when an answer or a merge landed.
 
@@ -124,7 +124,7 @@ Where the code points, in order: the office's public address when it has one (`A
 
 ## Keys
 
-Six of them, never while you type in a box or a terminal, or while a window is open.
+Seven of them, never while you type in a box or a terminal, or while a window is open.
 
 | Key | What it does |
 | --- | --- |
@@ -133,9 +133,12 @@ Six of them, never while you type in a box or a terminal, or while a window is o
 | Enter | The selected agent's next step (its row's button): answer, review, fix checks. Never a merge |
 | Esc | Back to the list: from the pane's terminal, out of the search box, or off the selection. While a merge is held, Esc (or u) undoes it instead |
 | / | Search agents |
+| T | Triage: one card at a time, answered from the keyboard |
 | ? | Help: the loop, these keys and the docs |
 
 After you answer or approve, the pane moves to the next item that needs you, then the next to review. Up and Down (or j and k) move the selection. Esc in the pane's terminal comes back to the list rather than reaching the agent; the keypad's **Esc** button, or Ctrl+[, sends the agent one.
+
+**Triage** (**T**) shows the same items one card at a time, Needs you then To review. Y, A and N answer an approval; Shift+Y allows a byte-identical call for every agent waiting on it at once; 1-9 and R answer a question; M merges (with the usual Undo) and S sends back finished work; Z snoozes for an hour. Keys wait 300 ms after each card appears, and allowing a call tagged destructive takes a held key. The full list is in [controls](controls.md#triage).
 
 ## Approvals
 

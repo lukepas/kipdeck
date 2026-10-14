@@ -103,6 +103,18 @@ export class ApprovalDesk {
     return undefined;
   }
 
+  /**
+   * Request `id` and every other open request for the byte-identical call (sameCall: the same tool
+   * with the same input), whichever agent asked, `id`'s first; empty when `id` is gone. Triage's
+   * Shift+Y answers them all at once ('approval.answer' with `same`).
+   */
+  sameAs(id: string): ApprovalView[] {
+    const h = this.held.get(id);
+    if (!h) return [];
+    const others = [...this.held.values()].filter((o) => o !== h && sameCall(o.payload, h.payload)).map((o) => o.view).sort((a, b) => a.at - b.at);
+    return [h.view, ...others];
+  }
+
   /** What request `id` is, while it's open. */
   get(id: string): ApprovalView | undefined {
     return this.held.get(id)?.view;
