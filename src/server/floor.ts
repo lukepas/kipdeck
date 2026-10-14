@@ -19,6 +19,7 @@ import { MissionStore } from './mission.js';
 import { Timeline, TimelineWatch } from './timeline.js';
 import { ReplyClock } from './pace.js';
 import { WorkLooks } from './review.js';
+import { LandQueue, landAgentsOf } from './landqueue.js';
 import { BRANCH_PREFIX } from './worktrees.js';
 import { missionLine, missionVars } from '../shared/mission.js';
 import { Docs } from './docs.js';
@@ -136,6 +137,8 @@ export class Floor {
   readonly replies: ReplyClock;
   /** What each worker at rest changed, for the review inbox (see review.ts). */
   readonly work: WorkLooks;
+  /** Whether each finished branch still lands on its base, and which live agents change the same files (see landqueue.ts). */
+  readonly land: LandQueue;
   /** The whiteboard everyone on the floor draws on together. */
   readonly whiteboard: Whiteboard;
   /** The meeting room, where workers work through a question together (see meetings.ts). */
@@ -344,6 +347,7 @@ export class Floor {
     );
 
     this.work = new WorkLooks((id) => this.changes.summary(id), (id) => this.workers.get(id), () => ctx.workChanged());
+    this.land = new LandQueue(this.dir, () => landAgentsOf(this.dir, this.workers.list(), this.project.branch), () => ctx.workChanged());
     // What the queue and the meeting room are now: the timeline only notes what changes from here.
     this.watch.queue(this.queue.state());
     this.watch.meetingRoom(this.meetings.state());
@@ -476,6 +480,7 @@ export class Floor {
     this.meetings.shutdown();
     this.changes.stop();
     this.work.stop();
+    this.land.stop();
     this.whiteboard.flush();
     this.workers.shutdown(keep);
   }
