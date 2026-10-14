@@ -7,6 +7,8 @@ import { holdLabel } from './spend.js';
 
 /** Working, but no hook event and no terminal output for this long: it may be stuck. */
 export const SILENT_MS = 10 * 60_000;
+/** Working and no sign of life for this long: still Working, but its row's clock says "quiet 4m" (shared/doing.ts). */
+export const QUIET_MS = 3 * 60_000;
 /**
  * Silent this long with a tool call open, for an agent whose hooks can't say it's asking permission
  * (Cursor): its terminal is most likely showing the prompt, so it's stuck sooner.

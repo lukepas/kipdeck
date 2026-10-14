@@ -1,6 +1,7 @@
 // One hired worker as the building-wide roster carries it (RosterEntry): what the attention ranking
 // needs and enough to show its row, never its prompts or its terminal.
 import type { GhPull, QueueTask, RosterEntry, WorkSummary, WorkerInfo } from '../shared/protocol.js';
+import type { TurnFacts } from '../shared/doing.js';
 import { pullReview } from '../shared/review.js';
 import { DESK_BY_ID } from '../shared/layout.js';
 import { workerPr } from '../shared/status.js';
@@ -16,6 +17,8 @@ export interface RosterFloor {
   goalTitle(id: string | undefined): string | undefined;
   /** What a worker at rest changed, once the office has looked (see server/review.ts). */
   work?(workerId: string): WorkSummary | undefined;
+  /** A worker at work's turn so far, from its review brief's journal (shared/doing.ts). */
+  turn?(workerId: string): TurnFacts | undefined;
 }
 
 const line = (s: string | undefined, max: number) => {
@@ -38,6 +41,7 @@ export function rosterEntry(f: RosterFloor, w: WorkerInfo): RosterEntry {
   const activity = line(w.activity, 80);
   const review = pull && pr.state === 'open' ? pullReview(pull.reviewDecision) : undefined;
   const work = w.kind === 'agent' ? f.work?.(w.id) : undefined;
+  const turn = w.kind === 'agent' && w.status === 'working' ? f.turn?.(w.id) : undefined;
   return {
     id: w.id,
     floor: f.id,
@@ -73,6 +77,7 @@ export function rosterEntry(f: RosterFloor, w: WorkerInfo): RosterEntry {
     ...(u && (u.cost > 0 || u.calls > 0 || (u.totalTokens ?? 0) > 0) ? { ...(u.costKnown === false ? {} : { usd: u.cost }), tokens: u.totalTokens ?? u.input + u.output + u.cacheRead + u.cacheWrite } : {}),
     ...(w.workedMs !== undefined ? { workedMs: w.workedMs } : {}),
     ...(w.workingSince !== undefined ? { workingSince: w.workingSince } : {}),
+    ...(turn ? { turn } : {}),
     ...(w.snooze ? { snooze: { ...w.snooze } } : {}),
     ...(w.kind === 'agent' && w.mode ? { mode: w.mode } : {}),
     ...(w.hold ? { hold: { ...w.hold } } : {}),

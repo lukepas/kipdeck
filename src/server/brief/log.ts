@@ -9,6 +9,7 @@
 import { closeSync, constants, fstatSync, openSync, readSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { commandAction, outputFailed, toolAction } from '../../shared/actions.js';
+import { toolPaths } from '../../shared/approval.js';
 import { askedAnswers, askedQuestions, cleanSummary, lastAssistantText, lastQuestion } from '../../shared/brief/transcript.js';
 import type { BriefQA, BriefRun } from '../../shared/protocol.js';
 import { readStateJson, writeState } from '../safefs.js';
@@ -20,6 +21,8 @@ export interface Journal {
   qa: BriefQA[];
   runs: BriefRun[];
   lastEditAt?: number;
+  /** The files it edited since its last prompt (its turn), for its Working row (shared/doing.ts). */
+  edited?: string[];
   summary?: { text: string; at: number };
   /** Questions an AskUserQuestion call asked that hasn't finished yet. */
   asking?: string[];
@@ -29,6 +32,8 @@ export interface Journal {
 const MAX_PROMPTS = 12;
 const MAX_QA = 20;
 const MAX_RUNS = 12;
+/** The most files a turn's edits are counted to. */
+const MAX_EDITED = 100;
 const PROMPT_MAX = 2000;
 /** The most agents kept; the ones not heard from longest go first. */
 const MAX_JOURNALS = 400;
@@ -57,6 +62,16 @@ function commandOf(input: unknown, tool: unknown): string | undefined {
   // "Bash: npm test" carries its command after the name.
   if (typeof tool === 'string' && tool.includes(': ')) return tool.slice(tool.indexOf(': ') + 2).trim() || undefined;
   return undefined;
+}
+
+/** The files an edit names, added to the turn's (Codex's apply_patch names its files in the patch). */
+function noteEdited(j: Journal, input: unknown) {
+  const i = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
+  const patch = typeof i.input === 'string' ? i.input : typeof i.patch === 'string' ? i.patch : '';
+  const files = [...toolPaths(i), ...[...patch.matchAll(/^\*\*\* (?:Add|Update|Delete) File: (.+)$/gm)].map((m) => m[1].trim())];
+  if (!files.length) return;
+  const all = new Set([...(j.edited ?? []), ...files]);
+  j.edited = [...all].slice(0, MAX_EDITED);
 }
 
 /** What a finished tool call printed, and whether it says it failed (an exit code, or an error). */
@@ -138,7 +153,10 @@ export class BriefLog {
         const saidSince = Math.max(j.prompts[j.prompts.length - 1]?.at ?? 0, j.qa[j.qa.length - 1]?.at ?? 0);
         const asked = j.summary && saidSince <= j.summary.at ? lastQuestion(j.summary.text) : undefined;
         if (asked && j.prompts.length) push(j.qa, { question: asked, answer: clip(text, 500), at }, MAX_QA);
-        else push(j.prompts, { text, at }, MAX_PROMPTS);
+        else {
+          push(j.prompts, { text, at }, MAX_PROMPTS);
+          j.edited = undefined;
+        }
         break;
       }
       case 'PreToolUse': {
@@ -146,7 +164,10 @@ export class BriefLog {
         if (/(?:^|[._])(?:AskUserQuestion|ask_user_question|request_user_input)$/.test(tool ?? '')) {
           const qs = askedQuestions(p.tool_input);
           j.asking = qs.length ? qs : undefined;
-        } else if (toolAction(tool, p.tool_input) === 'edit') j.lastEditAt = at;
+        } else if (toolAction(tool, p.tool_input) === 'edit') {
+          j.lastEditAt = at;
+          noteEdited(j, p.tool_input);
+        }
         break;
       }
       case 'PostToolUse':

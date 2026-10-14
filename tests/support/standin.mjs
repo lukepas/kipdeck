@@ -6,6 +6,7 @@
 //   [approve] asks permission over the PermissionRequest hook to run a risky command and waits for
 //           the inbox's answer: allowed, it commits and finishes; denied, it prints why and stops
 //   [done]  writes a file named after the task, commits it and finishes (To review)
+//   [work]  reads, edits two files, runs the tests (they pass), then searches and stays at work
 //   else    stays at work, printing test lines
 // After finishing it waits for more: each line typed in (a send-back note) is another commit and
 // another finish. Everything it prints and writes says [demo].
@@ -68,6 +69,17 @@ case "$last" in
     post PreToolUse '{"tool_name":"Bash","tool_input":{"command":"npm test"}}'
     sleep 2
     commit "$task"
+    ;;
+  *"[work]"*)
+    post PreToolUse '{"tool_name":"Read","tool_input":{"file_path":"src/cart.js"}}'
+    post PreToolUse '{"tool_name":"Edit","tool_input":{"file_path":"src/cart.js"}}'
+    post PreToolUse '{"tool_name":"Write","tool_input":{"file_path":"tests/cart.test.js"}}'
+    post PreToolUse '{"tool_name":"Bash","tool_input":{"command":"npm test"}}'
+    post PostToolUse '{"tool_name":"Bash","tool_input":{"command":"npm test"},"tool_response":{"stdout":"# pass 3\n# fail 0"}}'
+    post PreToolUse '{"tool_name":"Grep","tool_input":{"pattern":"TODO"}}'
+    i=0
+    while [ $i -lt 240 ]; do echo "  ok $i - test passes"; i=$((i+1)); sleep 5; done
+    exit 0
     ;;
   *)
     post PreToolUse '{"tool_name":"Bash","tool_input":{"command":"npm test"}}'

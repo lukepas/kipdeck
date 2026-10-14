@@ -1,4 +1,6 @@
 import { attention } from '../../shared/attention.js';
+import { turnFacts } from '../../shared/doing.js';
+import type { BriefLog } from '../brief/log.js';
 import type { ReviewPull, RosterEntry } from '../../shared/protocol.js';
 import type { Floor } from '../floor.js';
 import { onRoster, rosterEntry, type RosterFloor } from '../roster.js';
@@ -8,8 +10,8 @@ import type { Ctx, RosterHelpers } from './context.js';
 /** How often the roster is looked at again even when nothing changed: a worker goes silent by not changing. */
 export const ROSTER_TICK_MS = 30_000;
 
-/** What the roster knows about a floor. */
-export function rosterFloor(f: Floor): RosterFloor {
+/** What the roster knows about a floor; `briefs` for what its agents at work did this turn. */
+export function rosterFloor(f: Floor, briefs?: Pick<BriefLog, 'journal'>): RosterFloor {
   return {
     id: f.id,
     name: f.def.name,
@@ -21,6 +23,7 @@ export function rosterFloor(f: Floor): RosterFloor {
       const w = f.workers.get(id);
       return w && f.work.get(w);
     },
+    turn: (id) => turnFacts(briefs?.journal(id)),
   };
 }
 
@@ -33,7 +36,7 @@ export function rosterHelpers(ctx: Ctx): RosterHelpers {
   const rosterEntries = (): RosterEntry[] => {
     const out: RosterEntry[] = [];
     for (const f of ctx.floors.values()) {
-      const rf = rosterFloor(f);
+      const rf = rosterFloor(f, ctx.briefs);
       for (const w of f.workers.list()) if (onRoster(w)) out.push(rosterEntry(rf, w));
     }
     return out;
@@ -41,7 +44,7 @@ export function rosterHelpers(ctx: Ctx): RosterHelpers {
   const entryOf = (workerId: string): RosterEntry | undefined => {
     const f = ctx.workerFloor(workerId);
     const w = f?.workers.get(workerId);
-    return f && w ? rosterEntry(rosterFloor(f), w) : undefined;
+    return f && w ? rosterEntry(rosterFloor(f, ctx.briefs), w) : undefined;
   };
 
   /** Workers stuck as of the last look; undefined before the first, which only takes note (no posts on a restart). */

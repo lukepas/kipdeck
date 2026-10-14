@@ -8,7 +8,8 @@
 // data-section). Clicking a section header
 // never folds a section that's always open; with nobody waiting the two become one calm line.
 
-import { spokenActivity, attention, LEVEL_LABEL, type Ranked } from '../../shared/attention';
+import { attention, LEVEL_LABEL, type Ranked } from '../../shared/attention';
+import { workingWords } from '../../shared/doing';
 import { AGE_PREFIX, ageLabel, ALWAYS_OPEN, buildInbox, changeSummary, INBOX_SECTIONS, looseReminders, rowAction, SECTION_LABEL, waitShare, type InboxSection, type InboxView, type RowAction } from '../../shared/inbox';
 import type { Waiting } from '../../shared/metrics';
 import { waitTone, waitWords } from '../../shared/wait';
@@ -24,6 +25,7 @@ import { approvalRow } from './approval';
 import { home } from './state';
 import { proposalRows, proposalWaits } from './proposals';
 import { spendUi } from './spend-slot';
+import { workingAge, workingFacts, workingSpoken } from './doing';
 
 export interface ListDeps {
   /** A row's primary button. */
@@ -116,13 +118,13 @@ export function waitingNow(view: InboxView = currentView()): Waiting {
 }
 
 /**
- * A Working row's status: what the agent is doing, live and in words. Never the raw name of the tool
- * it asked with, never its own title again ("Starting..."), and never the echo of a reply someone just
- * typed ("1"): until its next step, that's "Back at work on your answer".
+ * A Working row's status: what the agent is doing, live and in plain words (shared/doing.ts: "Running
+ * npm test", never "Bash: npm test"). Never its own title again ("Starting..."), and never the echo of
+ * a reply someone just typed ("1"): until its next step, that's "Back at work on your answer".
  */
 function workingStatus(r: Ranked, title: string): string {
   const e = r.entry;
-  const doing = spokenActivity(e.activity) ?? r.att.label;
+  const doing = workingWords(e.activity, r.att.label);
   if (doing === title) return 'Starting...';
   const input = e.floor === store.floor ? store.workers.get(e.id)?.lastInput : undefined;
   if (input && e.activity && e.activityAt !== undefined && e.activityAt - input.at < 10_000 && e.activityAt >= input.at) {
@@ -150,7 +152,8 @@ function row(r: Ranked, section: InboxSection, deps: ListDeps, now: number): HTM
   // A merge on its way: the row no longer waits on you, so its clock stops and its status counts down.
   const away = held || inFlight(e.id);
   const style = waits && !away ? `--wait:${waitShare(r.att.since, now).toFixed(3)}` : '';
-  const spoken = [title, provider, LEVEL_LABEL[r.att.level], waits && !away ? `${AGE_PREFIX[section]} ${waitWords(now - r.att.since)}` : '', owner ? `deployed by ${e.createdBy}` : ''].filter(Boolean).join(', ');
+  const working = section === 'working' && !r.att.snoozed;
+  const spoken = [title, provider, LEVEL_LABEL[r.att.level], waits && !away ? `${AGE_PREFIX[section]} ${waitWords(now - r.att.since)}` : '', working ? workingSpoken(e, now) : '', owner ? `deployed by ${e.createdBy}` : ''].filter(Boolean).join(', ');
   return h(
     'li.row',
     { class: `l-${r.att.level} s-${section}${ask ? ' approval' : ''}${selected ? ' selected' : ''}${r.att.snoozed ? ' snoozed' : ''}${held ? ' holding' : ''}`, 'data-id': e.id, 'data-section': section, style: style || undefined },
@@ -163,8 +166,9 @@ function row(r: Ranked, section: InboxSection, deps: ListDeps, now: number): HTM
         {},
         h('span.row-title', {}, title),
         h('span.row-sub', {}, held ? h('span.row-status.row-hold', { 'data-until': String(until), 'data-prefix': 'Merging in' }, `Merging in ${countdownWords(until - now)}`) : h('span.row-status', { title: r.att.reason ?? r.att.label }, away ? 'Merging...' : status), ask?.tags ?? null, owner ? h('span.row-owner', { title: `Deployed by ${e.createdBy}` }, owner) : null, ...(spendUi()?.rowBadges(e) ?? []), where ? h('span.row-where', {}, where) : null),
+        working ? workingFacts(e) : null,
       ),
-      away ? null : ageEl(section, r.att, now),
+      away ? null : working ? workingAge(e, now) : ageEl(section, r.att, now),
     ),
     // Opening it is the row itself: a button only for a decision, or Undo while its merge is held.
     held
