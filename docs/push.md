@@ -33,11 +33,19 @@ Where the platform shows buttons (Chrome and Edge on Android and desktop; not Sa
 | Push | Buttons |
 | --- | --- |
 | Needs an answer | **Answer** (opens the agent), **Snooze 1h** |
-| Wants your approval | **Review request** (opens the agent), **Snooze 1h** |
+| Wants your approval | **Review request** (opens the agent), **Snooze 1h**; with no risk tags, **Allow once** and **Deny** (below) |
 | Ready for review | **Review** (opens the agent), **Mark seen** |
 | Looks stuck | **Look** (opens the agent), **Snooze 1h** |
 
-Answering and approving always happen in the inbox, where you can see what you are agreeing to. Tapping the push itself brings up an inbox tab already open on that agent, or opens one on `/?agent=<id>` (a Deck tab left open is not used: it can't show the agent's terminal).
+Answering a question always happens in the inbox, and so does any approval with a risk tag, where you can see what you are agreeing to. Tapping the push itself brings up an inbox tab already open on that agent, or opens one on `/?agent=<id>` (a Deck tab left open is not used: it can't show the agent's terminal).
+
+## Allow or deny from the lock screen
+
+When an agent you deployed asks to run a shell command or read a file, and the request has no risk tags (nothing destructive, no network, nothing outside its project, no secrets, the same tags the approval card shows), the push to your own devices has **Allow once** and **Deny** in place of Review request and Snooze 1h. The notification shows the whole request (`Run npm test`), so the command has to be one line of plain text, 120 characters at most. A tap answers the agent without opening Kipdeck, and a toast on the agent's floor says which device answered. Anything with a risk tag, an edit or write (its content can't fit on a lock screen), an MCP tool or any other tool keeps the buttons that open the inbox.
+
+A button works once, from the device it was sent to, for that one request, for 10 minutes. It goes through the same approvals desk as the inbox, so if the request was answered somewhere else, the agent moved on or asked again, the button is refused and the notification comes back with the reason; a tap on it opens the agent. There is no Allow always from a notification: it would change the agent's rules without you reading them.
+
+The buttons only go to the owner's devices. A push that went to everyone because the owner has no devices has the usual buttons, and so does one about an agent with more than one request open. **Settings > Notifications > Allow or deny from a notification** turns them off for your devices (on until you do), which also voids any buttons already out. The choice is kept per person in `.agent-office/push-approve.json`. Why this is safe enough is in [Security](security.md#allow-or-deny-from-a-notification).
 
 ## Who gets it
 
@@ -70,5 +78,5 @@ The timings live in `src/shared/push.ts` (`PUSH_SETTLE_MS`, `ESCALATE_MS`, `PRES
 - `src/client/public/sw.js` is the service worker: it shows a push and handles a tap and the buttons. No caching and no offline mode.
 - `src/client/public/manifest.webmanifest` and its icons (`npm run logo -- --png` renders them) make the home page installable.
 - `src/client/pwa/` registers the worker, tells the office you are at your desk (`presence.ts`), subscribes and unsubscribes (`push.ts`) and asks at the first Deploy.
-- `src/server/push/` is the server side: `crypto.ts` (encryption and VAPID), `devices.ts` (the devices and sending), `presence.ts` (who is at a desk), and `alerts.ts` (when an agent that waits reaches whom).
-- `src/server/http/routes/push.ts` serves the worker, the manifest and the icons without a session, and the signed-in `/api/push` routes.
+- `src/server/push/` is the server side: `crypto.ts` (encryption and VAPID), `devices.ts` (the devices and sending), `presence.ts` (who is at a desk), `alerts.ts` (when an agent that waits reaches whom) and `approve.ts` (Allow once and Deny, and their tokens).
+- `src/server/http/routes/push.ts` serves the worker, the manifest and the icons without a session, and the signed-in `/api/push` routes; `push-approve.ts` beside it takes a notification's Allow once or Deny (`POST /api/push/answer`) and the Settings switch (`/api/push/approve`).

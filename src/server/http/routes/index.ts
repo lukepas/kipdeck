@@ -12,6 +12,7 @@ import { githubRoutes } from './github.js';
 import { localRoutes } from './local.js';
 import { pageRoutes } from './pages.js';
 import { pushRoutes } from './push.js';
+import { pushApproveRoutes } from './push-approve.js';
 import { reputationRoutes } from './reputation.js';
 import { rundownRoutes } from './rundown.js';
 import { searchRoutes } from './search.js';
@@ -82,6 +83,10 @@ export const routes: readonly Route[] = [
   pushRoutes.unsubscribe,
   pushRoutes.test,
   pushRoutes.act,
+  // Allow once and Deny on an approval push, and the Settings switch for them.
+  pushApproveRoutes.setting,
+  pushApproveRoutes.set,
+  pushApproveRoutes.answer,
   // Rundown (Labs): a project's map page as a download.
   rundownRoutes.map,
   // Pairing phones, the devices paired so far, and the inbox's own addresses (/a/..., /p/...).
