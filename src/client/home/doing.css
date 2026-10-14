@@ -1,0 +1,8 @@
+/* A Working row's second line (home/doing.ts): the turn's phase, its files and its last test run, muted. */
+.row-facts { display: flex; gap: 6px; min-width: 0; overflow: hidden; white-space: nowrap; font-size: 11px; line-height: 15px; color: var(--muted); }
+.rf-item { display: inline-flex; align-items: center; gap: 3px; flex: none; }
+.rf-item::before { content: '\00b7'; margin-right: 3px; }
+.rf-test svg { flex: none; }
+.rf-test.t-fail { color: var(--text); }
+/* Gone still for a while: the clock says so in the text colour, still calm (red is only for stuck). */
+.row-age.quiet { color: var(--text); }

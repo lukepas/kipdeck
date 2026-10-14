@@ -2,6 +2,7 @@
 // usage read off the session transcript and booked in the budget, and tasks the office names.
 import path from 'node:path';
 import { FAILS_TO_DESPAIR, outputFailed, toolAction } from '../../shared/actions.js';
+import { doingWords } from '../../shared/doing.js';
 import { HOLD_MS } from '../approvals.js';
 import { MCP_READ_ONLY, writeClaudeMcpConfig } from '../office-workers.js';
 import { writeState } from '../safefs.js';
@@ -107,6 +108,7 @@ function askedQuestion(payload: any): string {
   return typeof q === 'string' && q.trim() ? truncate(q.trim(), 80) : 'AskUserQuestion';
 }
 
+/** The tool line a permission wait reads ("Wants permission: Bash: npm test"), which the Deck and the timeline take apart. */
 function describeTool(payload: any): string {
   const name = payload?.tool_name ?? 'tool';
   const input = payload?.tool_input ?? {};
@@ -179,7 +181,8 @@ function claudeHook(h: WorkerHandle, event: string, payload: any): boolean {
         info.activity = askedQuestion(payload);
         h.setStatus('needs_input');
       } else {
-        info.activity = describeTool(payload);
+        // What it's doing, in the words its row says ("Running npm test", shared/doing.ts).
+        info.activity = doingWords(payload?.tool_name, payload?.tool_input);
         info.action = toolAction(payload?.tool_name, payload?.tool_input);
         h.noteTool(info.activity);
         if (info.status !== 'working') h.setStatus('working');
