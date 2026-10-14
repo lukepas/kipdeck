@@ -1,8 +1,9 @@
 // End to end: a Working row in plain words, in the built office, in a headless browser, through the
 // real hook server. A stand-in agent (tests/support/standin.mjs, "[work]") reads a file, edits two,
-// runs the tests (they pass) and goes on searching. Its row says "Searching for TODO" (never
-// "Grep: TODO"), its muted second line says "Checking, 2 files, tests passed" with a check shape,
-// and its clock says "working <1m". No row in the list leads with a tool's name.
+// searches and runs the tests, which pass in a hook of their own a second later, its last. Its row
+// says "Running npm test" (never "Bash: npm test"), its muted second line says "Checking, 2 files,
+// tests passed" with a check shape (the pass reaches the row with nothing else changing), and its
+// clock says "working <1m". No row in the list leads with a tool's name.
 // Skipped (not failed) when there's no build (npm run build), the build is older than the client's
 // sources, or there's no browser playwright-core can start. Set DOING_SHOTS to a folder to keep
 // screenshots of the row on a laptop and a phone.
@@ -147,7 +148,7 @@ test('a Working row: what it does in words, its turn on a muted second line, and
 
   await deploy(page, '[work] Tidy the cart (demo)');
   const working = page.locator('.sec-working .row', { hasText: 'Tidy the cart' });
-  await working.locator('.row-status', { hasText: 'Searching for TODO' }).waitFor({ timeout: 30_000 });
+  await working.locator('.row-status', { hasText: 'Running npm test' }).waitFor({ timeout: 30_000 });
   await assertPlainRows(page);
 
   // The second line: the phase, the files it touched this turn, and its last test run with a shape.

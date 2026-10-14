@@ -26,6 +26,8 @@ const WEB_SEARCH = new Set(['websearch', 'web_search', 'search_web']);
 const FETCH = new Set(['webfetch', 'web_fetch', 'fetch', 'browse']);
 const PLAN = new Set(['todowrite', 'todoread', 'update_plan', 'exitplanmode']);
 const HAND_OFF = new Set(['task', 'agent']);
+const SHELL_OUTPUT = new Set(['bashoutput', 'write_stdin']);
+const SHELL_STOP = new Set(['killshell', 'killbash']);
 
 /** What each of them is doing with nothing more to say. */
 const BARE: [Set<string>, string][] = [
@@ -39,6 +41,8 @@ const BARE: [Set<string>, string][] = [
   [FETCH, 'Reading a web page'],
   [PLAN, 'Updating its plan'],
   [HAND_OFF, 'Handing off a subtask'],
+  [SHELL_OUTPUT, "Reading a command's output"],
+  [SHELL_STOP, 'Stopping a command'],
 ];
 
 /** The Approval card's verbs as they read while the call runs. */
@@ -61,6 +65,17 @@ function host(u: string): string {
   }
 }
 
+/**
+ * The files an edit names: its paths, and for Codex's apply_patch the files its patch adds, updates
+ * or deletes ("*** Update File: src/a.ts"). The brief log counts the same ones (server/brief/log.ts).
+ */
+export function editedFiles(input: unknown): string[] {
+  const i = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
+  const patch = typeof i.input === 'string' ? i.input : typeof i.patch === 'string' ? i.patch : '';
+  const patched = [...patch.matchAll(/^\*\*\* (?:Add|Update|Delete) File: (.+)$/gm)].map((m) => m[1].trim());
+  return [...new Set([...toolPaths(i).filter((p) => !p.includes('://')), ...patched])];
+}
+
 /** An MCP tool ("mcp__github__create_issue") as words: "Using github (create issue)". */
 function mcpWords(tool: string): string | undefined {
   const m = /^mcp__(.+?)__(.+)$/.exec(tool);
@@ -75,8 +90,8 @@ export function doingWords(tool: unknown, input?: unknown): string {
   const name = str(tool) ?? '';
   const i = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
   const n = bareName(name);
-  const command = Array.isArray(i.command) ? i.command.filter((x) => typeof x === 'string').join(' ').replace(/^(?:bash|sh|zsh) -l?c /, '') : str(i.command);
-  const files = toolPaths(i).filter((p) => !p.includes('://'));
+  const command = Array.isArray(i.command) ? i.command.filter((x) => typeof x === 'string').join(' ').replace(/^(?:bash|sh|zsh) -l?c /, '') : (str(i.command) ?? str(i.cmd));
+  const files = editedFiles(i);
   const say = (s: string) => clip(s.replace(/\s+/g, ' ').trim(), MAX);
   if (command && (SHELL.has(n) || !n)) return say(ingOf(approvalTitle({ tool: 'Bash', command, paths: [] })));
   if (EDIT.has(n) || WRITE.has(n)) {

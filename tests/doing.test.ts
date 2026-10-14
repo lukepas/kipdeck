@@ -3,7 +3,7 @@
 // or "quiet 4m" before it would be stuck. Plus the voice rule: no row ever leads with a tool's name.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { doingWords, isToolName, plainActivity, turnFacts, turnWords, workingClock, workingWords } from '../src/shared/doing.js';
+import { doingWords, editedFiles, isToolName, plainActivity, turnFacts, turnWords, workingClock, workingWords } from '../src/shared/doing.js';
 import { approvalTitle } from '../src/shared/approval.js';
 import { attention, QUIET_MS, SILENT_MS } from '../src/shared/attention.js';
 import { BriefLog } from '../src/server/brief/log.js';
@@ -37,6 +37,12 @@ test('a tool call reads as what it does, in the approval card words', () => {
   assert.equal(doingWords('Task', { description: 'Find the auth code' }), 'Handing off "Find the auth code"');
   assert.equal(doingWords('mcp__github__create_issue', { title: 'x' }), 'Using github (create issue)');
   assert.equal(doingWords('exec_command', { command: ['bash', '-lc', 'cargo test'] }), 'Running cargo test');
+  assert.equal(doingWords('exec_command', { cmd: 'ls -la' }), 'Running ls -la', "Codex's exec_command names its command cmd");
+  assert.equal(doingWords('apply_patch', { input: '*** Begin Patch\n*** Update File: src/a.ts\n*** End Patch' }), 'Editing a.ts');
+  assert.equal(doingWords('apply_patch', { input: '*** Begin Patch\n*** Update File: a.ts\n*** Add File: b.ts\n*** End Patch' }), 'Editing 2 files');
+  assert.deepEqual(editedFiles({ file_path: 'a.ts', input: '*** Delete File: b.ts\n*** Update File: a.ts' }), ['a.ts', 'b.ts']);
+  assert.equal(doingWords('BashOutput', { bash_id: '1' }), "Reading a command's output");
+  assert.equal(doingWords('KillShell', { shell_id: '1' }), 'Stopping a command');
   assert.equal(doingWords('shell'), 'Running a command');
   assert.equal(doingWords('read_file'), 'Reading files');
   assert.equal(doingWords('SomethingNew'), 'Using SomethingNew');

@@ -9,7 +9,7 @@
 import { closeSync, constants, fstatSync, openSync, readSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { commandAction, outputFailed, toolAction } from '../../shared/actions.js';
-import { toolPaths } from '../../shared/approval.js';
+import { editedFiles } from '../../shared/doing.js';
 import { askedAnswers, askedQuestions, cleanSummary, lastAssistantText, lastQuestion } from '../../shared/brief/transcript.js';
 import type { BriefQA, BriefRun } from '../../shared/protocol.js';
 import { readStateJson, writeState } from '../safefs.js';
@@ -64,14 +64,11 @@ function commandOf(input: unknown, tool: unknown): string | undefined {
   return undefined;
 }
 
-/** The files an edit names, added to the turn's (Codex's apply_patch names its files in the patch). */
+/** The files an edit names (shared/doing.ts), added to the turn's. */
 function noteEdited(j: Journal, input: unknown) {
-  const i = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
-  const patch = typeof i.input === 'string' ? i.input : typeof i.patch === 'string' ? i.patch : '';
-  const files = [...toolPaths(i), ...[...patch.matchAll(/^\*\*\* (?:Add|Update|Delete) File: (.+)$/gm)].map((m) => m[1].trim())];
+  const files = editedFiles(input);
   if (!files.length) return;
-  const all = new Set([...(j.edited ?? []), ...files]);
-  j.edited = [...all].slice(0, MAX_EDITED);
+  j.edited = [...new Set([...(j.edited ?? []), ...files])].slice(0, MAX_EDITED);
 }
 
 /** What a finished tool call printed, and whether it says it failed (an exit code, or an error). */
