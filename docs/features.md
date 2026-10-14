@@ -15,7 +15,7 @@ The inbox at `/` is the product, and the first section here is all most people n
 - **Settings** in three panes: Account, Agents and Notifications ([controls](controls.md#the-inbox)).
 - **On a phone** the list is the page, and an agent opens over it with large Answer and Merge buttons.
 - **Teams**: accounts with single-use invite links, on your machine or a shared dev box ([teams and servers](self-hosting.md)).
-- **Six keys**: Ctrl+K, N, Enter, Esc, / and ? ([controls](controls.md)).
+- **Seven keys**: Ctrl+K, N, Enter, Esc, /, T (triage) and ? ([controls](controls.md)).
 - **A demo** with five scripted agents and no model: `npx github:zbagdzevicius/kipdeck --demo` ([the demo](demo.md)).
 
 ## The office in detail (much of it the Deck, a lab)
