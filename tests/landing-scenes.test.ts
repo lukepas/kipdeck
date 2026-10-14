@@ -140,7 +140,7 @@ test('section 06 looks finished within a second of coming into view, and its ter
   const { page, errors } = await open(t);
   // Before the terminal runs, every line is already in the accessibility tree.
   const tree = await page.locator('#from-source').ariaSnapshot();
-  assert.match(tree, /npx github:zbagdzevicius\/kipdeck/);
+  assert.match(tree, /npx https:\/\/kipdeck\.com\/get/);
   assert.match(tree, /running at\s+http:\/\/localhost:4600/);
   await page.evaluate(() => document.querySelector('#yours .measured')!.scrollIntoView({ block: 'center' }));
   await page.waitForTimeout(1200);
