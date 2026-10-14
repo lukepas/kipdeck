@@ -15,13 +15,13 @@ npx github:zbagdzevicius/kipdeck
 
 ![Kipdeck in 30 seconds: Codex's question opens by itself and is answered in one box, Claude Code's diff is reviewed and merged into Shipped today (the demo's scripted agents, no model)](docs/img/demo.gif)
 
-No agents yet? `npx github:zbagdzevicius/kipdeck --demo` plays five scripted ones on a throwaway repository, no CLI, sign-in or model needed ([the demo](docs/demo.md)). Or watch a recorded round in the browser, with nothing to install: https://kipdeck-demo.vercel.app
+No agents yet? `npx github:zbagdzevicius/kipdeck --demo` plays five scripted ones on a throwaway repository, no CLI, sign-in or model needed ([the demo](docs/demo.md)). Or watch a recorded round in the browser, with nothing to install: https://kipdeck-demo.vercel.app, or the same round on the 3D Deck at https://kipdeck-demo.vercel.app/deck
 
 Run it inside the repository you work in. It opens in your browser, signed in, with that repository as your first project. Claude Code, Codex and Cursor run side by side (OpenCode, Pi, Grok, Muse and DeepSeek Harness in beta), each on a branch of its own, and you answer, review and merge from one page, on your laptop or your phone. It runs on your machine or your team's dev box, and nothing leaves it.
 
 [**Run it**](#run-it) · [**Try the demo**](docs/demo.md) · [**Attach an agent**](#attach-an-agent-you-already-started) · [**Teams and servers**](docs/self-hosting.md) · [**Labs**](#labs) · [**Docs**](docs/features.md)
 
-- **One loop.** **Deploy agent**, get pinged when it needs you, answer its question in one box, read its review brief (what it was asked, what it says it did, your answers, its test runs and what in the diff is risky) over the diff beside the list and Merge, and it lands in **Shipped today**. The oldest agent waiting on you opens by itself, and with nothing selected the pane shows the next item that needs you, or All clear with Kip keeping watch, one warm line and the day so far (he steps aside the moment anyone needs you, and cheers in the toast when a merge lands); the top bar says how many need you and how many are ready to review, with the oldest wait ticking, the median wait today and what merged today. Merge waits a few seconds for Undo and names where it goes. Answer or approve one and the pane moves on to the next that needs you, then the next to review, as it does after a merge. See [the inbox](docs/inbox.md).
+- **One loop.** **Deploy agent**, get pinged when it needs you, answer its question in one box, read its review brief (what it was asked, what it says it did, your answers, its test runs and what in the diff is risky) over the diff beside the list and Merge, and it lands in **Shipped today**. Each To review row already says the brief's verdict (*Tested, nothing flagged*, or *No tests, touches sign-in code*), and the ready ones come first; Merge stays in the pane. The oldest agent waiting on you opens by itself (in To review, the ready ones first), and with nothing selected the pane shows the next item that needs you, or All clear with Kip keeping watch, one warm line and the day so far (he steps aside the moment anyone needs you, and cheers in the toast when a merge lands); the top bar says how many need you and how many are ready to review, with the oldest wait ticking, the median wait today and what merged today. Merge waits a few seconds for Undo and names where it goes. Answer or approve one and the pane moves on to the next that needs you, then the next to review, as it does after a merge. See [the inbox](docs/inbox.md).
 - **One ranking, one set of names.** `src/shared/attention.ts` decides the order and names the five states everywhere: Needs you, Stuck, To review, Working and Idle. The inbox's sections (Needs you with the stuck ones in it, To review, Working, Idle), Mission control, the tab title and notifications all read from it ([the inbox](docs/inbox.md) has the full list).
 - **Spend and control.** Each row shows the agent's permission mode (`bypass`, `auto`, `edits`, `ask`, `plan`, read off the command line it started with) and what it has spent, with `cost ?` for a CLI that reports none. The pulse has today's spend. Admins set a default mode per project and budget caps per agent and per day in Settings: a warning at 80 percent, and at 100 percent the agent is paused into Needs you until an admin lets it continue. **Pause all** in the top bar (and Ctrl+K) pauses, resumes or stops every agent, with Undo. See [spend and control](docs/spend.md).
 - **A record of what shipped.** Every merge and send-back is kept on your machine as a signed record: which agent and model, the prompt, and who reviewed it. **Numbers** shows human wait time and the merge rate per agent and model from it.
@@ -77,7 +77,7 @@ kipdeck --telemetry                 # share anonymous usage numbers (off by defa
 kipdeck --labs proof                # turn on Proof of Merge (testnets), the Colosseum entry's payout layer
 ```
 
-`kipdeck rundown [path]` writes a project's map (its parts by status, inferred from the code, no Claude needed) into `.rundown/`, and `kipdeck rundown install` adds the `/rundown` skill to Claude Code for Claude's own read; see [docs/rundown.md](docs/rundown.md).
+`kipdeck rundown [path]` writes a project's map (its parts by status, inferred from the code, no Claude needed) into `.rundown/`, and `kipdeck rundown install` adds the `/rundown` skill to Claude Code for Claude's own read (it never replaces a newer installed copy unless you add `--force`). The repository is also a Claude Code plugin: `/plugin marketplace add zbagdzevicius/kipdeck`, then `/plugin install rundown@kipdeck`, adds the same skill plus a SessionStart hook that starts each session in a mapped repository with a brief of at most 1.5 KB (milestone, next step, open decisions, stuck parts) when its map is under a week old; see [docs/rundown.md](docs/rundown.md).
 
 Once it is on npm, to have a `kipdeck` command instead: `npm install -g` with its package name, or [`install.sh`](install.sh) (macOS and Linux) and [`install.ps1`](install.ps1) (Windows), which install the same package. Until then those print the from-source steps above, and `npm link` gives you the same command. Every option is in [docs/configuration.md](docs/configuration.md); choosing models and providers per agent is in [docs/agents.md](docs/agents.md).
 
@@ -116,7 +116,7 @@ More in [docs/labs.md](docs/labs.md).
 - **Your phone.** **Pair a phone** (avatar menu, or Ctrl+K) shows a QR code that signs your phone in once, without a password; the phone stays signed in until you revoke it under Settings > Account > Paired devices. Every agent has its own address (`/a/<project>/<agent>`, a project is `/p/<project>`), so Back closes what you opened, a link opens the same agent on another device, and the team channel's posts link to the agent once the office has a secure address ([on your phone](docs/inbox.md#on-your-phone)).
 - **Numbers.** Human wait time, changes merged, the merge rate and agent-hours, the last 7 days against the 7 days before, and the merge rate per agent and model with its N, from the signed shipped log on your machine ([metrics](docs/metrics.md)).
 - **Settings in three panes.** Account, Agents and Notifications. Eight keys, and Help on **?** ([controls](docs/controls.md)).
-- **Push to your phone.** Kipdeck installs as an app, and an agent that needs an answer, wants an approval, has work to review or is stuck reaches your devices with a push titled by its task. The first Deploy asks once; Slack or Discord hears only if the push goes unanswered for a few minutes with nobody at a Kipdeck tab ([push](docs/push.md)).
+- **Push to your phone.** Kipdeck installs as an app, and an agent that needs an answer, wants an approval, has work to review or is stuck reaches your devices with a push titled by its task. A short command or file read with no risk tags can be allowed or denied from the lock screen, once, for 10 minutes. The first Deploy asks once; Slack or Discord hears only if the push goes unanswered for a few minutes with nobody at a Kipdeck tab ([push](docs/push.md)).
 - **Teams.** Accounts with invite links, a shared dev box reached by SSH tunnel or Tailscale, and the team's Slack or Discord channel ([below](#teams-and-servers)).
 - **Agents that manage agents, with you in charge.** Every agent can list the others through the `kipdeck` MCP server or the `office-workers` command ([agents](docs/agents.md)). When one asks to deploy, message or stop another, the request waits in Needs you with its full text until you approve or reject it, unless an admin gave that project a standing permission in Settings > Agents; every such action is on a record there ([agents acting on agents](docs/agent-gate.md)).
 - **Mission control** (with the GitHub boards and queue lab on): the same ranking with reminders, the review inbox and the digest of what happened while you were away ([mission control](docs/mission-control.md)).
@@ -191,10 +191,13 @@ Eight keys on the home page: **Ctrl+K** (find an agent or a command), **N** (dep
 npm install
 npm run dev          # Vite with hot reload on :5173, the server on :4600 (password: dev)
 npm run typecheck
+(cd onchain/attest && npm ci --ignore-scripts)   # once: a few tests import its sources, which need viem
 npm test
 ```
 
 The browser tests (`tests/*-e2e.test.ts`) load the built bundle, so run `npm run build` before `npm test` to include them. They skip, saying why, when there is no bundle or it is older than the sources it was built from (after an edit, a merge or a checkout).
+
+`npm test` is two runs. `npm run test:main` runs every file in parallel except the timing-sensitive ones: the landing page's CPU-throttled scroll budgets and the browser tests that drive the 3D office. `npm run test:perf` then runs those one at a time, so nothing else competes for the CPU while they measure. The list is `SERIAL` in `tests/support/run.mjs`; a new test that times the page goes there. CI runs the same two scripts as separate steps. To pass the test runner a flag, give it to one group: `npm run test:main -- --test-name-pattern=digest` (after `npm test --` it would reach only `test:perf`).
 
 Server edits restart the server, not the workers. After changing `ptyhost.ts`, bump `PTY_PROTOCOL` in `ptys.ts` so the next server replaces the PTY host.
 
@@ -204,7 +207,7 @@ The rules for coding agents working on this repository are in [`AGENTS.md`](AGEN
 
 ### Publishing to npm
 
-The npm package ships the built `dist/` (`files` in `package.json`: the app, the server, the showcase and the rundown script), so an install from npm builds nothing on the user's machine. `prepare` runs `npm run build` on `npm pack`, `npm publish` and a GitHub install (`npx github:zbagdzevicius/kipdeck`), and `publishConfig.access` is `public`, which a scoped name needs. Both bin names (`kipdeck`, `agent-office`) run the same script, so `npx <any name>` finds it. To publish under a scope you own, for example `@kipdeck/kipdeck`:
+The npm package ships the built `dist/` and the /rundown skill (`files` in `package.json`: the app, the server, the showcase, and `plugins/rundown/skills/rundown/` with its committed script), so an install from npm builds nothing on the user's machine. `prepare` runs `npm run build` on `npm pack`, `npm publish` and a GitHub install (`npx github:zbagdzevicius/kipdeck`), and `publishConfig.access` is `public`, which a scoped name needs. Both bin names (`kipdeck`, `agent-office`) run the same script, so `npx <any name>` finds it. To publish under a scope you own, for example `@kipdeck/kipdeck`:
 
 ```bash
 npm login
@@ -219,9 +222,9 @@ Then, in the same release: set `NPM_PACKAGE` to that name and `ON_NPM` to `true`
 
 - [The inbox](docs/inbox.md): the home page, its loop, the setup card, Numbers, Settings, its keys and the shipped log
 - [Spend and control](docs/spend.md): each agent's permission mode badge, spend on rows and in the pulse, budget caps that pause an agent into Needs you, and Pause all, Resume all and Stop all
-- [Push to your devices](docs/push.md): installing Kipdeck as an app, Web Push to your phone and laptop, who gets a push and when, and when Slack or Discord hears after it
+- [Push to your devices](docs/push.md): installing Kipdeck as an app, Web Push to your phone and laptop, who gets a push and when, Allow once and Deny from the lock screen, and when Slack or Discord hears after it
 - [Signal](docs/signal.md): the project's status at one look over the inbox list (On track, At risk, Off track or No goal), the rules behind it, and Copy as text for Slack
-- [The demo](docs/demo.md): `npx github:zbagdzevicius/kipdeck --demo` with five scripted agents, the hosted read-only demo, the replay demo at https://kipdeck-demo.vercel.app, and the scripts that make the video, the GIF and the deck's screenshots
+- [The demo](docs/demo.md): `npx github:zbagdzevicius/kipdeck --demo` with five scripted agents, the hosted read-only demo, the replay demo at https://kipdeck-demo.vercel.app and its Deck at /deck, and the scripts that make the video, the GIF and the deck's screenshots
 - [Metrics for the deck](docs/metrics.md): what each number means, where it comes from, and what not to show
 - [The landing page](docs/landing.md): `site/landing/` (`npm run build:site`, then `npm run preview:site`), what each section's motion shows, the one file that holds the product's name, its speed budgets (`npm run perf:site`), accessibility and search tags, the design-partner ask, and how to deploy it to Cloudflare Pages ([site/landing/README.md](site/landing/README.md))
 - [Features](docs/features.md): the inbox first, then the whole office in detail
@@ -239,7 +242,7 @@ Then, in the same release: set `NPM_PACKAGE` to that name and `ON_NPM` to `true`
 Labs and the Deck:
 
 - [Labs](docs/labs.md): what each lab brings back, and how to switch it
-- [Rundown](docs/rundown.md): the project map, as the `/rundown` skill in any repository and in the office, its data model and its limits
+- [Rundown](docs/rundown.md): the project map, as the `/rundown` skill or the Claude Code plugin in any repository and in the office, the index of every project, the session brief, its data model and its limits
 - [Mission control](docs/mission-control.md): the attention ranking, the floor's mission and milestones, linking work to goals, the review inbox, the timeline, reminders and the digest
 - [Design system](docs/design.md): each surface on screen, the motion and the deck's sound, demo mode, and how to check a design change with `design/shoot.mjs`
 - [Voice](docs/voice.md): the crew voice, before and after copy, Kip's states, the signature moments and where fun is forbidden

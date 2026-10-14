@@ -35,13 +35,14 @@ after(() => {
 test('kipdeck rundown: a path, --open, --no-gh, install with --dry-run, help, and what it refuses', () => {
   assert.deepEqual(parseRundownArgs([]), { cmd: 'map', open: false, gh: true });
   assert.deepEqual(parseRundownArgs(['~/code/app', '--open', '--no-gh']), { cmd: 'map', path: '~/code/app', open: true, gh: false });
-  assert.deepEqual(parseRundownArgs(['install']), { cmd: 'install', dryRun: false });
-  assert.deepEqual(parseRundownArgs(['install', '--dry-run']), { cmd: 'install', dryRun: true });
-  assert.deepEqual(parseRundownArgs(['install', '-n']), { cmd: 'install', dryRun: true });
+  assert.deepEqual(parseRundownArgs(['install']), { cmd: 'install', dryRun: false, force: false });
+  assert.deepEqual(parseRundownArgs(['install', '--dry-run']), { cmd: 'install', dryRun: true, force: false });
+  assert.deepEqual(parseRundownArgs(['install', '-n']), { cmd: 'install', dryRun: true, force: false });
+  assert.deepEqual(parseRundownArgs(['install', '--force']), { cmd: 'install', dryRun: false, force: true });
   assert.deepEqual(parseRundownArgs(['--help']), { cmd: 'help' });
   assert.deepEqual(parseRundownArgs(['install', '-h']), { cmd: 'help' });
   assert.equal(parseRundownArgs(['--force']).cmd, 'error');
-  assert.equal(parseRundownArgs(['install', '--force']).cmd, 'error');
+  assert.equal(parseRundownArgs(['install', '--bogus']).cmd, 'error');
   assert.equal(parseRundownArgs(['a', 'b']).cmd, 'error');
   assert.match(RUNDOWN_HELP, /kipdeck rundown install \[--dry-run\]/);
   assert.match(RUNDOWN_HELP, /\.git\/info\/exclude/);
@@ -62,16 +63,15 @@ test("the package's skill files: found from the source and from the bundled scri
   const empty = path.join(tmp, 'empty-pkg');
   mkdirSync(empty);
   assert.match((packagedFiles(empty) as { missing: string }).missing, /rundown\.mjs \(run npm run build:rundown/);
-  // The bundled script finds SKILL.md and README.md two folders up, as the package lays them out...
+  // The bundled script finds SKILL.md and README.md one folder up, as the package and the plugin lay them out...
   const pkg = path.join(tmp, 'pkg');
-  mkdirSync(path.join(pkg, 'dist', 'rundown'), { recursive: true });
-  mkdirSync(path.join(pkg, 'skills', 'rundown'), { recursive: true });
-  writeFileSync(path.join(pkg, 'dist', 'rundown', 'rundown.mjs'), '');
-  writeFileSync(path.join(pkg, 'skills', 'rundown', 'SKILL.md'), '');
-  assert.deepEqual(packagedSkill(path.join(pkg, 'dist', 'rundown', 'rundown.mjs')), { skill: path.join(pkg, 'skills', 'rundown', 'SKILL.md') });
-  writeFileSync(path.join(pkg, 'skills', 'rundown', 'README.md'), '');
-  assert.equal(packagedSkill(path.join(pkg, 'dist', 'rundown', 'rundown.mjs'))?.readme, path.join(pkg, 'skills', 'rundown', 'README.md'));
-  assert.equal((packagedFiles(pkg) as { script: string }).script, path.join(pkg, 'dist', 'rundown', 'rundown.mjs'));
+  mkdirSync(path.join(pkg, 'plugins', 'rundown', 'skills', 'rundown', 'scripts'), { recursive: true });
+  writeFileSync(path.join(pkg, 'plugins', 'rundown', 'skills', 'rundown', 'scripts', 'rundown.mjs'), '');
+  writeFileSync(path.join(pkg, 'plugins', 'rundown', 'skills', 'rundown', 'SKILL.md'), '');
+  assert.deepEqual(packagedSkill(path.join(pkg, 'plugins', 'rundown', 'skills', 'rundown', 'scripts', 'rundown.mjs')), { skill: path.join(pkg, 'plugins', 'rundown', 'skills', 'rundown', 'SKILL.md') });
+  writeFileSync(path.join(pkg, 'plugins', 'rundown', 'skills', 'rundown', 'README.md'), '');
+  assert.equal(packagedSkill(path.join(pkg, 'plugins', 'rundown', 'skills', 'rundown', 'scripts', 'rundown.mjs'))?.readme, path.join(pkg, 'plugins', 'rundown', 'skills', 'rundown', 'README.md'));
+  assert.equal((packagedFiles(pkg) as { script: string }).script, path.join(pkg, 'plugins', 'rundown', 'skills', 'rundown', 'scripts', 'rundown.mjs'));
   // ...and the installed copy, with none beside it, finds none.
   assert.equal(packagedSkill(path.join(tmp, '.claude', 'skills', 'rundown', 'scripts', 'rundown.mjs')), null);
 });
