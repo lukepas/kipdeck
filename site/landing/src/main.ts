@@ -21,6 +21,7 @@ import { watchFilm } from './ui/watch';
 import { soundButton, cue } from './ui/sound';
 import { wait } from './ui/wait';
 import { steadyAnchors } from './ui/anchors';
+import { warmSections } from './engine/warm';
 
 const root = document.documentElement;
 root.classList.add('js');
@@ -85,6 +86,10 @@ if (!env.reduced && tier !== 'min') {
     idle(() => void import('./fx/shockwave').then((m) => m.warmShockwave()));
   }, 2900), { once: true });
 }
+
+// The sections that skip rendering until they are near are laid out once in idle moments after the
+// opening, so none pays for its first layout in the middle of a scroll (engine/warm.ts).
+addEventListener('load', () => setTimeout(warmSections, 1500), { once: true });
 
 // Kip, the mascot, in his own chunk once the opening has painted (never with ?nokip). Everything he
 // does is in src/kip/.
