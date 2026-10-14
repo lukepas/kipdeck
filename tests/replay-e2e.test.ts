@@ -93,3 +93,33 @@ test('the replay demo plays the recorded round on a static page, read only', asy
   assert.ok(!(await page.evaluate(() => (window as any).__vibrateCalls as boolean[])).includes(false), 'never a vibrate before a tap');
   await page.close();
 });
+
+test("the Rundown window shows the demo project's map from the tape, and its download is refused, not a 404", async (t) => {
+  if (why) return t.skip(why);
+  const page = await browser!.newPage({ viewport: { width: 1280, height: 800 }, acceptDownloads: true });
+  t.after(() => page.close());
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  page.on('console', (m) => {
+    if (m.type() === 'error') errors.push(m.text());
+  });
+  let downloads = 0;
+  page.on('download', () => downloads++);
+  await page.goto(`${base}/`);
+  await page.locator('.demo-text').filter({ hasText: /^Recorded/ }).waitFor({ state: 'attached', timeout: 15_000 });
+  await page.getByText('Add rate limiting to /api/login').first().waitFor({ timeout: 15_000 });
+
+  await page.keyboard.press('Control+k');
+  await page.keyboard.type('Rundown');
+  await page.keyboard.press('Enter');
+  const win = page.locator('.modal.rundown');
+  await win.getByText('Suggested next step').waitFor({ timeout: 10_000 });
+  // The recorded day reads as today, as every other time on the tape does.
+  const today = new Date().toISOString().slice(0, 10);
+  assert.match((await win.textContent()) ?? '', new RegExp(`last commit ${today}`));
+
+  await win.getByText(/Download map/).click();
+  await page.getByText(READ_ONLY_REFUSAL).first().waitFor({ timeout: 5000 });
+  assert.equal(downloads, 0, 'no download of the static host 404');
+  assert.deepEqual(errors, []);
+});

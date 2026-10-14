@@ -43,6 +43,23 @@ test('the recorded times move to now, and nothing else does', () => {
   assert.equal(shiftTimes(msg, 0, t), msg);
 });
 
+test("a rundown's git times and days move too: an offset ISO time, a bare day and a day in a sentence", () => {
+  const t = tape();
+  const day = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+  const week = 7 * 86_400_000;
+  const local = new Date(T0).toISOString().replace('Z', '+00:00');
+  const msg = { date: local, day: day(T0), text: `Carry on with web (last commit ${day(T0)})`, old: 'since 2020-01-01', iso: '2020-01-01T00:00:00+03:00' };
+  const moved = shiftTimes(msg, week, t);
+  assert.equal(moved.date, new Date(T0 + week).toISOString());
+  assert.equal(moved.day, day(T0 + week));
+  assert.equal(moved.text, `Carry on with web (last commit ${day(T0 + week)})`);
+  assert.equal(moved.old, msg.old, 'a day far from the recording stays');
+  assert.equal(moved.iso, msg.iso);
+  // Late in the day it is played on, the recorded day still reads as that day, not the next.
+  const late = Date.UTC(2026, 9, 20, 23, 30) - T0;
+  assert.equal(shiftTimes({ day: day(T0) }, late, t).day, '2026-10-20');
+});
+
 test("a terminal is its last snapshot with what was written after it, as it stood at that moment", () => {
   const t = tape([
     { at: 100, msg: { t: 'term.data', workerId: 'w1', data: 'before' } },

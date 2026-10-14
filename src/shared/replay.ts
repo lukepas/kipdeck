@@ -34,22 +34,34 @@ export interface Tape {
 
 /** Times on the tape are ms since epoch from this window around the recording; nothing else is that big. */
 const TIME_SLACK_MS = 3 * 24 * 3600 * 1000;
-const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z$/;
+const DAY_MS = 86_400_000;
+// An ISO time in UTC or with an offset (git's dates in a rundown carry the recorder's), and a bare day,
+// alone or inside a sentence ("the last 2026-10-14").
+const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$/;
+const DAY = /\b(\d{4}-\d\d-\d\d)\b(?!T\d)/g;
 
 /**
  * `value` with every time from the recording moved by `delta` ms: numbers in ms since epoch within a few
- * days of it, and ISO strings in that window. Everything else stays as it is.
+ * days of it, ISO strings in that window (written back in UTC), and days in that window, alone or in a
+ * sentence, moved to the day they land on. Everything else stays as it is.
  */
 export function shiftTimes<T>(value: T, delta: number, tape: Pick<Tape, 'recordedAt' | 'loopTo'>): T {
   if (!delta) return value;
   const lo = tape.recordedAt - TIME_SLACK_MS;
   const hi = tape.recordedAt + tape.loopTo + TIME_SLACK_MS;
+  // Whole days, so the recording's day reads as the day it is played on (UTC), whatever its hour.
+  const days = Math.floor((tape.recordedAt + delta) / DAY_MS) - Math.floor(tape.recordedAt / DAY_MS);
   const walk = (v: unknown): unknown => {
     if (typeof v === 'number') return Number.isInteger(v) && v >= lo && v <= hi ? v + delta : v;
     if (typeof v === 'string') {
-      if (!ISO.test(v)) return v;
-      const ms = Date.parse(v);
-      return ms >= lo && ms <= hi ? new Date(ms + delta).toISOString() : v;
+      if (ISO.test(v)) {
+        const ms = Date.parse(v);
+        return ms >= lo && ms <= hi ? new Date(ms + delta).toISOString() : v;
+      }
+      return v.replace(DAY, (day) => {
+        const ms = Date.parse(`${day}T12:00:00Z`);
+        return ms >= lo && ms <= hi ? new Date(ms + days * DAY_MS).toISOString().slice(0, 10) : day;
+      });
     }
     if (Array.isArray(v)) return v.map(walk);
     if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, walk(x)]));

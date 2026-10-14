@@ -62,7 +62,22 @@ export class Net {
     _profile: () => Profile,
     _where: () => Spot | null,
     _lite = false,
-  ) {}
+  ) {
+    // A link into the office's HTTP API (the Rundown window's Download map) has no office behind it
+    // here, so it gets the read-only toast instead of the static host's 404 as a download.
+    document.addEventListener(
+      'click',
+      (e) => {
+        const a = e.target instanceof Element ? e.target.closest('a[href]') : null;
+        if (!(a instanceof HTMLAnchorElement)) return;
+        const url = new URL(a.href, location.href);
+        if (url.origin !== location.origin || !url.pathname.startsWith('/api/')) return;
+        e.preventDefault();
+        this.refuse();
+      },
+      true,
+    );
+  }
 
   onMessage(h: Handler) {
     this.handlers.push(h);
@@ -99,14 +114,19 @@ export class Net {
     if (msg.t === 'ping') return this.emit({ t: 'pong', at: msg.at, now: Date.now() });
     if (!READ_ONLY_ALLOWS.has(msg.t) && !REPLAY_ALSO_ANSWERS.has(msg.t)) {
       if (READ_ONLY_QUIET.has(msg.t)) return;
-      const now = performance.now();
-      if (now - this.toldAt < TOLD_GAP_MS) return;
-      this.toldAt = now;
-      return this.emit({ t: 'toast', text: READ_ONLY_REFUSAL, level: 'warn' });
+      return this.refuse();
     }
     this.follows.note(msg);
     const pos = this.position();
     for (const m of answer(t, msg, pos.at)) this.emit(shiftTimes(m, pos.delta, t));
+  }
+
+  /** The read-only demo's toast, at most once every TOLD_GAP_MS. */
+  private refuse() {
+    const now = performance.now();
+    if (now - this.toldAt < TOLD_GAP_MS) return;
+    this.toldAt = now;
+    this.emit({ t: 'toast', text: READ_ONLY_REFUSAL, level: 'warn' });
   }
 
   /** Where on the tape the page is now, and how far its times move. */
