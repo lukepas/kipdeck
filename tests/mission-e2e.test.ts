@@ -257,15 +257,39 @@ test('back after a while away: the digest is over the list on the home page, and
 
   const office = await signedIn(undefined, 40 * 60_000);
   t.after(() => office.context.close());
+  // When the debrief comes and goes (page ms), to say why should it be gone before Full log is pressed.
+  await office.page.addInitScript(() => {
+    const w = window as unknown as { __debrief: string[] };
+    w.__debrief = [];
+    new MutationObserver((records) => {
+      for (const r of records) {
+        const el = r.target as HTMLElement;
+        if (el.classList?.contains('debrief') && /\bon\b/.test(r.oldValue ?? '') !== el.classList.contains('on')) w.__debrief.push(`${el.classList.contains('on') ? 'on' : 'off'}@${Math.round(performance.now())}`);
+      }
+    }).observe(document, { subtree: true, attributeFilter: ['class'], attributeOldValue: true });
+  });
   await office.page.goto(`${base}/deck`);
+  const debriefLog = () => office.page.evaluate(() => `debrief ${(window as unknown as { __debrief: string[] }).__debrief.join(' ')}, now ${Math.round(performance.now())}`);
   // The start of watch takes the window's place at load: the debrief, whose Full log is the window.
-  const debrief = office.page.locator('.debrief.on');
-  await debrief.waitFor({ timeout: 60_000 });
-  assert.match(await debrief.locator('.debrief-title').innerText(), /SINCE YOU LEFT/);
-  assert.equal(await debrief.locator('.close').count(), 1);
-  // A dispatched click, as Locate's below: under the full suite's load the software renderer starves
-  // Playwright's wait for the button to hold still.
-  await debrief.locator('button', { hasText: 'Full log' }).dispatchEvent('click');
+  // It is up for 15 s, and at load the software-rendered office can starve the page for longer than
+  // that between two of Playwright's round trips. So the page itself, on a timer, reads it and
+  // presses Full log the moment it is up: one round trip, as a person would see it and press it.
+  const seen = await office.page
+    .waitForFunction(() => {
+      const d = document.querySelector('.debrief.on');
+      if (!d) return null;
+      const full = [...d.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Full log');
+      const read = { title: d.querySelector('.debrief-title')?.textContent ?? '', closes: d.querySelectorAll('.close').length, full: !!full };
+      full?.click();
+      return read;
+    }, null, { timeout: 60_000, polling: 100 })
+    .then((h) => h.jsonValue())
+    .catch(async (err: Error) => {
+      throw new Error(`${err.message.split('\n')[0]} (${await debriefLog()})`);
+    });
+  assert.match(seen.title, /SINCE YOU LEFT/);
+  assert.equal(seen.closes, 1, 'a close button top right');
+  assert.equal(seen.full, true, 'a Full log button');
   const digest = office.page.locator('.modal.digest');
   await digest.waitFor({ timeout: 30_000 });
   assert.match(await digest.locator('.dg-summary').innerText(), /./);
@@ -369,8 +393,10 @@ test('docked in the 3D office: the deck stays in view, D floats it, a click on t
   assert.ok(seen.card && seen.button, `the selected unit's card is in view beside the docked panel: ${JSON.stringify(seen)}`);
   assert.ok(seen.right <= seen.dock, 'the card ends left of the docked panel');
 
-  // Whoever has the keys after Locate, a click on the panel gives them to it (its tabs undim).
-  await docked.locator('header h2').click();
+  // Whoever has the keys after Locate, a click on the panel gives them to it (its tabs undim). The
+  // panel takes them on pointerdown (ui/mission/dock.ts), dispatched as Locate's click above: right
+  // after Locate's flight the software renderer can hold Playwright's real click past 30 s (Release).
+  await docked.locator('header h2').dispatchEvent('pointerdown');
   assert.equal(await docked.evaluate((m) => m.classList.contains('mc-keys-away')), false, 'a click on the panel takes the keys back');
   // D floats it in the middle, remembered; D again docks it.
   await page.keyboard.press('d');
