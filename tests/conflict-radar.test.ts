@@ -73,8 +73,11 @@ test('the Restack prompt names the branch, the base, how far behind and the file
   assert.doesNotMatch(p, /force-with-lease/);
   const pr = restackPrompt(entry({ land: clash, pr: { number: 12, state: 'open' } }));
   assert.match(pr, /`git push --force-with-lease` so pull request #12 updates\./);
+  // Compared with origin's copy (a local main nobody pulled): fetch, then rebase onto origin's.
+  const remote = restackPrompt(entry({ land: { ...clash, onto: 'origin/main' }, pr: { number: 12, state: 'open' } }));
+  assert.match(remote, /Rebase it onto origin\/main \(`git fetch origin` and `git rebase origin\/main`\)/);
   // Plain ASCII, as every word the office writes.
-  assert.match(p + pr, /^[\x20-\x7e]*$/);
+  assert.match(p + pr + remote, /^[\x20-\x7e]*$/);
 });
 
 test('work that conflicts is To review with Restack, and says where', () => {

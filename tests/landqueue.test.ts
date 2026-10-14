@@ -154,6 +154,40 @@ test('collision radar: two live agents changing the same file, committed or not,
   assert.deepEqual(q.overlapOf('a'), { with: ['b'], files: ['user.ts'] });
 });
 
+test("origin's copy of the base when it is ahead: what was merged on GitHub counts, and is nobody's own change", async (t) => {
+  const f = fixture(t);
+  const a = f.worktree('a');
+  f.commit(a.cwd, 'user.ts', 'export const name = "from a";\n');
+  // A pull request merged on GitHub and fetched, while the local main was never pulled.
+  f.git(f.dir, 'checkout', '-q', '-b', 'upstream');
+  f.commit(f.dir, 'user.ts', 'export const name = "from github";\n');
+  f.git(f.dir, 'update-ref', 'refs/remotes/origin/main', 'upstream');
+  f.git(f.dir, 'checkout', '-q', 'main');
+  // Two agents hired since start from origin's copy (Worktrees.startPoint), each on a file of its own.
+  const cut = (name: string) => {
+    const rel = path.join('.office', name);
+    f.git(f.dir, 'worktree', 'add', '-q', '-b', `office/${name}`, rel, 'origin/main');
+    return { cwd: path.join(f.dir, rel), branch: `office/${name}` };
+  };
+  const b = cut('b');
+  const c = cut('c');
+  writeFileSync(path.join(b.cwd, 'b.ts'), 'b\n');
+  writeFileSync(path.join(c.cwd, 'c.ts'), 'c\n');
+  const { q } = queue(t, f.dir, () => [
+    { id: 'a', cwd: a.cwd, branch: a.branch, base: 'main', atRest: true, live: false },
+    { id: 'b', cwd: b.cwd, branch: b.branch, base: 'main', atRest: false, live: true },
+    { id: 'c', cwd: c.cwd, branch: c.branch, base: 'main', atRest: false, live: true },
+  ], f.env);
+  await q.refresh();
+  assert.deepEqual(q.get('a'), { behind: 1, ahead: 1, conflicts: ['user.ts'], onto: 'origin/main' });
+  assert.equal(q.overlapOf('b'), undefined, "origin's commits are in both branches, not something either agent changed");
+  assert.equal(q.overlapOf('c'), undefined);
+  // Once the local main has it too (pulled), the local branch is the base again.
+  f.git(f.dir, 'merge', '-q', '--ff-only', 'upstream');
+  await q.refresh();
+  assert.deepEqual(q.get('a'), { behind: 1, ahead: 1, conflicts: ['user.ts'] });
+});
+
 test('git too old for merge-tree --write-tree: behind still shows, conflicts are unknown, and it stops asking', async (t) => {
   const f = fixture(t);
   const a = f.worktree('a');

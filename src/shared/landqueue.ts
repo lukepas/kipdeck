@@ -16,6 +16,8 @@ export interface LandState {
   conflicts: string[];
   /** Conflicting files past the list. */
   more?: number;
+  /** The ref it was compared with when that's origin's copy of the base ("origin/main"), which a pull request lands on. */
+  onto?: string;
   /** This git can't merge without touching a checkout (merge-tree --write-tree came in git 2.38): conflicts unknown. */
   unknown?: true;
 }
@@ -66,8 +68,10 @@ export function restackPrompt(e: { branch?: string; into?: string; land?: LandSt
   const where = e.branch ? `Your branch ${e.branch}` : 'Your branch';
   const behind = land && land.behind > 0 ? ` is ${plural(land.behind, 'commit')} behind ${into}` : ` has fallen behind ${into}`;
   const clash = land?.conflicts.length ? `, and merging it now conflicts in ${fileList(land.conflicts, land.more ?? 0, 8)}` : '';
+  // Compared with origin's copy: fetch it first, and rebase onto that rather than a local branch nobody pulled.
+  const rebase = land?.onto ? `\`git fetch origin\` and \`git rebase ${land.onto}\`` : `\`git rebase ${into}\``;
   const push = e.pr && e.pr.state === 'open' ? ` Then push it with \`git push --force-with-lease\` so pull request #${e.pr.number} updates.` : '';
-  return `${where}${behind}${clash}. Rebase it onto ${into} (\`git rebase ${into}\`), resolve each conflict so both sides' changes survive, run the tests, and finish when it merges clean.${push}`;
+  return `${where}${behind}${clash}. Rebase it onto ${land?.onto ?? into} (${rebase}), resolve each conflict so both sides' changes survive, run the tests, and finish when it merges clean.${push}`;
 }
 
 /** "Also changed by Fix login: src/api/user.ts": the overlap note, naming the others by `nameOf`. */

@@ -146,19 +146,21 @@ export class LandQueue {
   private async look() {
     if (this.stopped) return;
     const agents = this.agents();
-    const shas = await this.commits(agents.flatMap((a) => [a.base, a.branch]));
+    const bases = await this.bases(agents.map((a) => a.base));
+    const shas = await this.commits(agents.map((a) => a.branch));
     let moved = false;
 
     const landers = new Set<string>();
     for (const a of agents) {
       if (this.stopped) return;
-      const base = shas.get(a.base);
+      const base = bases.get(a.base);
       const head = shas.get(a.branch);
       if (!a.atRest || !base || !head) continue;
       landers.add(a.id);
-      const key = `${base}:${head}`;
+      const key = `${base.onto ?? ''}:${base.sha}:${head}`;
       if (this.land.get(a.id)?.key === key) continue;
-      const state = await this.landing(base, head);
+      const found = await this.landing(base.sha, head);
+      const state = found && base.onto ? { ...found, onto: base.onto } : found;
       const had = this.land.get(a.id)?.state;
       // A look that couldn't tell for a passing reason (a lock, a timeout) is tried again next time.
       const retry = state?.unknown && this.writeTree !== false;
@@ -174,9 +176,9 @@ export class LandQueue {
     const touching: { id: string; files: string[] }[] = [];
     for (const a of agents) {
       if (this.stopped) return;
-      const base = shas.get(a.base);
+      const base = bases.get(a.base);
       if (!a.live || !base) continue;
-      const files = await this.changedFiles(a.cwd, base);
+      const files = await this.changedFiles(a.cwd, base.sha);
       if (files.length) touching.push({ id: a.id, files });
     }
     const next = overlaps(touching);
@@ -190,10 +192,37 @@ export class LandQueue {
   private async commits(refs: string[]): Promise<Map<string, string>> {
     const out = new Map<string, string>();
     for (const ref of new Set(refs)) {
-      // `--end-of-options` so a branch name can never be read as a flag.
-      const r = await git(['rev-parse', '--verify', '-q', '--end-of-options', `${ref}^{commit}`], this.dir, this.opts.env);
-      const sha = r.out.trim();
-      if (r.code === 0 && HEX.test(sha)) out.set(ref, sha);
+      const sha = await this.commitOf(ref);
+      if (sha) out.set(ref, sha);
+    }
+    return out;
+  }
+
+  private async commitOf(ref: string): Promise<string | undefined> {
+    // `--end-of-options` so a branch name can never be read as a flag.
+    const r = await git(['rev-parse', '--verify', '-q', '--end-of-options', `${ref}^{commit}`], this.dir, this.opts.env);
+    const sha = r.out.trim();
+    return r.code === 0 && HEX.test(sha) ? sha : undefined;
+  }
+
+  /**
+   * The commit each base stands for, and the ref when it's origin's copy. A pull request lands on
+   * origin's branch, and a worktree starts from origin's when it's ahead (Worktrees.startPoint), so
+   * the same rule picks the side: origin's copy as last fetched unless the local branch already has
+   * it. Comparing with a local branch nobody pulled would miss what was merged on GitHub, and count
+   * those commits as every agent's own, so every two agents would overlap on them.
+   */
+  private async bases(names: string[]): Promise<Map<string, { sha: string; onto?: string }>> {
+    const out = new Map<string, { sha: string; onto?: string }>();
+    for (const name of new Set(names)) {
+      const local = await this.commitOf(name);
+      const remote = !name.startsWith('origin/') ? await this.commitOf(`refs/remotes/origin/${name}`) : undefined;
+      if (!remote || remote === local) {
+        if (local) out.set(name, { sha: local });
+        continue;
+      }
+      if (local && (await git(['merge-base', '--is-ancestor', remote, local], this.dir, this.opts.env)).code === 0) out.set(name, { sha: local });
+      else out.set(name, { sha: remote, onto: `origin/${name}` });
     }
     return out;
   }
