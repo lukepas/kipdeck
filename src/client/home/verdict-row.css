@@ -1,0 +1,10 @@
+/* A To review row's verdict (verdict-row.ts): its glyph, its words, then the size of the change. */
+.row-verdict { display: inline-flex; align-items: center; gap: 5px; min-width: 0; max-width: 100%; }
+.row-verdict > .ico { flex: none; }
+.row-verdict.v-ready > .ico { color: var(--text); }
+.row-verdict.v-gap > .ico { color: var(--warn); }
+.row-verdict .rv-words { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+.row-verdict .rv-size { flex: none; color: var(--muted); }
+.row-verdict .rv-size::before { content: '\00b7'; margin-right: 5px; }
+/* On a phone the verdict gets the room; the size is a tap away in the pane. */
+@media (max-width: 599px) { .row-verdict .rv-size { display: none; } }
