@@ -1,6 +1,6 @@
 // The service worker (src/client/public/sw.js), run as it is in a stand-in for the browser's worker
 // scope: a push shows the notification the office sent (task as title, two buttons at most, sticky
-// for questions), a tap brings up the inbox tab (on /, /a/... or /p/...) on that agent or opens one (never a Deck tab, which
+// for questions), Allow once and Deny on a safe approval answer with the push's one-use token, a tap brings up the inbox tab (on /, /a/... or /p/...) on that agent or opens one (never a Deck tab, which
 // doesn't know the message), and Snooze goes back to the office as the device that took the push.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -22,7 +22,8 @@ interface Win {
   postMessage(m: unknown): void;
 }
 
-function scope(windows: string[] = []) {
+/** `reply` is what the office answers the worker's own requests with. */
+function scope(windows: string[] = [], reply: { ok: boolean; json?: () => Promise<unknown> } = { ok: true }) {
   const listeners = new Map<string, (e: unknown) => void>();
   const shown: { title: string; options: Record<string, any> }[] = [];
   const opened: string[] = [];
@@ -48,7 +49,7 @@ function scope(windows: string[] = []) {
       pushManager: { getSubscription: async () => ({ endpoint: 'https://fcm.googleapis.com/fcm/send/me' }) },
     },
   };
-  const fetch = async (url: string, init: { body: string }) => (fetched.push({ url, body: JSON.parse(init.body) }), { ok: true });
+  const fetch = async (url: string, init: { body: string }) => (fetched.push({ url, body: JSON.parse(init.body) }), reply);
   vm.runInNewContext(SW, { self, fetch, URL, JSON, Array, Promise });
   /** Fires an event and waits for what it asked to wait for. */
   const fire = async (type: string, e: Record<string, unknown>) => {
@@ -137,4 +138,51 @@ test('Snooze and Mark seen go back to the office as this device, without opening
     { url: '/api/push/act', body: { endpoint: 'https://fcm.googleapis.com/fcm/send/me', worker: 'w2', action: 'seen' } },
   ]);
   assert.deepEqual(s.opened, []);
+});
+
+test('an approval push with a token shows Allow once and Deny, and keeps the token for the button', async () => {
+  const s = scope();
+  const p = { ...pushPayload({ kind: 'approval', worker: 'w1', task: 'Run the tests', project: 'shop', detail: 'Wants permission: Bash npm test' }), approve: 'tok-1' };
+  p.actions = [
+    { action: 'allow', title: 'Allow once' },
+    { action: 'deny', title: 'Deny' },
+  ];
+  await s.fire('push', { data: { json: () => p } });
+  assert.deepEqual(plain(s.shown[0].options.actions), [
+    { action: 'allow', title: 'Allow once' },
+    { action: 'deny', title: 'Deny' },
+  ]);
+  assert.deepEqual(plain(s.shown[0].options.data), { url: '/?agent=w1', worker: 'w1', kind: 'approval', approve: 'tok-1', title: 'Run the tests' });
+});
+
+test('Allow once and Deny go back to the office as this device with the token, without opening anything', async () => {
+  const s = scope();
+  const data = { url: '/?agent=w1', worker: 'w1', kind: 'approval', approve: 'tok-1', title: 'Run the tests' };
+  await s.fire('notificationclick', { notification: notification(data), action: 'allow' });
+  await s.fire('notificationclick', { notification: notification({ ...data, approve: 'tok-2' }), action: 'deny' });
+  assert.deepEqual(s.fetched, [
+    { url: '/api/push/answer', body: { endpoint: 'https://fcm.googleapis.com/fcm/send/me', token: 'tok-1', decision: 'once' } },
+    { url: '/api/push/answer', body: { endpoint: 'https://fcm.googleapis.com/fcm/send/me', token: 'tok-2', decision: 'deny' } },
+  ]);
+  assert.deepEqual(s.opened, []);
+  assert.equal(s.shown.length, 0, 'nothing comes back when it went through');
+});
+
+test('a refused Allow brings the notification back with the reason, and a tap on that opens the agent', async () => {
+  const s = scope([], { ok: false, json: async () => ({ error: 'That request is gone: the agent already moved on' }) });
+  await s.fire('notificationclick', { notification: notification({ url: '/?agent=w1', worker: 'w1', kind: 'approval', approve: 'tok-1', title: 'Run the tests' }), action: 'allow' });
+  assert.equal(s.shown.length, 1);
+  assert.equal(s.shown[0].title, 'Run the tests');
+  assert.equal(s.shown[0].options.body, 'That request is gone: the agent already moved on\nTap to open it in Kipdeck.');
+  assert.equal(s.shown[0].options.tag, 'worker-w1');
+  assert.deepEqual(plain(s.shown[0].options.data), { url: '/?agent=w1', worker: 'w1', kind: 'approval' }, 'no token: the button is not offered again');
+  await s.fire('notificationclick', { notification: notification(s.shown[0].options.data), action: '' });
+  assert.deepEqual(s.opened, ['/?agent=w1']);
+});
+
+test('Allow without a token (an older push) opens the agent instead', async () => {
+  const s = scope();
+  await s.fire('notificationclick', { notification: notification({ url: '/?agent=w1', worker: 'w1', kind: 'approval' }), action: 'allow' });
+  assert.deepEqual(s.fetched, []);
+  assert.deepEqual(s.opened, ['/?agent=w1']);
 });
