@@ -75,15 +75,51 @@ export function rowAction(att: Attention): { action: RowAction; label: string } 
 export const AGE_PREFIX: Readonly<Record<InboxSection, string>> = { 'needs-you': 'waiting', review: 'done', working: 'working', idle: 'idle' };
 
 /**
- * How long a row has been the way it is, in the words its section uses: "waiting 38s", "done 12m",
- * "working 4m", "idle 2h", "snoozed 1h". A wait on you (Needs you, To review) counts in seconds at first with
- * waitWords, the clock the page ticks (home/clock.ts); the rest keep whole minutes. A snoozed row sits
- * under Idle but says snoozed.
+ * Why an agent sits in Idle, in the one or two words its row's clock and the folded section's header
+ * use: it has no task (never given one, or its last one was seen and it waits for the next), it is
+ * asleep (its session ended), its pull request merged and it only waits to be archived, or a person
+ * snoozed it.
  */
-export function ageLabel(section: InboxSection, att: Pick<Attention, 'since'> & { snoozed?: boolean }, now: number): string {
+export type IdleKind = 'no task' | 'asleep' | 'merged' | 'snoozed';
+export const IDLE_KINDS: readonly IdleKind[] = ['no task', 'asleep', 'merged', 'snoozed'];
+
+export function idleKind(att: Pick<Attention, 'level' | 'action' | 'snoozed'>): IdleKind {
+  if (att.snoozed) return 'snoozed';
+  if (att.level === 'review' && att.action === 'send-home') return 'merged';
+  if (att.level === 'parked' && att.action === 'resume') return 'asleep';
+  return 'no task';
+}
+
+/** "2 asleep, 1 merged": what the Idle section holds, for its header while it's folded ('' when empty). */
+export function idleBreakdown(items: readonly Pick<Ranked, 'att'>[]): string {
+  const n = new Map<IdleKind, number>();
+  for (const r of items) n.set(idleKind(r.att), (n.get(idleKind(r.att)) ?? 0) + 1);
+  return IDLE_KINDS.filter((k) => n.get(k)).map((k) => `${n.get(k)} ${k}`).join(', ');
+}
+
+/**
+ * An Idle row's status line: what the ranking says when it adds something (a merged pull request,
+ * or what a snoozed agent was doing), else why it's idle in a few plain words. Never just "Idle"
+ * under the Idle header, and never "Asleep" beside a clock that already says asleep.
+ */
+export function idleStatus(att: Pick<Attention, 'level' | 'action' | 'snoozed'>, detail: string): string {
+  const kind = idleKind(att);
+  if (kind === 'asleep') return 'Its session ended';
+  if (kind === 'no task') return 'Waiting for a task';
+  return detail;
+}
+
+/**
+ * How long a row has been the way it is, in the words its section uses: "waiting 38s", "done 12m",
+ * "working 4m", and in Idle why it's there ("asleep 2h", "merged 1h", "no task 20m", "snoozed 1h"; plain "idle 2h"
+ * when the ranking isn't given). A wait on you (Needs you, To review) counts in seconds at first with
+ * waitWords, the clock the page ticks (home/clock.ts); the rest keep whole minutes. A snoozed row sits
+ * under Idle and says snoozed.
+ */
+export function ageLabel(section: InboxSection, att: Pick<Attention, 'since'> & Partial<Pick<Attention, 'snoozed' | 'level' | 'action'>>, now: number): string {
   const waits = section === 'needs-you' || section === 'review';
   const t = waits ? waitWords(now - att.since) : ago(now - att.since);
-  const prefix = att.snoozed ? 'snoozed' : AGE_PREFIX[section];
+  const prefix = att.snoozed ? 'snoozed' : section === 'idle' && att.level && att.action ? idleKind({ level: att.level, action: att.action, snoozed: false }) : AGE_PREFIX[section];
   return prefix ? `${prefix} ${t}` : t;
 }
 
