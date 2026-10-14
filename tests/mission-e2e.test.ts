@@ -257,15 +257,29 @@ test('back after a while away: the digest is over the list on the home page, and
 
   const office = await signedIn(undefined, 40 * 60_000);
   t.after(() => office.context.close());
+  // When the debrief comes and goes (page ms), to say why should it be gone before Full log is pressed.
+  await office.page.addInitScript(() => {
+    const w = window as unknown as { __debrief: string[] };
+    w.__debrief = [];
+    new MutationObserver((records) => {
+      for (const r of records) {
+        const el = r.target as HTMLElement;
+        if (el.classList?.contains('debrief') && /\bon\b/.test(r.oldValue ?? '') !== el.classList.contains('on')) w.__debrief.push(`${el.classList.contains('on') ? 'on' : 'off'}@${Math.round(performance.now())}`);
+      }
+    }).observe(document, { subtree: true, attributeFilter: ['class'], attributeOldValue: true });
+  });
   await office.page.goto(`${base}/deck`);
+  const debriefLog = () => office.page.evaluate(() => `debrief ${(window as unknown as { __debrief: string[] }).__debrief.join(' ')}, now ${Math.round(performance.now())}`);
   // The start of watch takes the window's place at load: the debrief, whose Full log is the window.
   const debrief = office.page.locator('.debrief.on');
   await debrief.waitFor({ timeout: 60_000 });
   assert.match(await debrief.locator('.debrief-title').innerText(), /SINCE YOU LEFT/);
-  assert.equal(await debrief.locator('.close').count(), 1);
+  assert.equal(await debrief.locator('.close').count(), 1, await debriefLog());
   // A dispatched click, as Locate's below: under the full suite's load the software renderer starves
   // Playwright's wait for the button to hold still.
-  await debrief.locator('button', { hasText: 'Full log' }).dispatchEvent('click');
+  await debrief.locator('button', { hasText: 'Full log' }).dispatchEvent('click', undefined, { timeout: 30_000 }).catch(async (err: Error) => {
+    throw new Error(`${err.message.split('\n')[0]} (${await debriefLog()})`);
+  });
   const digest = office.page.locator('.modal.digest');
   await digest.waitFor({ timeout: 30_000 });
   assert.match(await digest.locator('.dg-summary').innerText(), /./);
