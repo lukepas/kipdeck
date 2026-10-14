@@ -3,7 +3,7 @@
 // or "quiet 4m" before it would be stuck. Plus the voice rule: no row ever leads with a tool's name.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { doingWords, editedFiles, isToolName, plainActivity, turnFacts, turnWords, workingClock, workingWords } from '../src/shared/doing.js';
+import { doingWords, editedFiles, isToolName, plainActivity, rosterActivity, turnFacts, turnWords, workingClock, workingWords } from '../src/shared/doing.js';
 import { approvalTitle } from '../src/shared/approval.js';
 import { attention, QUIET_MS, SILENT_MS } from '../src/shared/attention.js';
 import { BriefLog } from '../src/server/brief/log.js';
@@ -92,10 +92,18 @@ test('a Working row never leads with a tool name, whatever any CLI wrote', () =>
     doingWords('Bash', { command: 'npm test' }),
     doingWords('mcp__fetch__fetch', { url: 'https://x.dev' }),
   ];
-  for (const a of lines) assertNoToolPrefix(workingWords(a, 'Working'), a);
+  // Each one as the roster sends it (server/roster.ts puts it in plain words) and the row says it.
+  const floor: RosterFloor = { id: 'f', name: 'shop', pulls: [], tasks: [], goalTitle: () => undefined };
+  const at = (activity: string | undefined, status = 'working') => rosterEntry(floor, { id: 'w', deskId: 'desk-1', name: 'w', color: '#fff', kind: 'agent', status, acked: false, createdAt: NOW, activity } as unknown as WorkerInfo).activity;
+  for (const a of lines) assertNoToolPrefix(workingWords(at(a), 'Working'), a);
+  assert.equal(at('Bash: npm test'), 'Running npm test');
   // The question tool's own name says nothing: the ranking's label stands in.
-  assert.equal(workingWords('AskUserQuestion', 'Working'), 'Working');
+  assert.equal(at('AskUserQuestion'), 'AskUserQuestion', 'the roster leaves it for spokenActivity to leave out');
+  assert.equal(workingWords(at('AskUserQuestion'), 'Working'), 'Working');
   assert.equal(workingWords(undefined, 'Starting'), 'Starting');
+  // Only an agent at work's line is rephrased: one waiting on you keeps its own words.
+  assert.equal(at('Wants permission: Bash: npm test', 'needs_input'), 'Wants permission: Bash: npm test');
+  assert.equal(rosterActivity('Bash: npm test', false), 'Bash: npm test');
 });
 
 test('the Claude hook keeps the activity in plain words', async () => {

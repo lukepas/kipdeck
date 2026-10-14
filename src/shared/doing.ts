@@ -153,12 +153,22 @@ export function plainActivity(activity: string): string {
 }
 
 /**
- * A Working row's status: what the agent is doing in plain words, else the ranking's `label`. Never a
- * tool's name in front ("Bash: ..."), and never only the name of the tool it asks a question with.
+ * The activity line the roster sends (server/roster.ts): an agent at work's in plain words, whoever
+ * wrote it, so no row or view gets "Bash: npm test" and the home page needs none of the phrasing above.
+ * Any other line, and the bare name of the tool it asks a question with, stays as it is.
+ */
+export function rosterActivity(activity: string | undefined, working: boolean): string | undefined {
+  const said = working ? spokenActivity(activity) : undefined;
+  return said ? plainActivity(said) : activity;
+}
+
+/**
+ * A Working row's status: what the agent is doing, as the roster says it (rosterActivity), else the
+ * ranking's `label`. Never a tool's name in front ("Bash: ..."), and never only the name of the tool it
+ * asks a question with.
  */
 export function workingWords(activity: string | undefined, label: string): string {
-  const said = spokenActivity(activity);
-  return said ? plainActivity(said) : label;
+  return spokenActivity(activity) ?? label;
 }
 
 // ---- The second line ---------------------------------------------------------------------------

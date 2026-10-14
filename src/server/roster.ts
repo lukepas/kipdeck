@@ -1,7 +1,7 @@
 // One hired worker as the building-wide roster carries it (RosterEntry): what the attention ranking
 // needs and enough to show its row, never its prompts or its terminal.
 import type { GhPull, QueueTask, RosterEntry, WorkSummary, WorkerInfo } from '../shared/protocol.js';
-import type { TurnFacts } from '../shared/doing.js';
+import { rosterActivity, type TurnFacts } from '../shared/doing.js';
 import { pullReview } from '../shared/review.js';
 import { DESK_BY_ID } from '../shared/layout.js';
 import { workerPr } from '../shared/status.js';
@@ -38,7 +38,8 @@ export function rosterEntry(f: RosterFloor, w: WorkerInfo): RosterEntry {
   const task = [...f.tasks].reverse().find((t) => t.workerId === w.id);
   const u = w.usage;
   const goalTitle = f.goalTitle(w.goal);
-  const activity = line(w.activity, 80);
+  // An agent at work's line in plain words ("Running npm test"), whichever CLI wrote it.
+  const activity = line(rosterActivity(w.activity, w.status === 'working'), 80);
   const review = pull && pr.state === 'open' ? pullReview(pull.reviewDecision) : undefined;
   const work = w.kind === 'agent' ? f.work?.(w.id) : undefined;
   const turn = w.kind === 'agent' && w.status === 'working' ? f.turn?.(w.id) : undefined;
