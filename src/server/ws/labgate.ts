@@ -11,6 +11,7 @@ import { meetingHandlers } from './handlers/meetings.js';
 import { reputationHandlers } from './handlers/reputation.js';
 import { rundownHandlers } from './handlers/rundown.js';
 import { showcaseHandlers } from './handlers/showcase.js';
+import { yourCallHandlers } from './handlers/yourcall.js';
 
 const LAB_MAPS: [LabId, object][] = [
   ['proof', bountiesHandlers],
@@ -18,6 +19,7 @@ const LAB_MAPS: [LabId, object][] = [
   ['proof', showcaseHandlers],
   ['meetings', meetingHandlers],
   ['rundown', rundownHandlers],
+  ['rundown', yourCallHandlers],
 ];
 
 /** Which lab each gated message type belongs to. */

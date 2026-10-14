@@ -41,8 +41,8 @@ export interface Actions {
   /** Send back with a note; `initial` starts the box (Restack's rebase prompt). */
   sendBack(e: RosterEntry, initial?: string): void;
   stop(e: RosterEntry, merged?: boolean): void;
-  /** Opens the Deploy sheet: with `prompt` in its box, and `provider` picked (the setup card's first ready agent). */
-  deploy(prompt?: string, provider?: AgentProvider): void;
+  /** Opens the Deploy sheet: with `prompt` in its box, `provider` picked (the setup card's first ready agent), and on project `floor`. */
+  deploy(prompt?: string, provider?: AgentProvider, floor?: string): void;
   /** The office answered a merge. */
   merged(msg: Extract<InboxServerMsg, { t: 'inbox.merged' }>): void;
   openBoard(kind: 'issues' | 'pulls'): void;
@@ -249,7 +249,7 @@ export function createActions(net: Net): Actions {
     merging,
     sendBack,
     stop,
-    deploy: (prompt, provider) => openDeploy(net, { prompt, provider, started: (at) => (home.deployedAt = at) }),
+    deploy: (prompt, provider, floor) => openDeploy(net, { prompt, provider, floor, started: (at) => (home.deployedAt = at) }),
     merged(msg) {
       merging.delete(msg.workerId);
       if (msg.error) {

@@ -26,12 +26,13 @@ function lastAgent(): AgentProvider | undefined {
   }
 }
 
-/** Opens the sheet. `prompt` fills the box (the first-run starter task), `provider` picks the agent; `started` hears when an agent was asked for. */
-export function openDeploy(net: Net, opts: { prompt?: string; provider?: AgentProvider; started?(at: number): void } = {}) {
+/** Opens the sheet. `prompt` fills the box (the first-run starter task), `provider` picks the agent, `floor` the project; `started` hears when an agent was asked for. */
+export function openDeploy(net: Net, opts: { prompt?: string; provider?: AgentProvider; floor?: string; started?(at: number): void } = {}) {
   const floors = store.floors.filter((f) => !f.cloning);
   if (!floors.length) return toast('Add a project first: none is open yet', 'warn');
   const project = h('select', { id: 'deploy-project', 'aria-label': 'Project' }, ...floors.map((f) => h('option', { value: f.id }, f.name))) as HTMLSelectElement;
-  project.value = floors.some((f) => f.id === home.project) ? home.project : (store.floor ?? floors[0].id);
+  const wantFloor = opts.floor ?? home.project;
+  project.value = floors.some((f) => f.id === wantFloor) ? wantFloor : (store.floor ?? floors[0].id);
 
   const providers = supportedProviders(store.project);
   const def = officeChoice(store.project);
