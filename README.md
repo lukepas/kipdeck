@@ -116,7 +116,7 @@ More in [docs/labs.md](docs/labs.md).
 - **Your phone.** **Pair a phone** (avatar menu, or Ctrl+K) shows a QR code that signs your phone in once, without a password; the phone stays signed in until you revoke it under Settings > Account > Paired devices. Every agent has its own address (`/a/<project>/<agent>`, a project is `/p/<project>`), so Back closes what you opened, a link opens the same agent on another device, and the team channel's posts link to the agent once the office has a secure address ([on your phone](docs/inbox.md#on-your-phone)).
 - **Numbers.** Human wait time, changes merged, the merge rate and agent-hours, the last 7 days against the 7 days before, and the merge rate per agent and model with its N, from the signed shipped log on your machine ([metrics](docs/metrics.md)).
 - **Settings in three panes.** Account, Agents and Notifications. Seven keys, and Help on **?** ([controls](docs/controls.md)).
-- **Push to your phone.** Kipdeck installs as an app, and an agent that needs an answer, wants an approval, has work to review or is stuck reaches your devices with a push titled by its task. The first Deploy asks once; Slack or Discord hears only if the push goes unanswered for a few minutes with nobody at a Kipdeck tab ([push](docs/push.md)).
+- **Push to your phone.** Kipdeck installs as an app, and an agent that needs an answer, wants an approval, has work to review or is stuck reaches your devices with a push titled by its task. A short command or file read with no risk tags can be allowed or denied from the lock screen, once, for 10 minutes. The first Deploy asks once; Slack or Discord hears only if the push goes unanswered for a few minutes with nobody at a Kipdeck tab ([push](docs/push.md)).
 - **Teams.** Accounts with invite links, a shared dev box reached by SSH tunnel or Tailscale, and the team's Slack or Discord channel ([below](#teams-and-servers)).
 - **Agents that manage agents, with you in charge.** Every agent can list the others through the `kipdeck` MCP server or the `office-workers` command ([agents](docs/agents.md)). When one asks to deploy, message or stop another, the request waits in Needs you with its full text until you approve or reject it, unless an admin gave that project a standing permission in Settings > Agents; every such action is on a record there ([agents acting on agents](docs/agent-gate.md)).
 - **Mission control** (with the GitHub boards and queue lab on): the same ranking with reminders, the review inbox and the digest of what happened while you were away ([mission control](docs/mission-control.md)).
@@ -191,10 +191,13 @@ Seven keys on the home page: **Ctrl+K** (find an agent or a command), **N** (dep
 npm install
 npm run dev          # Vite with hot reload on :5173, the server on :4600 (password: dev)
 npm run typecheck
+(cd onchain/attest && npm ci --ignore-scripts)   # once: a few tests import its sources, which need viem
 npm test
 ```
 
 The browser tests (`tests/*-e2e.test.ts`) load the built bundle, so run `npm run build` before `npm test` to include them. They skip, saying why, when there is no bundle or it is older than the sources it was built from (after an edit, a merge or a checkout).
+
+`npm test` is two runs. `npm run test:main` runs every file in parallel except the timing-sensitive ones: the landing page's CPU-throttled scroll budgets and the browser tests that drive the 3D office. `npm run test:perf` then runs those one at a time, so nothing else competes for the CPU while they measure. The list is `SERIAL` in `tests/support/run.mjs`; a new test that times the page goes there. CI runs the same two scripts as separate steps. To pass the test runner a flag, give it to one group: `npm run test:main -- --test-name-pattern=digest` (after `npm test --` it would reach only `test:perf`).
 
 Server edits restart the server, not the workers. After changing `ptyhost.ts`, bump `PTY_PROTOCOL` in `ptys.ts` so the next server replaces the PTY host.
 
@@ -219,7 +222,7 @@ Then, in the same release: set `NPM_PACKAGE` to that name and `ON_NPM` to `true`
 
 - [The inbox](docs/inbox.md): the home page, its loop, the setup card, Numbers, Settings, its keys and the shipped log
 - [Spend and control](docs/spend.md): each agent's permission mode badge, spend on rows and in the pulse, budget caps that pause an agent into Needs you, and Pause all, Resume all and Stop all
-- [Push to your devices](docs/push.md): installing Kipdeck as an app, Web Push to your phone and laptop, who gets a push and when, and when Slack or Discord hears after it
+- [Push to your devices](docs/push.md): installing Kipdeck as an app, Web Push to your phone and laptop, who gets a push and when, Allow once and Deny from the lock screen, and when Slack or Discord hears after it
 - [Signal](docs/signal.md): the project's status at one look over the inbox list (On track, At risk, Off track or No goal), the rules behind it, and Copy as text for Slack
 - [The demo](docs/demo.md): `npx github:zbagdzevicius/kipdeck --demo` with five scripted agents, the hosted read-only demo, the replay demo at https://kipdeck-demo.vercel.app and its Deck at /deck, and the scripts that make the video, the GIF and the deck's screenshots
 - [Metrics for the deck](docs/metrics.md): what each number means, where it comes from, and what not to show

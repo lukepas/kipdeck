@@ -5,8 +5,9 @@
 // What it holds the scenes to: a scroll through the whole page, on a laptop and on a phone, throws
 // nothing, never scrolls sideways and shifts nothing; the loop's answer clears the visitor's own
 // wait and its merge is a real button that stamps the change merged; the footer tells the truth
-// about the wait; and
-// with less motion no scene stages anything, so every section is its final HTML.
+// about the wait; every section that skips rendering is rendered once while idle after the opening;
+// a scene that plays in time holds while it is out of view; and with less motion no scene stages
+// anything, so every section is its final HTML.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync } from 'node:fs';
@@ -168,6 +169,23 @@ test('on a phone the problem plays as the reader arrives, with its headline numb
   assert.deepEqual(errors, []);
 });
 
+test('on a phone a scene that plays in time holds while it is scrolled out of view, and finishes when it is back', { skip: why || false, timeout: 60_000 }, async (t) => {
+  const { page, errors } = await open(t, { width: 390, height: 844 });
+  const clip = () => page.locator('#problem .lane-draw').evaluate((el) => (el as SVGGElement).style.clipPath);
+  const drawn = /inset\(0(px)? (-?[0-2](\.\d+)?%|0%?)/;
+  await page.evaluate(() => document.querySelector('#problem .lanes')!.scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(600);
+  // Away before its 3.2 s are up, for longer than that.
+  await page.evaluate(() => document.getElementById('end')!.scrollIntoView());
+  await page.waitForTimeout(4000);
+  const held = await clip();
+  assert.doesNotMatch(held, drawn, `it held while away: ${held}`);
+  await page.evaluate(() => document.querySelector('#problem .lanes')!.scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(3600);
+  assert.match(await clip(), drawn);
+  assert.deepEqual(errors, []);
+});
+
 test('the footer tells the truth about the wait, and answering there clears it', { skip: why || false }, async (t) => {
   const { page, errors } = await open(t);
   await page.evaluate(() => document.getElementById('end')!.scrollIntoView());
@@ -179,6 +197,58 @@ test('the footer tells the truth about the wait, and answering there clears it',
   assert.equal(await page.locator('[data-pulse-count]').textContent(), '0');
   assert.deepEqual(errors, []);
 });
+
+for (const [name, size] of [['a laptop', { width: 1440, height: 900 }], ['a phone', { width: 390, height: 844 }]] as const) {
+  test(`on ${name}, every section that skips rendering is rendered once while idle after the opening, and the loop and the merge's ring are made ready, so none of it lands mid-scroll`, { skip: why || false, timeout: 60_000 }, async (t) => {
+    const { page, errors } = await open(t, size);
+    // What each deferred section measures without being rendered: its remembered size, which is the
+    // estimate in styles/perf.css until it has been rendered once.
+    const remembered = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll<HTMLElement>('main > *')]
+          .filter((el) => getComputedStyle(el).contentVisibility === 'auto')
+          .map((el) => [el.id, el.offsetHeight] as const),
+      );
+    const before = await remembered();
+    assert.ok(before.length >= 6, `the deferred sections: ${before.map(([id]) => id).join(', ')}`);
+    // Each one the warm-up hands back (engine/warm.ts). The page is never scrolled, so nothing else
+    // renders them.
+    await page.evaluate(() => {
+      const w = window as unknown as { warmed: string[] };
+      w.warmed = [];
+      new MutationObserver((records) => {
+        for (const r of records) if (/\bwarming\b/.test(r.oldValue ?? '')) w.warmed.push((r.target as HTMLElement).id);
+      }).observe(document.querySelector('main')!, { subtree: true, attributeFilter: ['class'], attributeOldValue: true });
+    });
+    await page.waitForFunction((n) => (window as unknown as { warmed: string[] }).warmed.length >= n, before.length, { timeout: 30_000 });
+    assert.deepEqual(await page.evaluate(() => (window as unknown as { warmed: string[] }).warmed), before.map(([id]) => id), 'one at a time, top to bottom');
+    assert.equal(await page.evaluate(() => scrollY), 0);
+    const after = await remembered();
+    const real = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>('main > *')]
+        .filter((el) => getComputedStyle(el).contentVisibility === 'auto')
+        .map((el) => {
+          el.style.contentVisibility = 'visible';
+          const h = el.offsetHeight;
+          el.style.contentVisibility = '';
+          return [el.id, h] as const;
+        }),
+    );
+    assert.deepEqual(after, real, 'each remembers its real size, so it has been rendered');
+    assert.notDeepEqual(before, real, 'at load they held the estimates');
+    // And they still skip rendering off screen.
+    assert.deepEqual(after.map(([id]) => id), before.map(([id]) => id));
+    // In the same idle time: the loop, the costliest scene to mount, is mounted (scenes/index.ts,
+    // EARLY), and the merge's ring has shown its one empty frame and is hidden again (fx/shockwave.ts).
+    await page.waitForFunction(() => !!document.querySelector('#loop .staged'), null, { timeout: 30_000 });
+    await page.waitForFunction(() => {
+      const c = document.querySelector<HTMLCanvasElement>('canvas.shockwave');
+      return !!c && getComputedStyle(c).visibility === 'hidden';
+    }, null, { timeout: 30_000 });
+    assert.equal(await page.evaluate(() => scrollY), 0, 'mounted ahead of the reader, not by a visit');
+    assert.deepEqual(errors, []);
+  });
+}
 
 test('with less motion no scene stages anything: every section is its final HTML', { skip: why || false, timeout: 60_000 }, async (t) => {
   const { page, errors } = await open(t, { reduced: true });
