@@ -7,7 +7,7 @@ import { attention } from '../src/shared/attention.js';
 import { ciOf, rowVerdict, verdictWords, workKey } from '../src/shared/brief/row-verdict.js';
 import { verdict } from '../src/shared/brief/verdict.js';
 import { buildInbox, rowAction } from '../src/shared/inbox.js';
-import { RowVerdicts, wantsVerdict } from '../src/server/brief/verdicts.js';
+import { RETRY_MS, RowVerdicts, wantsVerdict } from '../src/server/brief/verdicts.js';
 import type { BriefChanges } from '../src/server/brief/build.js';
 import type { Journal } from '../src/server/brief/log.js';
 import type { BriefRun, ChangedFile, RiskFlag, RosterEntry, RowVerdict } from '../src/shared/protocol.js';
@@ -120,4 +120,39 @@ test('a checkout that cannot be read gets no verdict rather than "nothing flagge
   assert.equal(none.verdict(entry()), undefined);
   await new Promise((r) => setTimeout(r, 0));
   assert.equal(none.verdict(entry()), undefined);
+});
+
+test('a checkout that could not be read is tried again a while later, not only when the work moves on', async () => {
+  let clock = 0;
+  let fail = true;
+  let looks = 0;
+  const changes: BriefChanges = { summary: async () => (looks++, fail ? Promise.reject(new Error('floor away')) : { files: [file('src/a.ts')] }), diff: async () => 'none' };
+  let changed = 0;
+  const v = new RowVerdicts(() => changes, () => ({ prompts: [], qa: [], runs: [passed], updatedAt: 0 }), () => changed++, () => clock);
+  const flush = () => new Promise((r) => setTimeout(r, 0));
+  assert.equal(v.verdict(entry()), undefined);
+  await flush();
+  assert.equal(looks, 1);
+  // Not straight away: the roster goes out often, and git shouldn't be asked each time.
+  clock = RETRY_MS - 1;
+  assert.equal(v.verdict(entry()), undefined);
+  await flush();
+  assert.equal(looks, 1);
+  fail = false;
+  clock = RETRY_MS;
+  assert.equal(v.verdict(entry()), undefined);
+  await flush();
+  assert.equal(looks, 2);
+  assert.equal(changed, 1);
+  assert.deepEqual(v.verdict(entry()), { ready: true, tests: 'pass', gaps: 0, flags: [] });
+  // A floor that isn't there is tried again too.
+  let floor: BriefChanges | undefined;
+  const away = new RowVerdicts(() => floor, () => undefined, () => {}, () => clock);
+  away.verdict(entry());
+  await flush();
+  floor = changes;
+  clock += RETRY_MS;
+  away.verdict(entry());
+  await flush();
+  assert.equal(away.verdict(entry())?.tests, 'none');
 });
