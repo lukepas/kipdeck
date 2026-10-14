@@ -12,7 +12,8 @@ import { parseDecisions, writeDecisions } from '../src/shared/rundown/markdown.j
 import { decisionSince, decisionStatus, decisionTitle, deployOnLabel, nextOf, nextStepCall, nextStepPrompt, openFor, stamp } from '../src/shared/yourcall.js';
 import { answerDecision, raiseInFile, readDecisionsFile } from '../src/server/rundown/answer.js';
 import { beamDeploy, beamHint } from '../src/client/features/rundown/beam.js';
-import type { Rundown } from '../src/shared/rundown/schema.js';
+import { LIMITS, type Rundown } from '../src/shared/rundown/schema.js';
+import { renderQuick } from '../src/server/rundown/cli.js';
 import type { YourCallFloor } from '../src/shared/protocol.js';
 
 const tmp = mkdtempSync(path.join(tmpdir(), 'office-yourcall-'));
@@ -143,6 +144,39 @@ test('raising into a checkout with no .rundown/ yet makes it', () => {
   const md = readFileSync(path.join(dir, '.rundown', 'decisions.md'), 'utf8');
   assert.equal(parseDecisions(md)[0].raised, '2026-10-14');
   assert.match(md, /^Raised by: Bo \(w1\)$/m);
+});
+
+test("a decisions.md that is too big or not a plain file is never written over as if it were missing", () => {
+  const dir = path.join(tmp, 'big');
+  mkdirSync(path.join(dir, '.rundown'), { recursive: true });
+  const file = path.join(dir, '.rundown', 'decisions.md');
+  const big = `${MD}\n${'x'.repeat(LIMITS.skillFileBytes)}\n`;
+  writeFileSync(file, big);
+  const raised = raiseInFile(dir, { question: 'Q?', options: ['a', 'b'], default: 'a' });
+  assert.ok('error' in raised);
+  assert.match(raised.error, /over 512 KB/);
+  const answered = answerDecision(dir, 'D1', 'Fly', statSync(file).mtimeMs);
+  assert.equal(answered.ok, false);
+  assert.equal(readFileSync(file, 'utf8'), big);
+  const odd = path.join(tmp, 'odd');
+  mkdirSync(path.join(odd, '.rundown', 'decisions.md'), { recursive: true });
+  const r = raiseInFile(odd, { question: 'Q?', options: ['a', 'b'], default: 'a' });
+  assert.ok('error' in r);
+  assert.match(r.error, /not a plain file/);
+});
+
+test('the page drawn again after an answer refuses a .rundown/ with a symlink in it', async () => {
+  const dir = path.join(tmp, 'linked');
+  const elsewhere = path.join(tmp, 'elsewhere');
+  mkdirSync(path.join(dir, '.rundown'), { recursive: true });
+  mkdirSync(elsewhere);
+  writeFileSync(path.join(elsewhere, 'keep.json'), '{}');
+  writeFileSync(path.join(dir, '.rundown', 'facts.json'), '{}');
+  writeFileSync(path.join(dir, '.rundown', 'state.json'), '{}');
+  symlinkSync(elsewhere, path.join(dir, '.rundown', 'history'));
+  await assert.rejects(renderQuick(dir), /symlink/);
+  assert.equal(readFileSync(path.join(elsewhere, 'keep.json'), 'utf8'), '{}');
+  assert.equal(readFileSync(path.join(dir, '.rundown', 'state.json'), 'utf8'), '{}');
 });
 
 const next = { text: 'Ask for the API key', why: 'The deploy waits on it', milestone: { id: 'M5', name: 'Server' }, part: { id: 'server', name: 'Server' } };

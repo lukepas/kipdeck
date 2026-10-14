@@ -26,14 +26,25 @@ export function decisionsPath(dir: string): { file: string } | { error: string }
   return { file };
 }
 
-/** decisions.md's text and mtime (ms), or nulls when there's none (or it's too big to be a person's file). */
-export function readDecisionsFile(file: string): { md: string | null; mtime: number | null } {
+/**
+ * decisions.md's text and mtime (ms), or nulls when there's none. `unusable` says why a file that is
+ * there can't be read (not a plain file, too big to be a person's file, unreadable): it is never
+ * written over then, as if it were missing.
+ */
+export function readDecisionsFile(file: string): { md: string | null; mtime: number | null; unusable?: string } {
+  let st;
   try {
-    const st = lstatSync(file);
-    if (!st.isFile() || st.size > LIMITS.skillFileBytes) return { md: null, mtime: null };
+    st = lstatSync(file);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return { md: null, mtime: null };
+    return { md: null, mtime: null, unusable: `.rundown/decisions.md can't be read: ${err instanceof Error ? err.message : String(err)}` };
+  }
+  if (!st.isFile()) return { md: null, mtime: null, unusable: '.rundown/decisions.md is not a plain file: Kipdeck leaves it alone' };
+  if (st.size > LIMITS.skillFileBytes) return { md: null, mtime: null, unusable: `.rundown/decisions.md is over ${LIMITS.skillFileBytes / 1024} KB: Kipdeck leaves it alone` };
+  try {
     return { md: readFileSync(file, 'utf8'), mtime: Math.trunc(st.mtimeMs) };
-  } catch {
-    return { md: null, mtime: null };
+  } catch (err) {
+    return { md: null, mtime: null, unusable: `.rundown/decisions.md can't be read: ${err instanceof Error ? err.message : String(err)}` };
   }
 }
 
@@ -56,7 +67,8 @@ export function answerDecision(dir: string, id: string, answer: string, mtime: n
   if (!/^D\d{1,5}$/.test(id)) return { ok: false, error: 'No such decision' };
   const where = decisionsPath(dir);
   if ('error' in where) return { ok: false, error: where.error };
-  const { md, mtime: now } = readDecisionsFile(where.file);
+  const { md, mtime: now, unusable } = readDecisionsFile(where.file);
+  if (unusable) return { ok: false, error: unusable };
   if (md === null) return { ok: false, error: 'There is no .rundown/decisions.md in this project any more', stale: true };
   if (mtime === null || now !== Math.trunc(mtime)) return { ok: false, error: 'decisions.md changed since you looked: here it is again', stale: true };
   const next = setAnswer(md, id, answer);
@@ -78,8 +90,13 @@ export function raiseInFile(dir: string, ask: DecisionAsk, by?: RaisedBy, now = 
   } catch (err) {
     return { error: `Couldn't make .rundown/: ${err instanceof Error ? err.message : String(err)}` };
   }
-  const { md } = readDecisionsFile(where.file);
+  const { md, unusable } = readDecisionsFile(where.file);
+  if (unusable) return { error: unusable };
   const raised = raiseDecision(md, ask, isoLocal(now).slice(0, 10), by);
-  writeState(where.file, raised.md, modeOf(where.file));
+  try {
+    writeState(where.file, raised.md, modeOf(where.file));
+  } catch (err) {
+    return { error: `Couldn't write .rundown/decisions.md: ${err instanceof Error ? err.message : String(err)}` };
+  }
   return { id: raised.id, file: where.file };
 }
