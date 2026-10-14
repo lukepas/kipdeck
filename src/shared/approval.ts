@@ -166,6 +166,7 @@ export function approvalView(payload: unknown, o: { id: string; workerId: string
     ...(cwd ? { cwd: clip(cwd, 300) } : {}),
     risks: riskTags(tool, input, cwd),
     ...(always ? { always: clip(always.label, 200) } : {}),
+    call: callKey(p),
     at: o.at,
   };
   view.title = approvalTitle(view);
@@ -175,6 +176,24 @@ export function approvalView(payload: unknown, o: { id: string; workerId: string
 /** The same tool call: the tool's name and what it was given, for telling a request's call ran anyway. */
 export function sameCall(a: { tool_name?: unknown; tool_input?: unknown }, b: { tool_name?: unknown; tool_input?: unknown }): boolean {
   return a.tool_name === b.tool_name && JSON.stringify(a.tool_input ?? null) === JSON.stringify(b.tool_input ?? null);
+}
+
+/**
+ * A short key for a call: its tool and input hashed (FNV-1a, two rounds), so the inbox can tell which
+ * open requests ask for the same call without being sent their whole input. Two calls that sameCall
+ * says are the same always get the same key; the desk itself still checks with sameCall before it
+ * answers more than one (ApprovalDesk.sameAs).
+ */
+export function callKey(p: { tool_name?: unknown; tool_input?: unknown }): string {
+  const text = `${String(p.tool_name)}\u0000${JSON.stringify(p.tool_input ?? null)}`;
+  let a = 0x811c9dc5;
+  let b = 0x01000193;
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    a = Math.imul(a ^ c, 0x01000193);
+    b = Math.imul(b ^ c, 0x811c9dc5) ^ (b >>> 13);
+  }
+  return `${(a >>> 0).toString(16).padStart(8, '0')}${(b >>> 0).toString(16).padStart(8, '0')}`;
 }
 
 /** The words a deny without a reason carries back. */

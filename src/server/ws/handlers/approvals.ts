@@ -19,12 +19,17 @@ export const approvalsHandlers = {
     const id = str(msg.id, 64);
     const decision = DECISIONS.has(msg.decision) ? msg.decision : undefined;
     if (!id || !decision) return;
-    const view = ctx.approvals.get(id);
+    // Shift+Y in triage: allow once for every agent waiting on the byte-identical call.
+    const views = msg.same === true && decision === 'once' ? ctx.approvals.sameAs(id) : [ctx.approvals.get(id)];
     const err = ctx.approvals.answer(id, decision, decision === 'deny' ? str(msg.reason, DENY_REASON_MAX) : undefined);
     if (err) return ctx.warn(c, err);
-    const floor = view && ctx.floors.get(view.floor);
-    const name = view && floor?.workers.get(view.workerId)?.name;
-    if (view && floor) ctx.toastFloor(floor, `${c.peer.name} ${SAID[decision]}: ${name ? `${name}, ` : ''}${view.title}`, 'info', c.id);
+    for (const view of views) {
+      if (!view) continue;
+      if (view.id !== id && ctx.approvals.answer(view.id, 'once')) continue;
+      const floor = ctx.floors.get(view.floor);
+      const name = floor?.workers.get(view.workerId)?.name;
+      if (floor) ctx.toastFloor(floor, `${c.peer.name} ${SAID[decision]}: ${name ? `${name}, ` : ''}${view.title}`, 'info', c.id);
+    }
   },
 } satisfies HandlerMap<ApprovalsClientMsg>;
 

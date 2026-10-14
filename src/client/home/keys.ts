@@ -1,17 +1,20 @@
-// The inbox's keys, six of them and D: Ctrl+K the command palette, N to deploy an agent, Enter for the
+// The inbox's keys, seven of them and D: Ctrl+K the command palette, N to deploy an agent, Enter for the
 // selected row's primary action (which is never Merge: that's the pane's, behind a hold), Esc to step
-// back (or, while a merge is held, to undo it; u does too), / to search and ? for Help (the loop and
-// these keys), and D to enter the Deck while it's on (home/deck-link.ts). The arrow keys (and j and k) move the selection. None of them fire while you type in a box or the terminal, or
+// back (or, while a merge is held, to undo it; u does too), / to search, T for triage (one card at a
+// time, its own keys in shared/triage.ts, the window in triage.ts) and ? for Help (the loop and these
+// keys), and D to enter the Deck while it's on (home/deck-link.ts). The arrow keys (and j and k) move the selection. None of them fire while you type in a box or the terminal, or
 // while a window is open; Esc in the pane's terminal steps back to the list instead of reaching the
 // agent (Ctrl+[ or the keypad's Esc sends one).
 
 import { DOCS_URL, PRODUCT, UPSTREAM_CREDIT } from '../../shared/copy';
 import { rowAction } from '../../shared/inbox';
+import { TRIAGE_KEYS } from '../../shared/triage';
 import { h, modalOpen, openModal } from '../ui/dom';
 import type { Actions } from './actions';
 import { deckOn, goToDeck } from './deck-link';
 import { listedOrder, rankOf } from './list';
 import { menuOpen } from './menu';
+import * as lazy from './lazy';
 import { latestHeld } from './merge-hold';
 import { home } from './state';
 
@@ -21,6 +24,7 @@ export const SHORTCUTS: readonly [string, string][] = [
   ['Enter', 'Answer or review the selected agent'],
   ['Esc', 'Back to the list, or undo a merge while it waits'],
   ['/', 'Search agents'],
+  ['T', 'Triage: one card at a time'],
   ['?', 'This help'],
 ];
 
@@ -35,7 +39,10 @@ export const LOOP: readonly [string, string][] = [
   ['Ship', 'Merge waits a few seconds for Undo, then lands in Shipped today with a signed record, and the next one opens.'],
 ];
 
-/** Help (? or the avatar menu): the loop, the six keys and where the docs are. */
+/** Opens triage (T, or Triage in Ctrl+K), loaded the first time. */
+export const openTriage = (actions: Actions) => void lazy.triage().then((m) => m.openTriage(actions));
+
+/** Help (? or the avatar menu): the loop, the seven keys, triage's and where the docs are. */
 export function openHelp() {
   const el = h(
     'div.modal.keys-help',
@@ -49,6 +56,9 @@ export function openHelp() {
       h('h3.help-h', {}, 'Keys'),
       h('dl', {}, ...[...SHORTCUTS, ...(deckOn() ? [DECK_SHORTCUT] : [])].flatMap(([k, what]) => [h('dt', {}, ...k.split(' ').map((x) => h('kbd', {}, x))), h('dd', {}, what)])),
       h('p.keys-note', {}, 'Up and Down (or j and k) move through the list.'),
+      h('h3.help-h', {}, 'In triage (T)'),
+      h('ul.help-triage', {}, ...TRIAGE_KEYS.map(([k, what]) => h('li', {}, h('span.keys-k', {}, ...k.split(' ').map((x) => h('kbd', {}, x))), h('span', {}, what)))),
+      h('p.keys-note', {}, 'Keys wait a moment after each card appears, and allowing a call tagged destructive takes a held key.'),
       h('p.keys-note', {}, h('a', { href: DOCS_URL, target: '_blank', rel: 'noopener' }, 'Read the docs'), ' for teams, servers, Labs and every option.'),
       h('h3.help-h', {}, 'About'),
       h('p.keys-note', {}, `${PRODUCT}: the inbox for your AI coding agents. Every agent in one place, who waits on you and for how long, and one button to act.`),
@@ -125,6 +135,9 @@ export function installKeys(actions: Actions, palette: () => void, search: HTMLI
       } else if (e.key === 'n' || e.key === 'N') {
         e.preventDefault();
         actions.deploy();
+      } else if (e.key === 't' || e.key === 'T') {
+        e.preventDefault();
+        openTriage(actions);
       } else if ((e.key === 'd' || e.key === 'D') && deckOn()) {
         e.preventDefault();
         goToDeck();
