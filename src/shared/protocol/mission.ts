@@ -2,6 +2,7 @@
 // roster of workers that the attention ranking (shared/attention.ts) runs on.
 
 import type { AgentProvider } from './agents.js';
+import type { RowVerdict } from './brief.js';
 import type { GhPull } from './github.js';
 import type { WorkerAction, WorkerKind, WorkerStatus, WorkerTask } from './workers.js';
 import type { Hold } from './spend.js';
@@ -97,6 +98,8 @@ export interface RosterEntry {
   pr?: { number: number; state: 'open' | 'merged'; checks?: GhPull['checks']; review?: PullReview; conflicting?: boolean };
   /** What it changed, once it's at rest (from the Changes service): files, lines, and commits on its branch. */
   work?: WorkSummary;
+  /** Whether that work looks ready to merge, for its To review row (worked out at rest, see RowVerdict). */
+  verdict?: RowVerdict;
   /** Its queue task failed to start. */
   taskFailed?: boolean;
   issue?: number;
