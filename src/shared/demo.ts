@@ -87,7 +87,7 @@ export const READ_ONLY_ALLOWS: ReadonlySet<string> = new Set([
  * project's rundown and Signal's gist of it (its contributors, uncommitted paths, branches and decisions
  * are not for anonymous visitors, as its download isn't): dropped without a word.
  */
-export const READ_ONLY_QUIET: ReadonlySet<string> = new Set(['term.resize', 'term.typing', 'profile', 'rtc', 'voice', 'setup.check', 'move', 'sit', 'act', 'limits.refresh', 'rundown.watch', 'rundown.unwatch', 'signal.peek', 'here']);
+export const READ_ONLY_QUIET: ReadonlySet<string> = new Set(['term.resize', 'term.typing', 'profile', 'rtc', 'voice', 'setup.check', 'move', 'sit', 'act', 'limits.refresh', 'rundown.watch', 'rundown.unwatch', 'signal.peek', 'yourcall.watch', 'here']);
 
 /** What a visitor to the read-only demo is told when they try to act. */
 export const READ_ONLY_REFUSAL = `This demo is read only: the agents and the reviewer are scripted. Run ${DEMO_COMMAND} to try it on your computer.`;
