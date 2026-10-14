@@ -271,15 +271,25 @@ test('back after a while away: the digest is over the list on the home page, and
   await office.page.goto(`${base}/deck`);
   const debriefLog = () => office.page.evaluate(() => `debrief ${(window as unknown as { __debrief: string[] }).__debrief.join(' ')}, now ${Math.round(performance.now())}`);
   // The start of watch takes the window's place at load: the debrief, whose Full log is the window.
-  const debrief = office.page.locator('.debrief.on');
-  await debrief.waitFor({ timeout: 60_000 });
-  assert.match(await debrief.locator('.debrief-title').innerText(), /SINCE YOU LEFT/);
-  assert.equal(await debrief.locator('.close').count(), 1, await debriefLog());
-  // A dispatched click, as Locate's below: under the full suite's load the software renderer starves
-  // Playwright's wait for the button to hold still.
-  await debrief.locator('button', { hasText: 'Full log' }).dispatchEvent('click', undefined, { timeout: 30_000 }).catch(async (err: Error) => {
-    throw new Error(`${err.message.split('\n')[0]} (${await debriefLog()})`);
-  });
+  // It is up for 15 s, and at load the software-rendered office can starve the page for longer than
+  // that between two of Playwright's round trips. So the page itself, on a timer, reads it and
+  // presses Full log the moment it is up: one round trip, as a person would see it and press it.
+  const seen = await office.page
+    .waitForFunction(() => {
+      const d = document.querySelector('.debrief.on');
+      if (!d) return null;
+      const full = [...d.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Full log');
+      const read = { title: d.querySelector('.debrief-title')?.textContent ?? '', closes: d.querySelectorAll('.close').length, full: !!full };
+      full?.click();
+      return read;
+    }, null, { timeout: 60_000, polling: 100 })
+    .then((h) => h.jsonValue())
+    .catch(async (err: Error) => {
+      throw new Error(`${err.message.split('\n')[0]} (${await debriefLog()})`);
+    });
+  assert.match(seen.title, /SINCE YOU LEFT/);
+  assert.equal(seen.closes, 1, 'a close button top right');
+  assert.equal(seen.full, true, 'a Full log button');
   const digest = office.page.locator('.modal.digest');
   await digest.waitFor({ timeout: 30_000 });
   assert.match(await digest.locator('.dg-summary').innerText(), /./);
