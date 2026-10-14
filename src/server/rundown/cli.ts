@@ -111,7 +111,7 @@ async function topOf(dir: string): Promise<{ root: string; repo: boolean }> {
 }
 
 /** .rundown/ out of git for every worktree: one line in the common info/exclude, never .gitignore. */
-async function excludeOutput(root: string) {
+export async function excludeOutput(root: string) {
   const git = gitRunner(root, () => {});
   const common = (await git(['rev-parse', '--git-common-dir']))?.trim();
   if (!common) return;
@@ -258,6 +258,18 @@ async function render(a: Args, root: string, out: string, repo: boolean, collect
   }
   writeAtomic(statePath, `${JSON.stringify(toState(r), null, 1)}\n`);
   return r;
+}
+
+/**
+ * Draws the page again from what an earlier run left in .rundown/ (facts.json and judgement.json, so
+ * no git or gh runs), in quick mode and without a word on stdout: what the office does after an answer
+ * lands in decisions.md (rundown/answer.ts). Null when no run has left facts there yet.
+ */
+export async function renderQuick(root: string): Promise<Rundown | null> {
+  const out = path.join(root, '.rundown');
+  if (!existsSync(path.join(out, 'facts.json'))) return null;
+  const a = parseArgs(['render', '--mode', 'quick', '--root', root, '--no-gh']);
+  return render(a, root, out, (await topOf(root)).repo);
 }
 
 /** The reply's shape: where the map is, the next milestone, the next step, what changed, what's open. */

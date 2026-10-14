@@ -135,7 +135,7 @@ export function decisions(r: Rundown): HTMLElement {
           ),
         )
       : h('p.rd-note', {}, 'Nothing waiting on you.'),
-    h('p.rd-note', {}, 'Write it under Answer: in .rundown/decisions.md and run /rundown quick.'),
+    h('p.rd-note', {}, 'Answer each one from Needs you in the inbox (Keep default or Choose...), or write it under Answer: in .rundown/decisions.md and run /rundown quick.'),
     done.length ? h('details', {}, h('summary', {}, plural(done.length, 'resolved decision')), h('ul', {}, ...done.map((d) => h('li', {}, `${d.id}. ${d.question}: ${d.answer}`)))) : null,
   );
 }

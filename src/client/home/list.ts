@@ -23,6 +23,7 @@ import { countdownWords, heldUntil, inFlight } from './merge-hold';
 import { approvalRow } from './approval';
 import { home } from './state';
 import { proposalRows, proposalWaits } from './proposals';
+import { decisionRows, decisionWaits, openDecisions } from './yourcall';
 import { spendUi } from './spend-slot';
 
 export interface ListDeps {
@@ -96,7 +97,7 @@ export function needsYouNow(except?: string): number {
   // Its own count, not waitingNow's: that one follows the picker and Mine for the pulse. Here every
   // loose reminder and every agent's request count, whoever's agent asked and on whichever project.
   const listed = new Set(store.roster.map((e) => e.id));
-  const n = all.sections['needs-you'].length + looseReminders(store.reminders, listed, Date.now()).length + store.gate.proposals.length;
+  const n = all.sections['needs-you'].length + looseReminders(store.reminders, listed, Date.now()).length + store.gate.proposals.length + openDecisions();
   return except && all.sections['needs-you'].some((r) => r.entry.id === except) ? n - 1 : n;
 }
 
@@ -110,7 +111,7 @@ export function waitingNow(view: InboxView = currentView()): Waiting {
   const listed = new Set(store.roster.map((e) => e.id));
   const loose = looseReminders(store.reminders, listed, now, home.project || undefined);
   return {
-    needYou: [...view.sections['needs-you'].map((r) => r.att.since), ...(home.owner === 'mine' ? [] : loose.map((r) => r.since)), ...proposalWaits()],
+    needYou: [...view.sections['needs-you'].map((r) => r.att.since), ...(home.owner === 'mine' ? [] : loose.map((r) => r.since)), ...proposalWaits(), ...decisionWaits(now)],
     toReview: view.sections.review.filter((r) => !inFlight(r.entry.id)).map((r) => r.att.since),
   };
 }
@@ -228,8 +229,8 @@ export function renderList(root: HTMLElement, deps: ListDeps, firstRun: () => HT
   const now = Date.now();
   const view = currentView();
   const listed = new Set(store.roster.map((e) => e.id));
-  // Agents' requests (proposals.ts) wait in Needs you first, then reminders about no agent in the list.
-  const loose = [...proposalRows(now), ...looseReminders(store.reminders, listed, now, home.project || undefined).map((r) => reminderRow(r, deps, now))];
+  // Agents' requests (proposals.ts) wait in Needs you first, then open decisions (yourcall.ts), then reminders about no agent in the list.
+  const loose = [...proposalRows(now), ...decisionRows(now), ...looseReminders(store.reminders, listed, now, home.project || undefined).map((r) => reminderRow(r, deps, now))];
   const anyAgent = store.roster.some((e) => !home.project || e.floor === home.project);
   if (!anyAgent && !loose.length && !home.query) {
     root.replaceChildren(firstRun());

@@ -25,6 +25,7 @@ import { closeMenu, menuOpen, toggleMenu, type MenuEntry } from './menu';
 import { renderOwner } from './owner';
 import { installPane, paneMessage } from './pane';
 import { installProposals } from './proposals';
+import { installYourCall, yourCallCommands } from './yourcall';
 import { openPalette, type Command } from './palette';
 import { renderChecklist, renderShipped } from './shipped';
 import { renderPulse } from './pulse';
@@ -115,6 +116,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     { label: 'Light or dark', icon: 'contrast', run: theme },
     ...phoneCommands(),
     { label: 'Help and keys', hint: '?', icon: 'help', run: openHelp },
+    ...yourCallCommands(),
     ...(store.lab('rundown') ? [{ label: 'Rundown', hint: "Labs: a project's parts, milestones and decisions", icon: 'overview' as const, run: openRundown }] : []),
     ...(store.lab('boards') ? workCommands() : []),
     ...deckCommands(),
@@ -246,6 +248,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
 
   installPane($('pane'), net, actions);
   installProposals(net);
+  installYourCall(net, (prompt, floor) => actions.deploy(prompt, undefined, floor));
   installSpend(net);
   installSignal(net, openSignal);
   installKeys(actions, palette, search);
