@@ -5,7 +5,7 @@
 //   the track has scrolled past the stage, smoothed a little so a mouse wheel's steps glide.
 // - view: progress is how far an element has risen into the viewport (no pin).
 // - play: where the stage is not pinned (phones, short windows) the scene plays once, in time,
-//   when it comes into view.
+//   when it comes into view, and holds while it is scrolled out of view.
 // - With less motion nothing runs: the HTML already holds every scene's final, readable state.
 import { every, clamp, type Task } from './loop';
 import { env } from './env';
@@ -101,15 +101,39 @@ export function drive(track: HTMLElement, update: Update, opts: DriveOptions = {
     if (played) return;
     played = true;
     const ms = opts.playMs ?? 4000;
-    const start = performance.now();
-    const off = every({
-      read: opts.read,
-      write(dt, now) {
-        const p = Math.min(1, (now - start) / ms);
-        update((shown = p), dt);
-        if (p >= 1) off();
-      },
+    // The play's clock runs only while the track is on screen: scrolled past before it ends, it
+    // waits where it is (no frames spent on a scene nobody sees) and goes on when it is back.
+    let ran = 0;
+    let from = performance.now();
+    let off: (() => void) | null = null;
+    let done = false;
+    const run = () => {
+      if (off || done) return;
+      from = performance.now();
+      off = every({
+        read: opts.read,
+        write(dt, now) {
+          const p = Math.min(1, Math.max(0, (ran + now - from) / ms));
+          update((shown = p), dt);
+          if (p >= 1) {
+            done = true;
+            off?.();
+            off = null;
+            seen.disconnect();
+          }
+        },
+      });
+    };
+    const seen = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) run();
+      else if (off) {
+        ran += performance.now() - from;
+        off();
+        off = null;
+      }
     });
+    seen.observe(track);
+    run();
   }
 
   function setMode() {

@@ -63,18 +63,31 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            onchain/attest/package-lock.json
 
       - name: Install and build
         run: npm ci # its prepare script builds the client and the server
 
+      # Some tests import onchain/attest's sources (its schema, with viem), whose packages are its own,
+      # not the app's. Only the packages: its build needs forge, and the tests read src/, not dist/.
+      - name: Install onchain/attest's packages for the tests
+        working-directory: onchain/attest
+        run: npm ci --ignore-scripts
+
       - run: npm run typecheck
 
       # The replay demo (docs/demo.md#the-replay-demo) isn't part of `build`, so installs never build
-      # it; it's built here so tests/replay-e2e.test.ts checks it on every pull request.
+      # it; it's built here so tests/replay-e2e.test.ts and tests/replay-deck-e2e.test.ts check it on every pull request.
       - name: Build the replay demo
         run: npm run build:replay
 
-      - run: npm test
+      # npm test is these two. The timing-sensitive files (tests/support/run.mjs) run on their own,
+      # one at a time, after the rest, so the parallel run can't starve them of CPU.
+      - run: npm run test:main
+
+      - run: npm run test:perf
 
       - name: Pack the release
         id: pack
@@ -86,22 +99,23 @@ jobs:
           # Installs get exactly the dependency versions tested here.
           cp package-lock.json npm-shrinkwrap.json
           npm pkg set 'files[]=npm-shrinkwrap.json'
-          npm pack --ignore-scripts
-          mv "agent-office-$version.tgz" agent-office.tgz
+          # npm names the tarball after the package (kipdeck-<version>.tgz) and prints that name last.
+          tarball="$(npm pack --ignore-scripts | tail -n 1)"
+          mv "$tarball" agent-office.tgz
           tar -tzf agent-office.tgz | grep -qx 'package/npm-shrinkwrap.json'
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Install it with install.sh and start it
         env:
-          AGENT_OFFICE_TARBALL: ${{ github.workspace }}/agent-office.tgz
-          AGENT_OFFICE_INSTALL_DIR: ${{ runner.temp }}/install
-          AGENT_OFFICE_BIN_DIR: ${{ runner.temp }}/bin
+          KIPDECK_TARBALL: ${{ github.workspace }}/agent-office.tgz
+          KIPDECK_PREFIX: ${{ runner.temp }}/install
+          KIPDECK_BIN_DIR: ${{ runner.temp }}/bin
+          KIPDECK_INSTALL_ONLY: '1'
           AGENT_OFFICE_HOME: ${{ runner.temp }}/office
-          AGENT_OFFICE_INSTALL_ONLY: '1'
         run: |
           bash install.sh
           cd "$RUNNER_TEMP"
-          "$RUNNER_TEMP/bin/agent-office" --host 127.0.0.1 --port 4700 --password ci > office.log 2>&1 &
+          "$RUNNER_TEMP/bin/kipdeck" --host 127.0.0.1 --port 4700 --password ci > office.log 2>&1 &
           office=$!
           for _ in $(seq 60); do
             code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:4700/login.html || true)
@@ -110,7 +124,8 @@ jobs:
           done
           cat office.log
           [ "$code" = 200 ] || { echo "the installed office didn't answer (last status: $code)"; exit 1; }
-          grep -qx "v${{ steps.pack.outputs.version }}" install/current
+          # The installed package is the one packed above, not one from the registry.
+          [ "$(node -p 'require(process.argv[1]).version' "$RUNNER_TEMP/install/lib/node_modules/kipdeck/package.json")" = "${{ steps.pack.outputs.version }}" ]
           kill -INT "$office"
 
       - name: Publish
