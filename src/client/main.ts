@@ -103,6 +103,7 @@ import { installSoundscape } from './features/soundscape';
 import { installSelection } from './features/selection';
 import { fetchLabs, installLabs } from './features/labs';
 import { installRundown } from './features/rundown';
+import { installReplayDeck } from './features/replay';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
 const loading = loadingScreen(onModelsProgress);
@@ -260,6 +261,8 @@ parts.lounge = installLounge(ctx, parts);
 parts.monitor = installMonitor(ctx, parts);
 // Labs > Rundown: the project's map as a city over the mission table, and its window (features/rundown).
 parts.rundown = installRundown(ctx, parts);
+// The replay demo's Deck: the city comes up by itself there (features/replay).
+installReplayDeck(ctx, parts);
 // Your gloved hands in first person, drawn over the deck (features/hands).
 installHands(ctx, parts);
 // What you hear besides the cues: your steps, Bolt, the interface and the bridge's ambience (features/soundscape).

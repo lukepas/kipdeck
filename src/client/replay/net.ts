@@ -5,9 +5,12 @@
 // are answered from the tape as it stood at that moment, and anything that would change something gets
 // the read-only demo's toast. Every recorded time is moved to now, so the waits read as they did.
 // The few HTTP calls the page makes are answered here too, and there is no service worker.
+// The Deck (bridge.html, at /deck) is built with this socket as well, so the 3D view plays the same
+// round, with the project's city over the mission table; on a phone it goes to the inbox instead.
 import type { ClientMsg, ServerMsg } from '../../shared/protocol';
 import { READ_ONLY_ALLOWS, READ_ONLY_QUIET, READ_ONLY_REFUSAL } from '../../shared/demo';
-import { Follows, answer, shiftTimes, tapePosition, type Tape } from '../../shared/replay';
+import { isDeckPath } from '../../shared/deck';
+import { Follows, REPLAY_ALSO_ANSWERS, answer, isPhone, shiftTimes, tapePosition, type Tape } from '../../shared/replay';
 import type { Profile, Spot } from '../state';
 
 export { loginUrl } from '../net';
@@ -20,6 +23,9 @@ const TICK_MS = 100;
 const TOLD_GAP_MS = 4000;
 
 type Handler = (msg: ServerMsg) => void;
+
+// The Deck on a phone: the inbox is the demo there, before the 3D starts loading.
+if ((isDeckPath(location.pathname) || location.pathname.endsWith('/bridge.html')) && isPhone({ coarse: matchMedia('(pointer: coarse)').matches, width: innerWidth, height: innerHeight })) location.replace('/');
 
 let tape: Promise<Tape> | undefined;
 const loadTape = () => (tape ??= fetch(TAPE_URL, { cache: 'no-cache' }).then((r) => (r.ok ? (r.json() as Promise<Tape>) : Promise.reject(new Error(`tape: ${r.status}`)))));
@@ -91,7 +97,7 @@ export class Net {
     const t = this.tape;
     if (!t) return;
     if (msg.t === 'ping') return this.emit({ t: 'pong', at: msg.at, now: Date.now() });
-    if (!READ_ONLY_ALLOWS.has(msg.t)) {
+    if (!READ_ONLY_ALLOWS.has(msg.t) && !REPLAY_ALSO_ANSWERS.has(msg.t)) {
       if (READ_ONLY_QUIET.has(msg.t)) return;
       const now = performance.now();
       if (now - this.toldAt < TOLD_GAP_MS) return;

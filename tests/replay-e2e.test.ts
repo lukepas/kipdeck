@@ -5,20 +5,18 @@
 // Skipped (not failed) when there's no build, the build is older than its sources, or there's no browser.
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createReadStream, existsSync, statSync } from 'node:fs';
-import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Browser } from 'playwright-core';
 import { READ_ONLY_REFUSAL } from '../src/shared/demo.js';
 import { bundleWhy } from './support/bundle.js';
+import { serveReplay } from './support/replay-host.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BUNDLE = path.join(ROOT, 'dist', 'replay');
-const TYPES: Record<string, string> = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2' };
 let why = bundleWhy(path.join(BUNDLE, 'index.html'), [path.join(ROOT, 'src', 'client'), path.join(ROOT, 'src', 'shared'), path.join(ROOT, 'deploy', 'replay')], 'replay bundle');
 let browser: Browser | undefined;
-let server: http.Server | undefined;
+let host: Awaited<ReturnType<typeof serveReplay>> | undefined;
 let base = '';
 
 before(async () => {
@@ -34,20 +32,13 @@ before(async () => {
   }
   if (!browser) return void (why = 'no browser for playwright-core (npx playwright-core install chromium, or install Chrome)');
   // A static host and nothing else: no /api, no /ws.
-  server = http.createServer((req, res) => {
-    const p = decodeURIComponent(new URL(req.url ?? '/', 'http://x').pathname);
-    const file = path.join(BUNDLE, p.endsWith('/') ? `${p}index.html` : p);
-    if (!file.startsWith(BUNDLE) || !existsSync(file) || !statSync(file).isFile()) return void res.writeHead(404).end();
-    res.writeHead(200, { 'content-type': TYPES[path.extname(file)] ?? 'application/octet-stream' });
-    createReadStream(file).pipe(res);
-  });
-  await new Promise<void>((r) => server!.listen(0, '127.0.0.1', r));
-  base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
+  host = await serveReplay(BUNDLE);
+  base = host.base;
 });
 
 after(async () => {
   await browser?.close();
-  await new Promise((r) => (server ? server.close(r) : r(undefined)));
+  await host?.close();
 });
 
 test('the replay demo plays the recorded round on a static page, read only', async (t) => {
