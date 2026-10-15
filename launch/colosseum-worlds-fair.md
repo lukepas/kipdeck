@@ -29,7 +29,7 @@ Code status on 2026-10-01: `launch/solana-escrow` has no commits, so nothing on 
 - [ ] 18 or older and of the age of majority, whichever is older, at the start of the contest.
 - [ ] Not located or resident in Afghanistan, Belarus, Cuba, Iran, North Korea, Russia, Somalia, Syria, occupied regions of Ukraine, Venezuela or Yemen, and not sanctioned. Lithuania is fine.
 - [ ] Not an employee, contractor or officer of Colosseum or a sponsor, or their immediate family.
-- [ ] **Employer permission.** The rules make you warrant that entering does not breach an employer's policies or contracts. Get the employer's written OK for outside work, IP ownership and prizes before registering.
+- [x] **Employer policy.** The rules make you warrant that entering does not breach an employer's policies or contracts. Kipdeck is unrelated to any founder's job, so it does not.
 - [ ] Every member registered on colosseum.com with profile information and consent, before 2026-10-12 23:59 PT.
 - [ ] Each person is on one team only; one submission per team.
 - [ ] Prizes need signed prize acceptance documents and passing Colosseum's and the sponsors' due diligence (expect KYC) [unverified: what the due diligence involves]; prizes are stated in Phantom CASH stablecoin and paid to the team leader, who may have to set up a wallet address.
@@ -121,7 +121,6 @@ Runtime target: 2:50 (limit: 3:00)
 
 ## Submission checklist
 
-- [ ] the employer's written permission saved.
 - [ ] Every team member registered on colosseum.com before 2026-10-12 23:59 PT.
 - [ ] Escrow program deployed (devnet at least), program ID in the README; tests pass.
 - [ ] Repo public (preferred) with MIT `LICENSE`, upstream notice kept.

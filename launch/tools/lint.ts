@@ -26,7 +26,7 @@ export const REQUIRED_SECTIONS = [
 ];
 
 /** The files in launch/ that are not per-program kits. */
-export const NOT_KITS = new Set(['README.md', 'disclosure.md']);
+export const NOT_KITS = new Set(['README.md', 'disclosure.md', 'PROPOSALS.md']);
 
 /** Lines inside ``` fences, which the prose rules skip. */
 function fenced(lines: string[]): boolean[] {

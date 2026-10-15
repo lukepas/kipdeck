@@ -40,7 +40,7 @@ What is deployed on testnets (every link below was checked on 2026-10-03, the x4
 ## Eligibility checklist
 
 - [ ] 18 or older and of the age of majority at the start of the contest; not in a sanctioned country or region (rules, section 3). Lithuania is fine.
-- [ ] Employer: written permission for outside work, IP ownership and prizes. The rules make the entrant warrant that entering breaches no employer policy.
+- [x] Employer policy: the rules make the entrant warrant that entering breaches no employer policy. Kipdeck is unrelated to any founder's job, so it does not.
 - [ ] Every member registered on colosseum.com before 2026-10-12 23:59 PT, profile complete, consent given.
 - [ ] Prior work disclosed in the form: the FAQ allows pre-existing code but requires disclosing all relevant past development; misrepresenting it can mean disqualification. The rules (section 9) also ask entrants to tell Colosseum the status and ownership of open-source and third-party code. Both are covered by [disclosure.md](disclosure.md).
 - [x] Repository public (https://github.com/zbagdzevicius/kipdeck), with the MIT `LICENSE` keeping the upstream copyright notice, and `NOTICE` crediting upstream.
@@ -132,7 +132,6 @@ Both videos are made from [launch/video/](../video/README.md): the pitch from [p
 
 ## Submission checklist
 
-- [ ] Employer permission saved.
 - [ ] Every member registered before 2026-10-12 23:59 PT.
 - [ ] Multi-track answer from Discord pasted into [judge-qa.md](judge-qa.md).
 - [ ] Repository public (it is: https://github.com/zbagdzevicius/kipdeck); the commit after `226452e4..` in the disclosure re-stamped with the submitted commit (stamped `f61d0eb8` on 2026-10-13; see [SUBMIT.md](SUBMIT.md)).

@@ -5,7 +5,7 @@ window.DECK_CONFIG = {
   name: 'Kipdeck',
   // Shown in the footer of every slide.
   asOf: '10 Oct 2026',
-  // Flip to true once `npx kipdeck` is live on npm (gated on trademark search and employer clearance).
+  // Flip to true once `npx kipdeck` is live on npm (gated on the trademark search).
   // While false, every install claim says "runs from source today; npm at M1".
   npmPublished: false,
   // Kip, the mascot who runs across the slides. Set to false for a more conservative investor

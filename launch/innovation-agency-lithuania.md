@@ -39,7 +39,6 @@ Foreign events call:
 - [ ] At most 3 events per startup (3 more if you show foreign partnerships from earlier funded trips).
 - [ ] SME status declaration; pitch deck on Hopohopo.io; proof of attendance afterwards (ticket, badge, photos, a short report).
 - [ ] Submitted electronically through the agency's KIP system (https://kip.inovacijuagentura.lt/login). Applying before or after the event is allowed; the documents differ.
-- [ ] Employer: the employer's permission for running a company alongside employment.
 
 ICT prototype call (when it reopens, based on the 2025 round):
 
@@ -105,7 +104,7 @@ Runtime target: 1:00 (limit: under 3:00)
 
 ## Submission checklist
 
-- [ ] Company registered in Lithuania; the employer's permission saved.
+- [ ] Company registered in Lithuania.
 - [ ] Startup status confirmed through Hopohopo.io; last financial year revenue at least EUR 2,000.
 - [ ] Section 21 of the call rules read in the original; the event qualifies.
 - [ ] Vultr on-site approval email and flight booking saved.

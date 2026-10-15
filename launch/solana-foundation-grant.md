@@ -26,7 +26,6 @@ Code status on 2026-10-01: `launch/solana-escrow` has no commits. There is no es
 - [ ] A clear answer to "why Solana and not elsewhere".
 - [ ] A well-structured budget with clear, measurable milestones, and an amount that matches the impact on the community.
 - [ ] Grant type: a milestone-based **grant** for a public good; a **convertible grant** for a public good with a commercial component (the hosted office and payout fee). The Foundation also issues RFPs for its own priorities. Pick convertible and say so plainly if the business plan stays in the pitch.
-- [ ] Employer: the employer's permission for outside work and for receiving grant money, in writing.
 - [ ] KYC and tax forms are expected before payout [unverified].
 - [ ] Something working to show: the Colosseum demo, deployed on devnet (not built on 2026-10-01).
 
@@ -83,6 +82,5 @@ Runtime target: 1:30 (limit: under 3:00)
 - [ ] Colosseum demo working on devnet; program ID and repo link ready.
 - [ ] Grant type chosen (grant or convertible) and explained.
 - [ ] Milestone budgets filled in with real numbers.
-- [ ] the employer's written permission saved.
 - [ ] All `{{...}}` placeholders filled; `npx tsx launch/tools/lint.ts` clean.
 - [ ] Form submitted; confirmation saved; follow up if no reply in two weeks.

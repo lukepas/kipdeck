@@ -31,7 +31,6 @@ Plan: **not ready to apply.** Every Filecoin program below needs a working proto
 - [ ] Grant-funded work open source (the microgrant page asks for MIT for code; check the license terms of the program you apply to).
 - [ ] Monthly progress updates as comments on the GitHub issue, and a final report.
 - [ ] Payment in FIL: a Filecoin wallet; KYC and tax forms [unverified].
-- [ ] Employer: the employer's permission for outside work and for receiving grant money.
 
 ## Pre-existing code disclosure
 
@@ -82,6 +81,5 @@ Runtime target: 1:20 (limit: under 3:00)
 - [ ] Prototype working and public (this is the blocker).
 - [ ] The program to apply to is confirmed open (repo README, issue templates, or an email to grants@fil.org).
 - [ ] Issue filed from the right template, all sections filled.
-- [ ] the employer's written permission saved.
 - [ ] All `{{...}}` placeholders filled; `npx tsx launch/tools/lint.ts` clean.
 - [ ] Calendar reminder for monthly updates once funded.

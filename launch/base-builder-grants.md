@@ -1,5 +1,7 @@
 # Base Builder Grants
 
+**Superseded on 2026-10-14 by [chain/base-builder.md](chain/base-builder.md)**, which has the filled nomination form, the mainnet gates and the calendar entry. This old-name draft stays for reference only.
+
 **Drafted on 2026-10-01 under the old name.** The product is now Kipdeck, the inbox for your AI coding agents, built on agent-office (MIT, by webdevcody / AgentSystemLabs), with Proof of Merge as its payout layer. Refresh the product name, what is built and the disclosure from [chain/disclosure.md](chain/disclosure.md) before you use this kit.
 
 Last checked: 2026-10-01. Sources: the Base grants team's post "Calling Based Builders" (dated 2023-10-30) and the Base "Get funded" docs (links below). The "Get funded" page lists Base Batches and the Base Ecosystem Fund but not Builder Grants, and the post is three years old, so whether Builder Grants still run in this form in 2026 is [unverified]. The nomination form was not opened, so its fields are [unverified].
@@ -26,7 +28,6 @@ Code status on 2026-10-01: `launch/x402-base` works. With `--x402` (off by defau
 - [ ] Posted about on X or Farcaster: the team finds grantees "through Twitter, Farcaster, and nominations submitted from the community", and only reaches out to the ones it selects.
 - [ ] W-8BEN (non-US) or W-9 ready: the team collects W-8/W-9 forms from all recipients for KYC, tax, compliance and legal reasons.
 - [ ] A Base wallet to receive ETH (the 2023 post says grants range from 1 to 5 ETH).
-- [ ] Employer: the employer's permission for outside work and for receiving the grant.
 
 ## Pre-existing code disclosure
 

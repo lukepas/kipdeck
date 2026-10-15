@@ -104,10 +104,10 @@
     },
     {
       "id": "base-nomination",
-      "date": "2026-10-28",
+      "date": "2026-11-02",
       "kind": "task",
-      "title": "Base Builder Grants: nominate the project once x402 payments are live on Base mainnet",
-      "kit": "base-builder-grants.md",
+      "title": "Base Builder Grants: revisit at 10:00 Vilnius; nominate only once every mainnet gate in the kit is green",
+      "kit": "chain/base-builder.md",
       "verified": true
     },
     {
@@ -134,7 +134,7 @@
       "id": "vultr-final",
       "date": "2026-11-08",
       "kind": "deadline",
-      "title": "Vultr Agent Rush: submission and on-site day in Salt Lake City (exact cut-off time not published yet)",
+      "title": "Vultr Agent Rush: submission cut-off (time not published; our target is 18:00 Vilnius) and on-site day in Salt Lake City",
       "kit": "vultr-agent-rush.md",
       "url": "https://lablab.ai/ai-hackathons/vultr-hackathon",
       "verified": false
@@ -223,6 +223,144 @@
       "kind": "result",
       "title": "Nebius x NVIDIA Global AI Hackathon: winners announced",
       "kit": "nebius-nvidia.md",
+      "verified": true
+    },
+    {
+      "id": "gitlab-register",
+      "date": "2026-10-14",
+      "kind": "task",
+      "title": "GitLab Life After Code: register on Devpost and start contributor onboarding (about 24 business hours)",
+      "kit": "gitlab-life-after-code.md",
+      "url": "https://gitlab-transcend.devpost.com/",
+      "verified": true
+    },
+    {
+      "id": "amazon-go-decision",
+      "date": "2026-10-15",
+      "kind": "task",
+      "title": "Amazon Build Ship Shape: go or no-go on the Alexa+ build (needs 6 free days)",
+      "kit": "amazon-build-ship-shape.md",
+      "verified": true
+    },
+    {
+      "id": "superteam-email",
+      "date": "2026-10-15",
+      "kind": "task",
+      "title": "Superteam Agentic Engineering: email support@superteam.fun asking when applications reopen",
+      "kit": "superteam-agentic-engineering.md",
+      "url": "https://superteam.fun/earn/grants/agentic-engineering/",
+      "verified": true
+    },
+    {
+      "id": "stellar-interest",
+      "date": "2026-10-16",
+      "kind": "task",
+      "title": "Stellar SCF #46: file the interest form on the SCF dashboard (invites take about 2 weeks)",
+      "kit": "stellar-scf-46.md",
+      "url": "https://communityfund.stellar.org/dashboard",
+      "verified": true
+    },
+    {
+      "id": "openai-codex-apply",
+      "date": "2026-10-16",
+      "kind": "task",
+      "title": "OpenAI Codex for Open Source: apply (rolling) this week",
+      "kit": "openai-codex-for-oss.md",
+      "url": "https://openai.com/form/codex-for-oss/",
+      "verified": true
+    },
+    {
+      "id": "amazon-submit-target",
+      "date": "2026-10-22",
+      "kind": "task",
+      "title": "Amazon Build Ship Shape: submit a day early",
+      "kit": "amazon-build-ship-shape.md",
+      "verified": true
+    },
+    {
+      "id": "gitlab-submit-target",
+      "date": "2026-10-26",
+      "kind": "task",
+      "title": "GitLab Life After Code: submit by 20:00 Vilnius, then edit only until 12:00 on the 27th",
+      "kit": "gitlab-life-after-code.md",
+      "verified": true
+    },
+    {
+      "id": "gitlab-deadline",
+      "at": "2026-10-27T13:00:00Z",
+      "zone": "UTC",
+      "kind": "deadline",
+      "title": "GitLab Life After Code (GitLab Transcend): submission closes",
+      "kit": "gitlab-life-after-code.md",
+      "url": "https://gitlab-transcend.devpost.com/",
+      "verified": true
+    },
+    {
+      "id": "nebius-submit-target",
+      "date": "2026-10-29",
+      "kind": "task",
+      "title": "Nebius x NVIDIA: submit a day early",
+      "kit": "nebius-nvidia.md",
+      "verified": true
+    },
+    {
+      "id": "vultr-recheck",
+      "date": "2026-11-02",
+      "kind": "task",
+      "title": "Vultr Agent Rush: re-check the event page for the cut-off time and update vultr-final",
+      "kit": "vultr-agent-rush.md",
+      "url": "https://lablab.ai/ai-hackathons/vultr-hackathon",
+      "verified": true
+    },
+    {
+      "id": "stellar-submit-target",
+      "date": "2026-11-07",
+      "kind": "task",
+      "title": "Stellar SCF #46: Build form in by 18:00 Vilnius",
+      "kit": "stellar-scf-46.md",
+      "verified": true
+    },
+    {
+      "id": "stellar-deadline",
+      "date": "2026-11-08",
+      "kind": "deadline",
+      "title": "Stellar SCF #46 Build Award: submissions close (no time or zone published)",
+      "kit": "stellar-scf-46.md",
+      "url": "https://communityfund.stellar.org/awards",
+      "verified": false
+    },
+    {
+      "id": "paypal-submit-target",
+      "date": "2026-11-11",
+      "kind": "task",
+      "title": "PayPal AI Hackathon: submit a day early",
+      "kit": "paypal-ai-hackathon.md",
+      "verified": true
+    },
+    {
+      "id": "paypal-deadline",
+      "at": "2026-11-12T12:00:00-08:00",
+      "zone": "PT (PST, UTC-8)",
+      "kind": "deadline",
+      "title": "PayPal AI Hackathon: submission closes",
+      "kit": "paypal-ai-hackathon.md",
+      "url": "https://paypalaihackathon.devpost.com/",
+      "verified": true
+    },
+    {
+      "id": "gitlab-results",
+      "date": "2026-11-16",
+      "kind": "result",
+      "title": "GitLab Life After Code: winners announced (on or around)",
+      "kit": "gitlab-life-after-code.md",
+      "verified": true
+    },
+    {
+      "id": "paypal-results",
+      "date": "2026-12-21",
+      "kind": "result",
+      "title": "PayPal AI Hackathon: winners announced (on or around)",
+      "kit": "paypal-ai-hackathon.md",
       "verified": true
     }
   ]

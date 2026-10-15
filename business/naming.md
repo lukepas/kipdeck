@@ -41,8 +41,6 @@ Do these for the top three, in this order, and keep screenshots with dates:
 
 If a candidate survives, consider filing an EU trade mark through EUIPO in classes 9, 41 and 42 before launch. Check the current fee on the EUIPO site before filing. An IP lawyer's clearance opinion is worth paying for before spending on branding.
 
-Also check with the employer (see employer-clearance-request.md) whether registering a mark or company is allowed while employed.
-
 ## Mergeline and Agent Inbox (checked 2026-10-07)
 
 The fundable direction renames the product to Mergeline, "the inbox for your AI coding agents", with Agent Inbox as the fallback. This is the Stage 0 check of both. It is a registry and web check, not a legal clearance.

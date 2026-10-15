@@ -10,7 +10,6 @@ Each line is a gate. A post that goes out before its gate is a claim that isn't 
 
 | Gate | Why | Where |
 | --- | --- | --- |
-| Employer clearance in writing | Public launch and fundraising while employed | [business/employer-clearance-request.md](../../business/employer-clearance-request.md) |
 | The name clears the trademark search | npm publish, the domain and every post carry it | [business/naming.md](../../business/naming.md) |
 | `npm publish` done, `npx kipdeck` works from a clean machine | Every post says `npx kipdeck` | `design/time-to-first-agent.mjs` |
 | The repository is public, with LICENSE and NOTICE (done) | The posts say open source and credit agent-office | https://github.com/zbagdzevicius/kipdeck |

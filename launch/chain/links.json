@@ -144,6 +144,30 @@
     {
       "url": "https://github.com/zbagdzevicius/ugc-army-demo/pull/4",
       "checked": "HTTP 200 on 2026-10-09; merged 2026-10-07T12:03:41Z by the operator's own account (self, not paid)"
+    },
+    {
+      "url": "https://www.hackquest.io/hackathons/Arbitrum-Open-House-Dubai-Online-Buildathon",
+      "checked": "HTTP 200 on 2026-10-14; timeline in the page data read: registration 2026-10-31 16:01Z to 2026-12-05 16:01Z, submission 2026-11-16 16:01Z to 2026-12-06 16:01Z, rewards 2026-12-13 17:01Z"
+    },
+    {
+      "url": "https://t.me/+BsYAyQmpC8E4NWE1",
+      "checked": "HTTP 200 on 2026-10-14; the Telegram group the Dubai page links"
+    },
+    {
+      "url": "https://docs.arbitrum.io/",
+      "checked": "HTTP 200 on 2026-10-14; the Dubai page's get-started/overview link returned 404"
+    },
+    {
+      "url": "https://docs.arbitrum.io/stylus/reference/testnet-information",
+      "checked": "HTTP 200 on 2026-10-14"
+    },
+    {
+      "url": "https://www.hackquest.io/hackathons/Arbitrum-Open-House-Singapore-Online-Buildathon",
+      "checked": "HTTP 200 on 2026-10-14; the Singapore edition, rules and judging read by the drafter"
+    },
+    {
+      "url": "https://sepolia-rollup.arbitrum.io/rpc",
+      "checked": "eth_chainId returned 0x66eee (421614) on 2026-10-14"
     }
   ]
 }

@@ -41,7 +41,7 @@ Thanks for building this and for putting it under MIT.
 
 ## Second message: the collaboration proposal
 
-Send only after at least one PR has been merged or clearly welcomed, and after your employer clearance (see employer-clearance-request.md) says you may do this.
+Send only after at least one PR has been merged or clearly welcomed.
 
 Hi Cody,
 
