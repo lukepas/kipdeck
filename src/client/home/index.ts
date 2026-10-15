@@ -11,7 +11,7 @@ import type { Net } from '../net';
 import { store } from '../state';
 import { $, h } from '../ui/dom';
 import { icon } from '../ui/icons';
-import { digestCard, recallDigest, watchAway } from '../ui/mission/digest';
+import { digestCard, recallDigest, watchAway } from '../ui/mission/away';
 import type { DesktopNotifier } from '../notify';
 import type { Settings } from '../state';
 import { applyLight, toggleLight } from '../lite-theme';
@@ -25,6 +25,7 @@ import { closeMenu, menuOpen, toggleMenu, type MenuEntry } from './menu';
 import { renderOwner } from './owner';
 import { installPane, paneMessage } from './pane';
 import { installProposals } from './proposals';
+import { installYourCall, yourCallCommands } from './yourcall';
 import { openPalette, type Command } from './palette';
 import { renderChecklist, renderShipped } from './shipped';
 import { renderPulse } from './pulse';
@@ -116,6 +117,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     { label: 'Light or dark', icon: 'contrast', run: theme },
     ...phoneCommands(),
     { label: 'Help and keys', hint: '?', icon: 'help', run: openHelp },
+    ...yourCallCommands(),
     ...(store.lab('rundown') ? [{ label: 'Rundown', hint: "Labs: a project's parts, milestones and decisions", icon: 'overview' as const, run: openRundown }] : []),
     ...(store.lab('boards') ? workCommands() : []),
     ...deckCommands(),
@@ -184,7 +186,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
       const next = nextUp(currentView());
       home.select(next?.id, next?.status === 'needs_input' ? 'terminal' : 'changes');
     };
-    const card = digestShown ? digestCard(actions.deps, showNext, () => ((digestShown = false), renderAll())) : null;
+    const card = digestShown ? digestCard(showNext, () => ((digestShown = false), renderAll())) : null;
     // Back after a night away, a line over it says so (warm.ts).
     const welcome = card ? welcomeLine(store.away?.since, showNext) : null;
     digest.replaceChildren(...(welcome ? [welcome] : []), ...(card ? [h('ul.digest', {}, card)] : []));
@@ -247,6 +249,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
 
   installPane($('pane'), net, actions);
   installProposals(net);
+  installYourCall(net, (prompt, floor) => actions.deploy(prompt, undefined, floor));
   installSpend(net);
   installSignal(net, openSignal);
   installKeys(actions, palette, search);

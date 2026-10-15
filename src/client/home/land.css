@@ -1,0 +1,5 @@
+/* The land queue's row badges and the brief's Lands line (land.ts). */
+.row-land, .row-overlap { flex: none; padding: 0 5px; border: 1px solid var(--line); border-radius: var(--radius-chip); font: 500 10px/15px var(--font-mono); color: var(--muted); }
+.row-land.clash { border-color: var(--review); color: var(--review); }
+.row-overlap { border-style: dashed; border-color: var(--review); color: var(--review); }
+.rb-land.clash .rb-val { color: var(--review); }

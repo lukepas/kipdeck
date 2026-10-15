@@ -18,9 +18,13 @@ export interface Brand {
   wordmark: { lead: string; muted: string };
   /** The npm package and the command it will be, once it is published. */
   pkg: string;
-  /** The source repository: every Source and Docs link, the start commands (npx github:owner/repo) and the structured data.
-   *  KIPDECK_REPO_URL overrides it at build. */
+  /** The source repository: every Source and Docs link, the start commands (npx on its newest release,
+   *  site/npx.mjs) and the structured data. KIPDECK_REPO_URL overrides it at build. */
   repo: string;
+  /** The landing page's short address for the newest release (vercel.json sends /get there), which the
+   *  start commands use in place of the release's full address. A build that moves the repository
+   *  (KIPDECK_REPO_URL) goes back to the full address of the new one. */
+  get?: string;
   /** Where people reach the team: the design-partner application (a mailto: link) and the footer.
    *  It has to work for someone outside the repository, which may be private. */
   contact: string;
@@ -42,6 +46,7 @@ export const BRANDS = {
     wordmark: { lead: 'KIP', muted: 'DECK' },
     pkg: 'kipdeck',
     repo: 'https://github.com/zbagdzevicius/kipdeck',
+    get: 'https://kipdeck.com/get',
     // Founder TODO: confirm this mailbox receives mail; it is the default until a real address is chosen.
     contact: 'hello@kipdeck.com',
     markVariant: 'kip',

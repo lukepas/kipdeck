@@ -57,10 +57,14 @@ export function commandSteps() {
       ...steps.flatMap((step, i) => {
         const span = document.createElement('span');
         span.className = 'step';
-        // A break opportunity after each slash of an address (a <wbr> adds no text).
+        // A break opportunity after each slash of an address (a <wbr> adds no text) and at each
+        // space; never at a flag's hyphens (--demo), so every word is held whole.
         step.split(/(?<=\/)(?=[^/])/).forEach((part, k) => {
           if (k) span.append(document.createElement('wbr'));
-          span.append(part);
+          for (const word of part.split(/( +)/)) {
+            if (!word || word.startsWith(' ')) span.append(word);
+            else span.append(Object.assign(document.createElement('span'), { className: 'nb', textContent: word }));
+          }
         });
         if (i < steps.length - 1) span.append(' &&');
         return i ? [' ', span] : [span];

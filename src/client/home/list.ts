@@ -8,8 +8,9 @@
 // data-section). Clicking a section header
 // never folds a section that's always open; with nobody waiting the two become one calm line.
 
-import { spokenActivity, attention, LEVEL_LABEL, type Ranked } from '../../shared/attention';
-import { AGE_PREFIX, ageLabel, ALWAYS_OPEN, buildInbox, changeSummary, INBOX_SECTIONS, looseReminders, rowAction, SECTION_LABEL, waitShare, type InboxSection, type InboxView, type RowAction } from '../../shared/inbox';
+import { attention, LEVEL_LABEL, type Ranked } from '../../shared/attention';
+import { workingWords } from '../../shared/doing';
+import { AGE_PREFIX, ageLabel, ALWAYS_OPEN, buildInbox, changeSummary, idleBreakdown, idleStatus, INBOX_SECTIONS, looseReminders, rowAction, SECTION_LABEL, waitShare, type InboxSection, type InboxView, type RowAction } from '../../shared/inbox';
 import type { Waiting } from '../../shared/metrics';
 import { waitTone, waitWords } from '../../shared/wait';
 import type { Reminder, RosterEntry } from '../../shared/protocol';
@@ -23,7 +24,11 @@ import { countdownWords, heldUntil, inFlight } from './merge-hold';
 import { approvalRow } from './approval';
 import { home } from './state';
 import { proposalRows, proposalWaits } from './proposals';
+import { decisionRows, decisionWaits, openDecisions } from './yourcall';
 import { spendUi } from './spend-slot';
+import { sectionHint } from './hints';
+import { landBadges } from './land';
+import { workingAge, workingFacts, workingSpoken } from './doing';
 import { verdictStatus } from './verdict-row';
 
 export interface ListDeps {
@@ -97,7 +102,7 @@ export function needsYouNow(except?: string): number {
   // Its own count, not waitingNow's: that one follows the picker and Mine for the pulse. Here every
   // loose reminder and every agent's request count, whoever's agent asked and on whichever project.
   const listed = new Set(store.roster.map((e) => e.id));
-  const n = all.sections['needs-you'].length + looseReminders(store.reminders, listed, Date.now()).length + store.gate.proposals.length;
+  const n = all.sections['needs-you'].length + looseReminders(store.reminders, listed, Date.now()).length + store.gate.proposals.length + openDecisions();
   return except && all.sections['needs-you'].some((r) => r.entry.id === except) ? n - 1 : n;
 }
 
@@ -111,19 +116,19 @@ export function waitingNow(view: InboxView = currentView()): Waiting {
   const listed = new Set(store.roster.map((e) => e.id));
   const loose = looseReminders(store.reminders, listed, now, home.project || undefined);
   return {
-    needYou: [...view.sections['needs-you'].map((r) => r.att.since), ...(home.owner === 'mine' ? [] : loose.map((r) => r.since)), ...proposalWaits()],
+    needYou: [...view.sections['needs-you'].map((r) => r.att.since), ...(home.owner === 'mine' ? [] : loose.map((r) => r.since)), ...proposalWaits(), ...decisionWaits(now)],
     toReview: view.sections.review.filter((r) => !inFlight(r.entry.id)).map((r) => r.att.since),
   };
 }
 
 /**
- * A Working row's status: what the agent is doing, live and in words. Never the raw name of the tool
- * it asked with, never its own title again ("Starting..."), and never the echo of a reply someone just
- * typed ("1"): until its next step, that's "Back at work on your answer".
+ * A Working row's status: what the agent is doing, live and in plain words (shared/doing.ts: "Running
+ * npm test", never "Bash: npm test"). Never its own title again ("Starting..."), and never the echo of
+ * a reply someone just typed ("1"): until its next step, that's "Back at work on your answer".
  */
 function workingStatus(r: Ranked, title: string): string {
   const e = r.entry;
-  const doing = spokenActivity(e.activity) ?? r.att.label;
+  const doing = workingWords(e.activity, r.att.label);
   if (doing === title) return 'Starting...';
   const input = e.floor === store.floor ? store.workers.get(e.id)?.lastInput : undefined;
   if (input && e.activity && e.activityAt !== undefined && e.activityAt - input.at < 10_000 && e.activityAt >= input.at) {
@@ -139,11 +144,19 @@ function row(r: Ranked, section: InboxSection, deps: ListDeps, now: number): HTM
   const ask = approvalRow(e.id);
   const { action, label } = ask ? { action: rowAction(r.att).action, label: ask.label } : rowAction(r.att);
   const provider = PROVIDER_META[e.provider ?? 'claude']?.label ?? 'Agent';
-  // Working: what it's doing right now (workingStatus). To review: what it changed. Otherwise why it's
-  // here, in the ranking's words.
-  // In To review, its verdict first when the office has one (verdict-row.ts).
-  const verdict = !ask && section === 'review' ? verdictStatus(e) : undefined;
-  const status = ask ? ask.status : section === 'working' ? workingStatus(r, title) : verdict?.el ?? ((section === 'review' && changeSummary(e.work)) || rowStatus(r.att, title));
+  // Working: what it's doing right now (workingStatus). To review: what it changed. Idle: why it's idle
+  // (idleStatus). Otherwise why it's here, in the ranking's words.
+  // In To review, its verdict first when the office has one (verdict-row.ts). A branch that would
+  // conflict says so instead (land.ts), since a clean verdict would read as ready to merge.
+  const restack = r.att.action === 'restack';
+  const verdict = !ask && section === 'review' && !restack ? verdictStatus(e) : undefined;
+  const status = ask
+    ? ask.status
+    : section === 'working'
+      ? workingStatus(r, title)
+      : section === 'idle'
+        ? idleStatus(r.att, rowStatus(r.att, title))
+        : verdict?.el ?? ((section === 'review' && !restack && changeSummary(e.work)) || rowStatus(r.att, title));
   const selected = home.selected === e.id;
   const where = rowWhere(e);
   const owner = ownerLabel(e);
@@ -153,7 +166,8 @@ function row(r: Ranked, section: InboxSection, deps: ListDeps, now: number): HTM
   // A merge on its way: the row no longer waits on you, so its clock stops and its status counts down.
   const away = held || inFlight(e.id);
   const style = waits && !away ? `--wait:${waitShare(r.att.since, now).toFixed(3)}` : '';
-  const spoken = [title, provider, LEVEL_LABEL[r.att.level], verdict?.spoken ?? '', waits && !away ? `${AGE_PREFIX[section]} ${waitWords(now - r.att.since)}` : '', owner ? `deployed by ${e.createdBy}` : ''].filter(Boolean).join(', ');
+  const working = section === 'working' && !r.att.snoozed;
+  const spoken = [title, provider, LEVEL_LABEL[r.att.level], verdict?.spoken ?? '', waits && !away ? `${AGE_PREFIX[section]} ${waitWords(now - r.att.since)}` : '', working ? workingSpoken(e, now) : '', owner ? `deployed by ${e.createdBy}` : ''].filter(Boolean).join(', ');
   return h(
     'li.row',
     { class: `l-${r.att.level} s-${section}${ask ? ' approval' : ''}${selected ? ' selected' : ''}${r.att.snoozed ? ' snoozed' : ''}${held ? ' holding' : ''}`, 'data-id': e.id, 'data-section': section, style: style || undefined },
@@ -165,9 +179,10 @@ function row(r: Ranked, section: InboxSection, deps: ListDeps, now: number): HTM
         'span.row-text',
         {},
         h('span.row-title', {}, title),
-        h('span.row-sub', {}, held ? h('span.row-status.row-hold', { 'data-until': String(until), 'data-prefix': 'Merging in' }, `Merging in ${countdownWords(until - now)}`) : h('span.row-status', { title: r.att.reason ?? r.att.label }, away ? 'Merging...' : status), ask?.tags ?? null, owner ? h('span.row-owner', { title: `Deployed by ${e.createdBy}` }, owner) : null, ...(spendUi()?.rowBadges(e) ?? []), where ? h('span.row-where', {}, where) : null),
+        h('span.row-sub', {}, held ? h('span.row-status.row-hold', { 'data-until': String(until), 'data-prefix': 'Merging in' }, `Merging in ${countdownWords(until - now)}`) : h('span.row-status', { title: r.att.reason ?? r.att.label }, away ? 'Merging...' : status), ask?.tags ?? null, owner ? h('span.row-owner', { title: `Deployed by ${e.createdBy}` }, owner) : null, ...(spendUi()?.rowBadges(e) ?? []), ...landBadges(e), where ? h('span.row-where', {}, where) : null),
+        working ? workingFacts(e) : null,
       ),
-      away ? null : ageEl(section, r.att, now),
+      away ? null : working ? workingAge(e, now) : ageEl(section, r.att, now),
     ),
     // Opening it is the row itself: a button only for a decision, or Undo while its merge is held.
     held
@@ -190,10 +205,10 @@ function reminderRow(r: Reminder, deps: ListDeps, now: number): HTMLElement {
 
 /**
  * A row's clock: "waiting 38s" in its wait's tone. A wait on you carries `data-since`, so clock.ts
- * ticks its text each second without drawing the list again; the calm sections ("idle 2h", "snoozed
+ * ticks its text each second without drawing the list again; the calm sections ("asleep 2h", "snoozed
  * 1h") move on with the 30 second redraw.
  */
-function ageEl(section: InboxSection, att: { since: number; snoozed?: boolean }, now: number): HTMLElement {
+function ageEl(section: InboxSection, att: Parameters<typeof ageLabel>[1], now: number): HTMLElement {
   const waits = section === 'needs-you' || section === 'review';
   if (!waits) return h('span.row-age', {}, ageLabel(section, att, now));
   return h('span.row-age.wait-clock', { 'data-since': String(att.since), 'data-prefix': AGE_PREFIX[section], 'data-tone': waitTone(now - att.since) }, ageLabel(section, att, now));
@@ -220,10 +235,10 @@ function section(s: InboxSection, view: InboxView, extra: HTMLElement[], deps: L
   }
   const open = !foldable || home.idleOpen;
   const head = foldable
-    ? h('button.sec-h', { type: 'button', 'aria-expanded': String(open), onclick: () => home.setIdleOpen(!open) }, h('span.sec-glyph', { class: `g-${s}` }, icon(LEVEL_ICON.parked, 14)), SECTION_LABEL[s], h('span.sec-n', {}, String(n)), h('span.sec-fold', {}, open ? 'Hide' : 'Show'))
+    ? h('button.sec-h', { type: 'button', 'aria-expanded': String(open), onclick: () => home.setIdleOpen(!open) }, h('span.sec-glyph', { class: `g-${s}` }, icon(LEVEL_ICON.parked, 14)), SECTION_LABEL[s], h('span.sec-n', {}, String(n)), s === 'idle' && !open ? h('span.sec-kinds', {}, idleBreakdown(items)) : null, h('span.sec-fold', {}, open ? 'Hide' : 'Show'))
     : h('h2.sec-h', {}, h('span.sec-glyph', { class: `g-${s}` }, icon(LEVEL_ICON[s === 'needs-you' ? 'needs-you' : s === 'review' ? 'review' : 'working'], 14)), SECTION_LABEL[s], n ? h('span.sec-n', {}, String(n)) : null);
   const body = !open ? null : n ? h('ol.rows', { 'aria-label': SECTION_LABEL[s] }, ...extra, ...items.map((r) => row(r, s, deps, now))) : h('p.sec-empty', { class: `e-${s}` }, s === 'needs-you' ? icon('check', 14) : null, EMPTY[s]);
-  return h('section.sec', { class: `sec-${s}${n ? '' : ' empty'}` }, head, body);
+  return h('section.sec', { class: `sec-${s}${n ? '' : ' empty'}` }, head, open ? sectionHint(s, n) : null, body);
 }
 
 /** Draws the inbox into `root`; with no agent yet, `firstRun` (the setup card, setup.ts) stands in for it. */
@@ -231,8 +246,8 @@ export function renderList(root: HTMLElement, deps: ListDeps, firstRun: () => HT
   const now = Date.now();
   const view = currentView();
   const listed = new Set(store.roster.map((e) => e.id));
-  // Agents' requests (proposals.ts) wait in Needs you first, then reminders about no agent in the list.
-  const loose = [...proposalRows(now), ...looseReminders(store.reminders, listed, now, home.project || undefined).map((r) => reminderRow(r, deps, now))];
+  // Agents' requests (proposals.ts) wait in Needs you first, then open decisions (yourcall.ts), then reminders about no agent in the list.
+  const loose = [...proposalRows(now), ...decisionRows(now), ...looseReminders(store.reminders, listed, now, home.project || undefined).map((r) => reminderRow(r, deps, now))];
   const anyAgent = store.roster.some((e) => !home.project || e.floor === home.project);
   if (!anyAgent && !loose.length && !home.query) {
     root.replaceChildren(firstRun());

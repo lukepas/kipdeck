@@ -3,6 +3,7 @@
 // a scripted reviewer answers and merges too, and the fleet starts over, while visitors only watch.
 // What the page is told about it, and the words it uses, are here; the fleet itself is the server's
 // (server/demo/).
+import { REPO_URL } from './copy.js';
 
 /** What the page knows about a demo office (the welcome message's `demo`). */
 export interface DemoInfo {
@@ -17,16 +18,26 @@ export interface DemoInfo {
 }
 
 /**
- * Whether Kipdeck is on npm yet. Until it is, every command it prints runs it straight from GitHub
- * with npx (which installs and builds it, a few minutes the first time), never `npx kipdeck`, which
- * 404s. Flip it in the release that publishes to npm, with NPM_PACKAGE set to the name it publishes
- * under (the landing page's KIPDECK_NPM_PUBLISHED gate goes with it, docs/landing.md).
+ * Whether Kipdeck is on npm yet. Until it is, every command it prints runs the newest release's
+ * prebuilt tarball with npx (RELEASE_TARBALL: nothing to build, so it starts as soon as npm has
+ * fetched its dependencies), never `npx kipdeck`, which 404s. Flip it in the release that publishes
+ * to npm, with NPM_PACKAGE set to the name it publishes under (the landing page's
+ * KIPDECK_NPM_PUBLISHED gate goes with it, docs/landing.md).
  */
 export const ON_NPM = false;
 /** The name it publishes under on npm (README, Publishing). */
 export const NPM_PACKAGE = 'kipdeck';
-/** What npx runs: the npm package once it's published, the public repository until then. */
-export const NPX_SPEC = ON_NPM ? NPM_PACKAGE : 'github:zbagdzevicius/kipdeck';
+/** The public repository: `npx github:` runs it from source, building it first (a few minutes). */
+export const GITHUB_SPEC = 'github:zbagdzevicius/kipdeck';
+/**
+ * The newest release's package, built and packed by the Release workflow on every main push
+ * (deploy/release/pack.mjs). GitHub sends releases/latest/download/ to the newest release's asset.
+ */
+export const RELEASE_TARBALL = `${REPO_URL}/releases/latest/download/kipdeck.tgz`;
+/** What npx runs: the npm package once it's published, the newest release's tarball until then. */
+export const NPX_SPEC = ON_NPM ? NPM_PACKAGE : RELEASE_TARBALL;
+/** The fallback when the release can't be fetched: npx straight from the repository, which builds it. */
+export const FROM_SOURCE_COMMAND = `npx ${GITHUB_SPEC}`;
 /** The command that runs it on any computer with Node: in your repository, that's the first project. */
 export const INSTALL_COMMAND = `npx ${NPX_SPEC}`;
 /** The command that runs the demo on your own computer. */
@@ -87,7 +98,7 @@ export const READ_ONLY_ALLOWS: ReadonlySet<string> = new Set([
  * project's rundown and Signal's gist of it (its contributors, uncommitted paths, branches and decisions
  * are not for anonymous visitors, as its download isn't): dropped without a word.
  */
-export const READ_ONLY_QUIET: ReadonlySet<string> = new Set(['term.resize', 'term.typing', 'profile', 'rtc', 'voice', 'setup.check', 'move', 'sit', 'act', 'limits.refresh', 'rundown.watch', 'rundown.unwatch', 'signal.peek', 'here']);
+export const READ_ONLY_QUIET: ReadonlySet<string> = new Set(['term.resize', 'term.typing', 'profile', 'rtc', 'voice', 'setup.check', 'move', 'sit', 'act', 'limits.refresh', 'rundown.watch', 'rundown.unwatch', 'signal.peek', 'yourcall.watch', 'here']);
 
 /** What a visitor to the read-only demo is told when they try to act. */
 export const READ_ONLY_REFUSAL = `This demo is read only: the agents and the reviewer are scripted. Run ${DEMO_COMMAND} to try it on your computer.`;

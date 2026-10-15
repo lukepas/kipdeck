@@ -65,7 +65,7 @@ export function reviewBrief(e: RosterEntry): BriefView {
   if (!view) loadView();
   if (!b || !view) return { el: h('section.rv-brief.loading', { 'aria-label': 'Review brief' }, h('p.rb-dim', {}, 'Reading its brief...')), ready: false };
   // Drawn again only when what it says changes, so an open "Told since" or More stays open.
-  const drawKey = `${e.id}|${b.at}|${e.pr?.state}|${e.pr?.checks}|${commentsOf(e.id).length}`;
+  const drawKey = `${e.id}|${b.at}|${e.pr?.state}|${e.pr?.checks}|${commentsOf(e.id).length}|${JSON.stringify([e.land, e.overlap])}`;
   if (drawn?.key !== drawKey) drawn = { key: drawKey, view: view.renderBrief(e, b) };
   return drawn.view;
 }

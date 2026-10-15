@@ -4,6 +4,13 @@
   "installCommand": "npm ci --ignore-scripts",
   "buildCommand": "KIPDECK_DEMO_URL=https://kipdeck-demo.vercel.app/ npm run build:site",
   "outputDirectory": "dist/site",
+  "redirects": [
+    {
+      "source": "/get",
+      "destination": "https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz",
+      "permanent": false
+    }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",

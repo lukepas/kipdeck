@@ -7,6 +7,7 @@ import type { Ctx } from '../office/context.js';
 import { readBody, send } from '../http/util.js';
 import { officeQueue } from './office-queue.js';
 import { officeWorkers } from './office-workers.js';
+import { officeDecide } from '../rundown/decide-hook.js';
 import { providerHook } from '../providers/index.js';
 import type { AgentProvider } from '../../shared/providers.js';
 
@@ -21,6 +22,7 @@ export async function startHookServer(ctx: Ctx): Promise<{ hookServer: http.Serv
     }
     if (url.pathname === '/office/queue') return officeQueue(ctx, req, res, url);
     if (url.pathname === '/office/workers' || url.pathname.startsWith('/office/workers/')) return officeWorkers(ctx, req, res, url);
+    if (url.pathname === '/office/decide') return officeDecide(ctx, req, res, url);
     // Each provider with hooks has its route, /hooks/<provider> (see providers/).
     const route = url.pathname.startsWith('/hooks/') ? url.pathname.slice('/hooks/'.length) : '';
     const hook = providerHook(route);
@@ -40,7 +42,12 @@ export async function startHookServer(ctx: Ctx): Promise<{ hookServer: http.Serv
     const event = url.searchParams.get('event') ?? '';
     const ok = workers.handleProviderHook(route as AgentProvider, workerId, token, event, payload);
     // What it did, for its review brief (brief/log.ts).
-    if (ok) ctx.briefs.observe(workerId, event, payload);
+    // Its Working row's second line reads the same journal (shared/doing.ts), so a test run that ends
+    // without changing the worker (a pass) still reaches the row.
+    if (ok) {
+      ctx.briefs.observe(workerId, event, payload);
+      ctx.rosterChanged();
+    }
     // A permission request waits here for its answer from the inbox (see approvals.ts).
     if (ok && ctx.approvals.holds(route, event) && ctx.approvals.open(workerId, ctx.workerFloor(workerId)?.id ?? '', payload, res)) return;
     if (ok) ctx.approvals.movedOn(workerId, event, payload);

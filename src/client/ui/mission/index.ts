@@ -18,7 +18,8 @@ import { mountShell, type Shell } from './dock';
 export type { MissionDeps } from './act';
 export { runAction } from './act';
 export { renderStrip } from './strip';
-export { digestCard, openDigest, recallDigest, watchAway } from './digest';
+export { openDigest } from './digest';
+export { digestCard, recallDigest, watchAway } from './away';
 export { missionDocked } from './dock';
 
 const TAB_LABEL: Record<MissionTab, string> = { attention: 'Attention', goals: 'Goals', review: 'Review', timeline: 'Timeline', crew: 'Records' };

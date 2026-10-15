@@ -90,9 +90,14 @@ for (const event of ['push', 'pull_request']) {
 // would have installed from the registry. These keep the steps on the names the package and script use.
 test('the Release workflow packs whatever npm names the tarball and installs it with install.sh as it is now', () => {
   const install = readFileSync(path.join(root, 'install.sh'), 'utf8');
-  assert.match(workflow, /tarball="\$\(npm pack --ignore-scripts \| tail -n 1\)"/, 'the pack step takes the name npm prints');
-  assert.ok(!workflow.includes('agent-office-$version.tgz'), 'no tarball name from before the rename');
-  const vars = [...workflow.matchAll(/^\s+(KIPDECK_\w+|AGENT_OFFICE_\w+):/gm)].map((m) => m[1]);
+  // deploy/release/pack.mjs packs and takes whatever .tgz npm made, then names it kipdeck.tgz, the
+  // asset the README's address and install.sh fetch.
+  const pack = readFileSync(path.join(root, 'deploy/release/pack.mjs'), 'utf8');
+  assert.match(workflow, /node deploy\/release\/pack\.mjs --version/, 'the pack step runs pack.mjs');
+  assert.match(pack, /readdirSync\(dest\)\.filter\(\(f\) => f\.endsWith\('\.tgz'\)\)/, 'pack.mjs takes the tarball npm made, whatever its name');
+  assert.ok(!/agent-office(-\$version)?\.tgz/.test(workflow + pack), 'no tarball name from before the rename');
+  // Unique names: the Linux/macOS and the Windows smoke jobs set the same ones.
+  const vars = [...new Set([...workflow.matchAll(/^\s+(KIPDECK_\w+|AGENT_OFFICE_\w+):/gm)].map((m) => m[1]))];
   assert.ok(vars.includes('KIPDECK_TARBALL'), 'the install step hands install.sh the packed tarball');
   for (const v of vars.filter((v) => v.startsWith('KIPDECK_'))) assert.ok(install.includes(`\${${v}`), `install.sh reads ${v}`);
   assert.deepEqual(vars.filter((v) => v.startsWith('AGENT_OFFICE_')), ['AGENT_OFFICE_HOME'], 'install.sh reads no AGENT_OFFICE_ variable; the office reads AGENT_OFFICE_HOME');

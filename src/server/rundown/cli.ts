@@ -25,7 +25,8 @@
 // --root, and outside git nothing is listed or opened at all.
 
 import { execFile, spawn } from 'node:child_process';
-import { appendFileSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { appendFileSync, copyFileSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -125,7 +126,7 @@ async function topOf(dir: string): Promise<{ root: string; repo: boolean }> {
 }
 
 /** .rundown/ out of git for every worktree: one line in the common info/exclude, never .gitignore. */
-async function excludeOutput(root: string) {
+export async function excludeOutput(root: string) {
   const git = gitRunner(root, () => {});
   const common = (await git(['rev-parse', '--git-common-dir']))?.trim();
   if (!common) return;
@@ -157,8 +158,9 @@ const readJson = (file: string): unknown => {
 
 /** A file written whole or not at all: a failed run leaves the old one. */
 function writeAtomic(file: string, text: string) {
-  const tmp = `${file}.${process.pid}.tmp`;
-  writeFileSync(tmp, text);
+  // A name nobody can guess, opened with wx (O_CREAT|O_EXCL): never written through a link left there.
+  const tmp = `${file}.${process.pid}.${randomBytes(4).toString('hex')}.tmp`;
+  writeFileSync(tmp, text, { flag: 'wx' });
   renameSync(tmp, file);
 }
 
@@ -306,6 +308,32 @@ async function render(a: Args, root: string, out: string, repo: boolean, collect
     if (href && !there) writePage(null);
   }
   return { r, index };
+}
+
+/** What a render in .rundown/ reads, writes or prunes. */
+const QUICK_FILES = ['facts.json', 'judgement.json', 'rundown.json', 'rundown.html', 'map.html', 'state.json', 'history', 'milestones.md', 'decisions.md'];
+
+function isLink(p: string): boolean {
+  try {
+    return lstatSync(p).isSymbolicLink();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Draws the page again from what an earlier run left in .rundown/ (facts.json and judgement.json, so
+ * no git or gh runs), in quick mode and without a word on stdout: what the office does after an answer
+ * lands in decisions.md (rundown/answer.ts). Null when no run has left facts there yet.
+ */
+export async function renderQuick(root: string): Promise<Rundown | null> {
+  const out = path.join(root, '.rundown');
+  if (!existsSync(path.join(out, 'facts.json'))) return null;
+  // The office runs this unasked, in checkouts it may have cloned: a link among the files a render
+  // reads or writes (history/ is pruned) could send it outside the checkout, so it draws nothing then.
+  if ([out, ...QUICK_FILES.map((f) => path.join(out, f))].some(isLink)) throw new Error('.rundown/ holds a symlink: not drawn');
+  const a = parseArgs(['render', '--mode', 'quick', '--root', root, '--no-gh']);
+  return (await render(a, root, out, (await topOf(root)).repo)).r;
 }
 
 /** The reply block Claude relays (reply.ts), with the index's path shown from home. */

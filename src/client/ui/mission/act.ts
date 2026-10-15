@@ -6,6 +6,7 @@ import { agentRef } from '../../../shared/agentname';
 import { attention, type NextAction } from '../../../shared/attention';
 import type { Reminder, ReviewPull, RosterEntry, TimelineEvent } from '../../../shared/protocol';
 import type { ReviewPayout } from '../../../shared/review';
+import { restackPrompt } from '../../../shared/landqueue';
 import type { Net } from '../../net';
 import { store, type MissionTab } from '../../state';
 import { closeAllModals, toast } from '../dom';
@@ -71,7 +72,7 @@ export function onFloorOf(deps: MissionDeps, e: RosterEntry, then: () => void) {
 }
 
 /** Looking at a finished worker's work from the Review tab is seeing it, as opening its terminal is. */
-const SEES: ReadonlySet<NextAction | 'terminal'> = new Set(['review', 'open-pr', 'fix-checks', 'merge', 'hand-back', 'send-home']);
+const SEES: ReadonlySet<NextAction | 'terminal'> = new Set(['review', 'open-pr', 'fix-checks', 'merge', 'hand-back', 'send-home', 'restack']);
 
 /** Does a row's action, on the worker's own floor. */
 export function runAction(deps: MissionDeps, e: RosterEntry, action: NextAction | 'terminal') {
@@ -96,6 +97,15 @@ export function runAction(deps: MissionDeps, e: RosterEntry, action: NextAction 
         return pr ? deps.openPull(pr, 'merge') : deps.openPr(w.id);
       case 'hand-back':
         return pr ? deps.openPull(pr, 'hand-back') : deps.openPr(w.id);
+      // Its branch conflicts with its base: hand it a rebase prompt to edit, through Send back.
+      case 'restack':
+        return openPrompt({
+          title: `Restack ${agentRef(w)}`,
+          subtitle: 'It rebases its branch onto the branch it merges into. Change the note first if you like.',
+          initial: restackPrompt(e),
+          submitLabel: 'Send restack',
+          onSubmit: (note) => deps.net.send({ t: 'inbox.sendBack', workerId: w.id, note }),
+        });
       case 'resume':
         return deps.net.send({ t: 'worker.resume', workerId: w.id });
       case 'rebuild':

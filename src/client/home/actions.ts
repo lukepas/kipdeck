@@ -12,6 +12,7 @@ import { toast } from '../ui/dom';
 import type { BoardActions } from '../ui/github/prompts';
 import type { MissionDeps } from '../ui/mission/act';
 import { reminderAction } from '../../shared/reminders';
+import { restackPrompt } from '../../shared/landqueue';
 import { clearComments, commentsNote } from './brief';
 import { quiet } from './warm';
 import type { openDeploy as OpenDeploy } from './deploy';
@@ -37,10 +38,11 @@ export interface Actions {
   held(id: string): boolean;
   /** Agents whose merge is under way. */
   merging: Set<string>;
-  sendBack(e: RosterEntry): void;
+  /** Send back with a note; `initial` starts the box (Restack's rebase prompt). */
+  sendBack(e: RosterEntry, initial?: string): void;
   stop(e: RosterEntry, merged?: boolean): void;
-  /** Opens the Deploy sheet: with `prompt` in its box, and `provider` picked (the setup card's first ready agent). */
-  deploy(prompt?: string, provider?: AgentProvider): void;
+  /** Opens the Deploy sheet: with `prompt` in its box, `provider` picked (the setup card's first ready agent), and on project `floor`. */
+  deploy(prompt?: string, provider?: AgentProvider, floor?: string): void;
   /** The office answered a merge. */
   merged(msg: Extract<InboxServerMsg, { t: 'inbox.merged' }>): void;
   openBoard(kind: 'issues' | 'pulls'): void;
@@ -176,14 +178,14 @@ export function createActions(net: Net): Actions {
     });
   }
 
-  function sendBack(e: RosterEntry) {
+  function sendBack(e: RosterEntry, initial?: string) {
     ask(({ openPrompt }) => openPrompt({
-      title: `Send back to ${entryRef(e)}`,
-      subtitle: 'Your note goes to the same agent, which keeps working on the same branch.',
+      title: initial ? `Restack ${entryRef(e)}` : `Send back to ${entryRef(e)}`,
+      subtitle: initial ? 'It rebases its branch onto the branch it merges into. Change the note first if you like.' : 'Your note goes to the same agent, which keeps working on the same branch.',
       placeholder: 'What should it change?',
-      submitLabel: 'Send back',
+      submitLabel: initial ? 'Send restack' : 'Send back',
       // The line comments left on its diff go with it, anchored (brief/comments.ts).
-      initial: commentsNote(e.id),
+      initial: [initial, commentsNote(e.id)].filter(Boolean).join('\n\n') || undefined,
       onSubmit: (note) => {
         net.send({ t: 'inbox.sendBack', workerId: e.id, note });
         clearComments(e.id);
@@ -214,6 +216,9 @@ export function createActions(net: Net): Actions {
         return show(e.id, 'changes');
       case 'hand-back':
         return sendBack(e);
+      // Conflicts with its base: the same Send back, with a rebase prompt to edit (shared/landqueue.ts).
+      case 'restack':
+        return sendBack(e, restackPrompt(e));
       case 'fix-checks':
         if (!e.pr) return show(e.id, 'changes');
         net.send({ t: 'worker.prompt', workerId: e.id, prompt: fixChecksPrompt(e.pr.number) });
@@ -244,7 +249,7 @@ export function createActions(net: Net): Actions {
     merging,
     sendBack,
     stop,
-    deploy: (prompt, provider) => openDeploy(net, { prompt, provider, started: (at) => (home.deployedAt = at) }),
+    deploy: (prompt, provider, floor) => openDeploy(net, { prompt, provider, floor, started: (at) => (home.deployedAt = at) }),
     merged(msg) {
       merging.delete(msg.workerId);
       if (msg.error) {

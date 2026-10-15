@@ -20,6 +20,7 @@ import { agentMark, currentView, entryTitle, needsYouNow, waitingNow } from './l
 import { preview } from './preview';
 import * as lazy from './lazy';
 import { home } from './state';
+import { nextStepButton } from './yourcall';
 import './empty.css';
 
 /** "3 working · 1 merged today · median wait 32s": the day so far on one line, for the calm pane. */
@@ -64,6 +65,7 @@ export function emptyState(actions: Actions): HTMLElement {
       calm ? clearLine(now) : null,
       h('p.pe-day', {}, daySoFar(pane.working, day.merged, day.medianWaitMs)),
       h('button.btn', { type: 'button', onclick: () => actions.deploy() }, icon('plus', 16), 'Deploy agent'),
+      nextStepButton(),
       keys,
     );
   }
@@ -81,6 +83,7 @@ export function emptyState(actions: Actions): HTMLElement {
       h('span.pe-item-text', {}, h('b', {}, entryTitle(next.entry)), h('span', {}, `${next.att.label} · waiting ${waitWords(waitedMs)}`)),
     ),
     h(asks ? 'button.btn.primary.needs-you' : 'button.btn.primary', { type: 'button', 'data-id': next.entry.id, onclick: open }, asks ? 'Answer it' : 'Review it'),
+    nextStepButton(),
     h('p', {}, [moreWords(more), working ? `${working} agent${working === 1 ? ' is' : 's are'} working.` : ''].filter(Boolean).join(' ')),
     keys,
   );

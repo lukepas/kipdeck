@@ -31,6 +31,7 @@ import { timelineHandlers } from './timeline.js';
 import { usageHandlers } from './usage.js';
 import { whiteboardHandlers, whiteboardHooks, whiteboardView } from './whiteboard.js';
 import { workerHandlers, workerHooks, workersView } from './workers.js';
+import { yourCallHandlers } from './yourcall.js';
 import type { FeatureHooks, HandlerMap, ViewPieces } from './types.js';
 
 /** Each domain's handlers put together, in alphabetical order. */
@@ -65,6 +66,7 @@ export const handlers: HandlerMap<ClientMsg> = {
   ...usageHandlers,
   ...whiteboardHandlers,
   ...workerHandlers,
+  ...yourCallHandlers,
 };
 
 /**
