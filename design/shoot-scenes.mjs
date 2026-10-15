@@ -11,6 +11,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { serve } from '../site/serve.mjs';
+import { repoJson } from './repo-json.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -112,5 +113,5 @@ try {
   await browser.close();
   server.close();
 }
-writeFileSync(path.join(out, `scenes-${phone ? 'phone' : width}-${scheme}.json`), JSON.stringify({ errors, shots }, null, 2));
+writeFileSync(path.join(out, `scenes-${phone ? 'phone' : width}-${scheme}.json`), repoJson(ROOT, { errors, shots }));
 console.log(JSON.stringify({ errors, shots: shots.map((s) => path.basename(s)) }, null, 2));

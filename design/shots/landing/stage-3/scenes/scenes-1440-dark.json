@@ -1,10 +1,10 @@
 {
   "errors": [],
   "shots": [
-    "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-3/scenes/1440-dark-labs-v010.png",
-    "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-3/scenes/1440-dark-labs-v040.png",
-    "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-3/scenes/1440-dark-labs-v070.png",
-    "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-3/scenes/1440-dark-labs-v100.png",
-    "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-3/scenes/1440-dark-labs-v140.png"
+    "design/shots/landing/stage-3/scenes/1440-dark-labs-v010.png",
+    "design/shots/landing/stage-3/scenes/1440-dark-labs-v040.png",
+    "design/shots/landing/stage-3/scenes/1440-dark-labs-v070.png",
+    "design/shots/landing/stage-3/scenes/1440-dark-labs-v100.png",
+    "design/shots/landing/stage-3/scenes/1440-dark-labs-v140.png"
   ]
 }

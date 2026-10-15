@@ -12,6 +12,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { serve } from '../site/serve.mjs';
+import { repoJson } from './repo-json.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -182,5 +183,5 @@ try {
   server.close();
 }
 const brief = (t) => t && { lcp: t.lcp, cls: t.cls, longTasks: t.longTasks, frames: t.frames, errors: t.errors };
-writeFileSync(path.join(out, 'hero-report.json'), JSON.stringify(report, null, 2));
+writeFileSync(path.join(out, 'hero-report.json'), repoJson(ROOT, report));
 console.log(JSON.stringify({ desktop: brief(report.timeline.desktop), light: brief(report.timeline.desktopLight), big: brief(report.timeline.big), phone: brief(report.timeline.phone), ghost: report.ghost?.clearedByGhost, throttled: report.vitals.phoneThrottled, clip: report.clip }, null, 1));

@@ -358,7 +358,7 @@
     "bad": []
   },
   "video": {
-    "file": "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/final/scroll-1920x1080.mp4",
+    "file": "design/shots/landing/final/scroll-1920x1080.mp4",
     "capturedFrames": 2843,
     "spanS": 54.2,
     "scriptedWallMs": 60684,

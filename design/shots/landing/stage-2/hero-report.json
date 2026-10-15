@@ -3,14 +3,14 @@
   "timeline": {
     "desktop": {
       "shots": [
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-dark-t00250-launch.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-dark-t00650-inhale.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-dark-t01200-rows.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-dark-t02550-asks.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-dark-t03300-climbed.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-dark-t07000-waiting.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-dark-answered.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-dark-back-to-work.png"
+        "design/shots/landing/stage-2/desktop-dark-t00250-launch.png",
+        "design/shots/landing/stage-2/desktop-dark-t00650-inhale.png",
+        "design/shots/landing/stage-2/desktop-dark-t01200-rows.png",
+        "design/shots/landing/stage-2/desktop-dark-t02550-asks.png",
+        "design/shots/landing/stage-2/desktop-dark-t03300-climbed.png",
+        "design/shots/landing/stage-2/desktop-dark-t07000-waiting.png",
+        "design/shots/landing/stage-2/desktop-dark-answered.png",
+        "design/shots/landing/stage-2/desktop-dark-back-to-work.png"
       ],
       "errors": [],
       "lcp": {
@@ -29,14 +29,14 @@
     },
     "desktopLight": {
       "shots": [
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-light-t00250-launch.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-light-t00650-inhale.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-light-t01200-rows.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-light-t02550-asks.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-light-t03300-climbed.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-light-t07000-waiting.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-light-answered.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-light-back-to-work.png"
+        "design/shots/landing/stage-2/desktop-light-t00250-launch.png",
+        "design/shots/landing/stage-2/desktop-light-t00650-inhale.png",
+        "design/shots/landing/stage-2/desktop-light-t01200-rows.png",
+        "design/shots/landing/stage-2/desktop-light-t02550-asks.png",
+        "design/shots/landing/stage-2/desktop-light-t03300-climbed.png",
+        "design/shots/landing/stage-2/desktop-light-t07000-waiting.png",
+        "design/shots/landing/stage-2/desktop-light-answered.png",
+        "design/shots/landing/stage-2/desktop-light-back-to-work.png"
       ],
       "errors": [],
       "lcp": {
@@ -55,14 +55,14 @@
     },
     "big": {
       "shots": [
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/big-dark-t00250-launch.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/big-dark-t00650-inhale.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/big-dark-t01200-rows.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/big-dark-t02550-asks.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/big-dark-t03300-climbed.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/big-dark-t07000-waiting.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/big-dark-answered.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/big-dark-back-to-work.png"
+        "design/shots/landing/stage-2/big-dark-t00250-launch.png",
+        "design/shots/landing/stage-2/big-dark-t00650-inhale.png",
+        "design/shots/landing/stage-2/big-dark-t01200-rows.png",
+        "design/shots/landing/stage-2/big-dark-t02550-asks.png",
+        "design/shots/landing/stage-2/big-dark-t03300-climbed.png",
+        "design/shots/landing/stage-2/big-dark-t07000-waiting.png",
+        "design/shots/landing/stage-2/big-dark-answered.png",
+        "design/shots/landing/stage-2/big-dark-back-to-work.png"
       ],
       "errors": [],
       "lcp": {
@@ -81,14 +81,14 @@
     },
     "phone": {
       "shots": [
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/phone-dark-t00250-launch.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/phone-dark-t00650-inhale.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/phone-dark-t01200-rows.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/phone-dark-t02550-asks.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/phone-dark-t03300-climbed.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/phone-dark-t07000-waiting.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/phone-dark-answered.png",
-        "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/phone-dark-back-to-work.png"
+        "design/shots/landing/stage-2/phone-dark-t00250-launch.png",
+        "design/shots/landing/stage-2/phone-dark-t00650-inhale.png",
+        "design/shots/landing/stage-2/phone-dark-t01200-rows.png",
+        "design/shots/landing/stage-2/phone-dark-t02550-asks.png",
+        "design/shots/landing/stage-2/phone-dark-t03300-climbed.png",
+        "design/shots/landing/stage-2/phone-dark-t07000-waiting.png",
+        "design/shots/landing/stage-2/phone-dark-answered.png",
+        "design/shots/landing/stage-2/phone-dark-back-to-work.png"
       ],
       "errors": [],
       "lcp": {
@@ -127,15 +127,15 @@
   },
   "ghost": {
     "shots": [
-      "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-ghost-arrives.png",
-      "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-ghost-answers.png"
+      "design/shots/landing/stage-2/desktop-ghost-arrives.png",
+      "design/shots/landing/stage-2/desktop-ghost-answers.png"
     ],
     "clearedByGhost": true
   },
   "pointer": [
-    "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-pointer.png",
-    "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-copied.png"
+    "design/shots/landing/stage-2/desktop-pointer.png",
+    "design/shots/landing/stage-2/desktop-copied.png"
   ],
-  "reduced": "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-reduced.png",
-  "clip": "/Users/zygimantasbagdzevicius/nortal/dark-factory/external-projects/agent-office/.claude/worktrees/product/design/shots/landing/stage-2/desktop-opening.mp4"
+  "reduced": "design/shots/landing/stage-2/desktop-reduced.png",
+  "clip": "design/shots/landing/stage-2/desktop-opening.mp4"
 }
