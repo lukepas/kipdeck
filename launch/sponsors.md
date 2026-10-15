@@ -28,7 +28,6 @@ GitHub Sponsors:
 - [ ] Payout: a bank account in the same region you live in, or a fiscal host.
 - [ ] Tax form: W-8BEN for non-US residents.
 - [ ] Fees: sponsorships from personal accounts reach you in full; from organizations GitHub takes up to 6 percent.
-- [ ] Employer: Nortal's policy on paid side work and on donations tied to work done with company equipment or time.
 
 Open Collective:
 
