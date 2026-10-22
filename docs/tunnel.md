@@ -41,14 +41,14 @@ The **🌐 Services** board in the office shows the command for the way you came
 It's part of Kipdeck (the `kipdeck` command; `agent-office` still works as an alias), so it needs Node.js 20 or newer and the office installed on your computer (you don't have to run one there). To install without starting an office:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zbagdzevicius/kipdeck/main/install.sh | KIPDECK_INSTALL_ONLY=1 bash
+curl -fsSL https://raw.githubusercontent.com/lukepas/kipdeck/main/install.sh | KIPDECK_INSTALL_ONLY=1 bash
 ```
 
 ```powershell
-$env:KIPDECK_INSTALL_ONLY = 1; irm https://raw.githubusercontent.com/zbagdzevicius/kipdeck/main/install.ps1 | iex
+$env:KIPDECK_INSTALL_ONLY = 1; irm https://raw.githubusercontent.com/lukepas/kipdeck/main/install.ps1 | iex
 ```
 
-They install the newest release's package, built ahead. If it can't be fetched they print the from-source steps instead: clone [github.com/zbagdzevicius/kipdeck](https://github.com/zbagdzevicius/kipdeck), then `npm install && npm link` gives you the same `kipdeck` command. Without installing, `npx https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz tunnel ...` runs it too.
+They install the newest release's package, built ahead. If it can't be fetched they print the from-source steps instead: clone [github.com/lukepas/kipdeck](https://github.com/lukepas/kipdeck), then `npm install && npm link` gives you the same `kipdeck` command. Without installing, `npx https://github.com/lukepas/kipdeck/releases/latest/download/kipdeck.tgz tunnel ...` runs it too.
 
 The office it talks to has to be new enough to list its workers' servers. If it isn't, the command says so: upgrade the office (**Update Kipdeck** in the **☰** menu, or the deploy script's `update`).
 

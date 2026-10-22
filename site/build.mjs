@@ -4,7 +4,7 @@
 //   KIPDECK_SITE_URL=https://kipdeck.com/ KIPDECK_WAITLIST_URL=https://... npm run build:site
 //   KIPDECK_BRAND=<id> npm run build:site           # another entry in site/landing/brand.ts
 //
-// The brand's repository (github.com/zbagdzevicius/kipdeck) is public, so a build with no settings
+// The brand's repository (github.com/lukepas/kipdeck) is public, so a build with no settings
 // links it: the npx commands (its newest release, site/npx.mjs), section 06's terminal, the Source
 // and Docs links and the structured data's codeRepository. For a brand whose repository is private, build with KIPDECK_REPO_PUBLIC=0:
 // the page then shows nothing a visitor could not follow.

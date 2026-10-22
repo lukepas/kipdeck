@@ -37,7 +37,7 @@ PR #4 on the demo repository was merged on 2026-10-07 by the operator's own acco
 - The Solana release on screen is a real devnet transaction from a test run (2026-10-03, the approver-wallet path, signed by the attester and the approver), shown on its own and labelled "no GitHub merge behind it".
 - The EAS shot is the schema page with test attestations; the `/pom/` board is the test fixture. Both say so.
 - Every shot carries a tag: `REAL`, `DEMO DATA`, `REPLAY` or `TEST DATA`.
-- The demo repository keeps its name from before the rename, `zbagdzevicius/ugc-army-demo` (its devnet bounties' addresses are derived from it); the cards label it a test repository, and its bounties hold a devnet test token, called test tokens everywhere, including the Deck's Issues board header ("N funded in test tokens", `src/client/features/boards/world.ts`) and the `/pom/` board ("test tokens in escrow (devnet)", amounts in TEST).
+- The demo repository keeps its name from before the rename, `ugc-army-demo` (its devnet bounties' addresses are derived from it); the cards label it a test repository, and its bounties hold a devnet test token, called test tokens everywhere, including the Deck's Issues board header ("N funded in test tokens", `src/client/features/boards/world.ts`) and the `/pom/` board ("test tokens in escrow (devnet)", amounts in TEST).
 
 Last render: 2026-10-10, from this branch, with every step below (the office on port 4693 through `DEMO_PORT`, the `/pom/` shots on 4694). One frame a second of both cuts (236 frames) was read with tesseract and the key frames looked at: the source repository is on the first and last cards, Kip's mark is on the title, problem and end cards, and nothing says `SET FORK_URL`, "still open", "Mission control for", UGC Army or Mergeline. "test USDC" shows only on the x402 payment (Circle's test USDC on Base Sepolia, which is right). Not done yet: the `/pom/` share image (`src/server/showcase/og.ts`) still prints USDC on main (PR #27 names the token by its mint); it is not in either cut. The demo repository's GitHub description now reads "Kipdeck / Proof of Merge demo: devnet test-token bounties paid only on a human merge (testnet only)".
 
@@ -45,7 +45,7 @@ When a merge that counts happens (an agent's new pull request merged by a second
 
 ## The source repository
 
-Colosseum needs a public code repository, and the cards show it: the title and end cards of both cuts print `github.com/zbagdzevicius/kipdeck`, which is public, and description.txt links it. `FORK_URL` overrides it only if the code moves:
+Colosseum needs a public code repository, and the cards show it: the title and end cards of both cuts print `github.com/lukepas/kipdeck`, which is public, and description.txt links it. `FORK_URL` overrides it only if the code moves:
 
 ```sh
 FORK_URL=github.com/<owner>/<repo> node launch/video/capture/cards.mjs
@@ -86,7 +86,7 @@ Check the result with `ffprobe launch/video/out/demo-3min.mp4`: one video and on
 
 ## Submission checklist
 
-- [ ] The cards show `github.com/zbagdzevicius/kipdeck`, the same link as description.txt and the Colosseum form ([../chain/colosseum-worlds-fair.md](../chain/colosseum-worlds-fair.md)).
+- [ ] The cards show `github.com/lukepas/kipdeck`, the same link as description.txt and the Colosseum form ([../chain/colosseum-worlds-fair.md](../chain/colosseum-worlds-fair.md)).
 - [ ] The cards show Kip's mark (the logo from `design/logo/mark.svg`), not the old 3x3 grid.
 - [ ] Pitch: 2:00-3:00, founder on camera, clear sound, only real footage as cutaways, the agent-office credit said or shown.
 - [ ] Demo: `demo-3min.mp4` with the voiceover, under 3:00, one audio stream. Never submit `demo-3min-silent.mp4` itself.

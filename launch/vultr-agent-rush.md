@@ -22,10 +22,10 @@ Kipdeck is built on agent-office (MIT, by webdevcody / AgentSystemLabs, https://
 - Discord (ask the pre-existing code question here): https://discord.gg/lablabai
 - Terms: https://lablab.ai/terms-of-use
 - Vultr Serverless Inference endpoint (from the event page): https://api.vultrinference.com/v1 (OpenAI-compatible)
-- Repo: https://github.com/zbagdzevicius/kipdeck
+- Repo: https://github.com/lukepas/kipdeck
 - Site: https://kipdeck.com
 - Replay demo: https://kipdeck-demo.vercel.app
-- Showcase: https://zbagdzevicius.github.io/kipdeck/
+- Showcase: https://lukepas.github.io/kipdeck/
 
 ## Fit
 
@@ -72,7 +72,7 @@ Fields per lablab's guidelines. The form itself is behind the lablab login.
 ### Team (dashboard, before the form)
 
 - Team name: Kipdeck
-- Members: Zygimantas Bagdzevicius (CEO/CTO, founder-led). [FOUNDERS: team - any co-founder or teammate to add, 1 to 6 people allowed]
+- Members: Lukas Kveraga (sole founder, CEO and CTO).
 - Profile fields lablab asks for (country: Lithuania; anything else such as date of birth or phone): [FOUNDERS: personal profile fields, fill yourself]
 
 ### Submission title (max 50 characters)
@@ -128,7 +128,7 @@ PDF, 16:9, 6 slides: (1) problem: agents run real commands on machines full of c
 ### GitHub repository
 
 ```
-https://github.com/zbagdzevicius/kipdeck
+https://github.com/lukepas/kipdeck
 ```
 README must have a "Vultr sandbox" section linking `docs/sandbox.md` (setup on a Vultr VM, the settings, how to reproduce the containment moment).
 
@@ -148,7 +148,7 @@ Planned: a subdomain such as `rush.kipdeck.com` pointed at the VM, via `deploy/p
 ### Additional information
 
 ```field name="Additional information"
-Pre-existing code: Kipdeck existed before the event. It is MIT licensed and built on agent-office by webdevcody / AgentSystemLabs (https://github.com/AgentSystemLabs/agent-office, MIT); LICENSE and NOTICE credit upstream. Before 2026-11-03 Kipdeck already had the inbox, review and merge, the worker environment allowlist and budget caps, and ran every agent as the office's OS user with no sandbox (docs/security.md said so). Built during Agent Rush (2026-11-03 to 2026-11-08): the Docker sandbox per task, the inference proxy that holds the key and routes every model call to Vultr Serverless Inference, the OpenCode provider for Vultr, the "Blocked by sandbox" state in the inbox, and the Vultr VM deployment. Every commit from the event: https://github.com/zbagdzevicius/kipdeck/compare/agent-rush-start...agent-rush-submit
+Pre-existing code: Kipdeck existed before the event. It is MIT licensed and built on agent-office by webdevcody / AgentSystemLabs (https://github.com/AgentSystemLabs/agent-office, MIT); LICENSE and NOTICE credit upstream. Before 2026-11-03 Kipdeck already had the inbox, review and merge, the worker environment allowlist and budget caps, and ran every agent as the office's OS user with no sandbox (docs/security.md said so). Built during Agent Rush (2026-11-03 to 2026-11-08): the Docker sandbox per task, the inference proxy that holds the key and routes every model call to Vultr Serverless Inference, the OpenCode provider for Vultr, the "Blocked by sandbox" state in the inbox, and the Vultr VM deployment. Every commit from the event: https://github.com/lukepas/kipdeck/compare/agent-rush-start...agent-rush-submit
 Model used: {{VULTR_MODEL}} on Vultr Serverless Inference. Demo login for judges: {{JUDGE_ACCESS}}.
 ```
 

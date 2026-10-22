@@ -21,7 +21,7 @@ Kipdeck is built on agent-office (MIT, by webdevcody / AgentSystemLabs, https://
 - Page: https://superteam.fun/earn/grants/agentic-engineering/
 - Form: the same page, "Apply" button (a 3-step modal: Basics, Details, Milestones). Needs a Superteam Earn account with a completed talent profile and a verified X account.
 - Questions: support@superteam.fun
-- Our links: repo https://github.com/zbagdzevicius/kipdeck (escrow in `onchain/solana/`, Action in `onchain/action/`), site https://kipdeck.com, replay demo https://kipdeck-demo.vercel.app, showcase https://zbagdzevicius.github.io/kipdeck/ (all HTTP 200 on 2026-10-14), program https://explorer.solana.com/address/JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6?cluster=devnet
+- Our links: repo https://github.com/lukepas/kipdeck (escrow in `onchain/solana/`, Action in `onchain/action/`), site https://kipdeck.com, replay demo https://kipdeck-demo.vercel.app, showcase https://lukepas.github.io/kipdeck/ (all HTTP 200 on 2026-10-14), program https://explorer.solana.com/address/JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6?cluster=devnet
 - Upstream credit: https://github.com/AgentSystemLabs/agent-office (MIT, webdevcody / AgentSystemLabs)
 
 ## Fit
@@ -53,7 +53,7 @@ Every box here must be ticked before submitting. The first one is open in every 
 - [ ] Applications are paused (`isPaused: true` in the listing data, button reads "Applications Paused"). Nothing can be filed until Superteam reopens it.
 - [ ] KYC on Earn is required before tranche 1. Personal details go there directly; nothing to invent here.
 - [ ] Company registration: not needed. The grant pays an individual's wallet and the receipt must carry the applicant's name or entity.
-- [ ] Personal fields to fill: Telegram username, verified X profile, Solana wallet for USDG, Earn talent profile completed. Team: founder-led [FOUNDERS: team, if co-founders are decided under D9 before applying].
+- [ ] Personal fields to fill: Telegram username, verified X profile, Solana wallet for USDG, Earn talent profile completed. Team: solo, Lukas Kveraga is the sole founder.
 - [ ] Receipt: the subscription must be bought in the applicant's name and total at least USD 200 [FOUNDERS: which plan; check its current price].
 
 ## Pre-existing code disclosure
@@ -88,7 +88,7 @@ Not shown for this grant; fixed at 200 USDG.
 
 ### TG username (required, Telegram username format)
 
-`[FOUNDERS: Telegram username of Zygimantas Bagdzevicius]`
+`[FOUNDERS: Telegram username of Lukas Kveraga]`
 
 ### Wallet address (required, valid Solana address)
 
@@ -132,22 +132,22 @@ Testnets only: the program accepts devnet USDC and a test mint, and is not audit
 ### Proof of work (required, rich text)
 
 ```field name="Proof of Work"
-- Code (MIT, public): https://github.com/zbagdzevicius/kipdeck. Escrow program, SDK and CLI in onchain/solana/, GitHub Action in onchain/action/. Our commits vs upstream agent-office: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
+- Code (MIT, public): https://github.com/lukepas/kipdeck. Escrow program, SDK and CLI in onchain/solana/, GitHub Action in onchain/action/. Our commits vs upstream agent-office: https://github.com/lukepas/kipdeck/compare/226452e4...main
 - Devnet program: https://explorer.solana.com/address/JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6?cluster=devnet
 - A devnet release sent by the approver after the GitHub Action claimed the bounty (2026-10-04): https://explorer.solana.com/tx/4PYnNQZAi23BGUQ84EqDJfgSZABjqqKxPeyan6frLG25H6jWY8F6qrLGyRituXNXeHujZd29uWPXhoDN7MSdYsUe?cluster=devnet
 - Live replay demo of the product: https://kipdeck-demo.vercel.app
-- Site: https://kipdeck.com and showcase: https://zbagdzevicius.github.io/kipdeck/
+- Site: https://kipdeck.com and showcase: https://lukepas.github.io/kipdeck/
 - Submitted to the Colosseum Crypto World's Fair hackathon (October 2026) [FOUNDERS: Colosseum project URL].
 - Built on agent-office (https://github.com/AgentSystemLabs/agent-office, MIT, by webdevcody / AgentSystemLabs). The 3D office is upstream's work; the escrow, SDK, Action, Blink and inbox are ours.
 ```
 
 ### Personal X profile (required, must be verified on Earn)
 
-`[FOUNDERS: X profile URL of Zygimantas Bagdzevicius; verify it in the Earn profile first or the form refuses it]`
+`[FOUNDERS: X profile URL of Lukas Kveraga; verify it in the Earn profile first or the form refuses it]`
 
 ### Personal GitHub profile (optional, GitHub username)
 
-`zbagdzevicius`
+`lukepas`
 
 ### Custom question (optional, link)
 
@@ -182,7 +182,7 @@ One merged pull request in a public repository we don't own that paid devnet USD
 | Field | Answer |
 | --- | --- |
 | Link to your project's URL | the public Blink host, or https://kipdeck.com if the Blink is on a subpath [FOUNDERS: final URL] |
-| Link to the GitHub repo | `zbagdzevicius/kipdeck` |
+| Link to the GitHub repo | `lukepas/kipdeck` |
 | AI subscription receipt (up to 3 PDFs or PNGs, name on it, total at least USD 200) | [FOUNDERS: receipt(s)] |
 | Solana wallet address | prefilled from the application |
 | Anything else? | the third-party repo, the merged PR URL, the claim and release transaction links |
@@ -245,10 +245,10 @@ Hi Superteam team,
 
 The Agentic Engineering Grant page shows "Applications Paused". Do you plan to reopen it for new applicants, and roughly when?
 
-We are building Proof of Merge, an open source Solana escrow (devnet program JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6) that pays for a pull request only after a person merges it, with a Fund this issue Blink and a GitHub Action. We would apply to ship the first public run in a repository we don't own. Code: https://github.com/zbagdzevicius/kipdeck
+We are building Proof of Merge, an open source Solana escrow (devnet program JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6) that pays for a pull request only after a person merges it, with a Fund this issue Blink and a GitHub Action. We would apply to ship the first public run in a repository we don't own. Code: https://github.com/lukepas/kipdeck
 
 Thanks,
-Zygimantas Bagdzevicius
+Lukas Kveraga
 Kipdeck, Vilnius, Lithuania
 hello@kipdeck.com
 ```

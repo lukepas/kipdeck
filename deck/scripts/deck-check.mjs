@@ -119,7 +119,7 @@ try {
   for (const re of BANNED) if (re.test(text)) fail('copy: found ' + re);
   // A way to reach us must stay in.
   const contact = await page.evaluate(() => [...document.querySelectorAll('#s14 [data-a="contact"] a')].map((a) => a.getAttribute('href')));
-  for (const re of [/^mailto:\S+@\S+$/, /^https:\/\/kipdeck\.com\/?$/, /^https:\/\/github\.com\/zbagdzevicius\/kipdeck$/]) if (!contact.some((h) => re.test(h))) fail('s14: contact line has no link matching ' + re + ' (got ' + contact.join(', ') + ')');
+  for (const re of [/^mailto:\S+@\S+$/, /^https:\/\/kipdeck\.com\/?$/, /^https:\/\/github\.com\/lukepas\/kipdeck$/]) if (!contact.some((h) => re.test(h))) fail('s14: contact line has no link matching ' + re + ' (got ' + contact.join(', ') + ')');
   if (!fails.some((f) => f.startsWith('copy:') || f.startsWith('s14: contact'))) console.log('ok copy: contact links ' + contact.join(', '));
 
   // Phone: reading layout, no sideways scroll, no tiny text, and the footer never collides.

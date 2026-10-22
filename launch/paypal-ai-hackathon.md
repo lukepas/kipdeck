@@ -25,10 +25,10 @@ Kipdeck is a fork of [agent-office](https://github.com/AgentSystemLabs/agent-off
 | PayPal Agent Toolkit | https://docs.paypal.ai/developer/tools/ai/agent-toolkit-quickstart |
 | PayPal MCP server | https://docs.paypal.ai/developer/tools/ai/mcp-quickstart |
 | Sandbox starter | https://github.com/paypaldev/getting-started-with-paypal-sandbox |
-| Kipdeck repo (public, MIT, licence shows in About) | https://github.com/zbagdzevicius/kipdeck |
+| Kipdeck repo (public, MIT, licence shows in About) | https://github.com/lukepas/kipdeck |
 | Site | https://kipdeck.com |
 | Replay demo (no install) | https://kipdeck-demo.vercel.app |
-| Showcase | https://zbagdzevicius.github.io/kipdeck/ |
+| Showcase | https://lukepas.github.io/kipdeck/ |
 | Contact | hello@kipdeck.com |
 
 ## Fit
@@ -156,7 +156,7 @@ typescript, node.js, vite, paypal, paypal-payouts, paypal-orders, paypal-js-sdk,
 ### Try it out links
 
 ```
-https://github.com/zbagdzevicius/kipdeck
+https://github.com/lukepas/kipdeck
 https://kipdeck-demo.vercel.app
 ```
 Add the hosted sandbox office URL here only if To build item 8 is done.
@@ -190,7 +190,7 @@ Kipdeck existed before 2026-10-01 as a fork of agent-office (MIT, webdevcody / A
 ```field name="Testing instructions"
 Hosted: [URL, if To build item 8 is done]. Login: [judge password].
 Locally (about 5 minutes): Node.js 20+, git. 
-  git clone https://github.com/zbagdzevicius/kipdeck && cd kipdeck && npm install
+  git clone https://github.com/lukepas/kipdeck && cd kipdeck && npm install
   cp .env.paypal.example .env.paypal   # sandbox client id and secret, given in the README for judges
   node bin/agent-office.js --demo --paypal-sandbox
 The --demo flag runs scripted agents, so no AI CLI or model key is needed to see the payment flow; with Claude Code, Codex or Cursor signed in, real agents work the issue. Sandbox buyer and payee accounts are listed in docs/paypal.md.
@@ -199,7 +199,7 @@ The --demo flag runs scripted agents, so no AI CLI or model key is needed to see
 
 **Country of residence**: Lithuania.
 
-**Team members**: founder-led. Zygimantas Bagdzevicius (CEO/CTO) submits as the individual entrant and Representative. [FOUNDERS: team, decision D9. Add teammates by Devpost username before submitting, and only people who actually worked on it.]
+**Team members**: none. Lukas Kveraga (sole founder, CEO and CTO) submits as the individual entrant and Representative.
 
 **Opt into sponsor prizes**: Render, only if hosted on Render. Otherwise none.
 

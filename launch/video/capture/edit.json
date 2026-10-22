@@ -185,7 +185,6 @@
       "dur": 8.0,
       "cut": 0,
       "tag": "github",
-      "url": "https://github.com/zbagdzevicius/ugc-army-demo/pull/4",
       "kb": [[0, 0, 1920], [330, 190, 1120]],
       "note": [0.3, 7.7, "Units open PRs with the operator's GitHub token, so GitHub shows the operator's account."],
       "noteAt": "low"

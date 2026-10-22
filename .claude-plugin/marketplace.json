@@ -1,6 +1,6 @@
 {
   "name": "kipdeck",
-  "owner": { "name": "Kipdeck", "url": "https://github.com/zbagdzevicius/kipdeck" },
+  "owner": { "name": "Kipdeck", "url": "https://github.com/lukepas/kipdeck" },
   "metadata": { "description": "Kipdeck's Claude Code plugins." },
   "plugins": [
     {

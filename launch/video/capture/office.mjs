@@ -11,7 +11,7 @@
 //
 // Everything in the office is a seeded demo crew: stand-in units (a shell script that posts Claude Code's
 // hooks), boards and bounties played into the page as if the server had sent them. The boards mirror the
-// public demo repo zbagdzevicius/ugc-army-demo as it stands on devnet (issues #1-#3 with 10, 15 and 25
+// public demo repo ugc-army-demo as it stands on devnet (issues #1-#3 with 10, 15 and 25
 // test tokens, PR #4 claiming #1); the merge, the approval and the payout are replayed, nothing touches a
 // chain. The x402 402 answer is the office's own, from the real route (the offer names the office's public
 // Base Sepolia address; no key is involved). The edit labels every one of these shots "demo data".
@@ -39,7 +39,8 @@ const W = 1920;
 const H = 1080;
 // The demo repository keeps its pre-rename name: each devnet bounty's address is derived from the repo name,
 // so renaming it would orphan the three funded bounties. The cards label it a test repository.
-const REPO = 'zbagdzevicius/ugc-army-demo';
+// The demo repository; set DEMO_REPO=<owner>/ugc-army-demo to record against the real one.
+const REPO = process.env.DEMO_REPO || 'demo/ugc-army-demo';
 // The office's public Base Sepolia address, as in README.md and docs/x402.md (an address, never a key).
 const PAY_TO = '0x2522fAd50CA1e545D8Bd8593763432bAB0dcDe9b';
 
@@ -99,7 +100,7 @@ const CREW = [
   ['desk-10', 'Changelog for 0.2.0'],
 ];
 // The unit hired on camera, for issue #2.
-const HIRE = ['desk-13', 'Issue #2 in zbagdzevicius/ugc-army-demo: slugify, transliterate accented letters'];
+const HIRE = ['desk-13', 'Issue #2 in ugc-army-demo: slugify, transliterate accented letters'];
 
 const office = spawn(
   process.execPath,
@@ -160,10 +161,10 @@ const PROFILE = () => {
 function fixtures() {
   const at = '2026-10-04T07:20:00Z';
   const url = (kind, n) => `https://github.com/${REPO}/${kind}/${n}`;
-  const issue = (number, title) => ({ number, title, state: 'OPEN', url: url('issues', number), author: 'zbagdzevicius', labels: [{ name: 'bounty' }], assignees: [], createdAt: at, updatedAt: at, body: '', comments: 0 });
+  const issue = (number, title) => ({ number, title, state: 'OPEN', url: url('issues', number), author: 'operator', labels: [{ name: 'bounty' }], assignees: [], createdAt: at, updatedAt: at, body: '', comments: 0 });
   return {
     issues: [issue(1, 'slugify: strip punctuation and collapse repeated dashes'), issue(2, 'slugify: transliterate accented letters'), issue(3, 'Add a truncate(slug, max) helper')],
-    pulls: [{ number: 4, title: 'slugify: strip punctuation and collapse repeated dashes', state: 'OPEN', isDraft: false, url: url('pull', 4), author: 'zbagdzevicius', labels: [], reviewDecision: '', headRefName: 'fix/1-slugify-punctuation', baseRefName: 'main', createdAt: at, updatedAt: at, additions: 32, deletions: 1, checks: 'pass', body: 'Closes #1', closes: [1] }],
+    pulls: [{ number: 4, title: 'slugify: strip punctuation and collapse repeated dashes', state: 'OPEN', isDraft: false, url: url('pull', 4), author: 'operator', labels: [], reviewDecision: '', headRefName: 'fix/1-slugify-punctuation', baseRefName: 'main', createdAt: at, updatedAt: at, additions: 32, deletions: 1, checks: 'pass', body: 'Closes #1', closes: [1] }],
   };
 }
 

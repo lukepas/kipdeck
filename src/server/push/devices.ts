@@ -12,7 +12,7 @@ import { tryStateJson, writeState } from '../safefs.js';
 import { encrypt, keysOk, newVapidKeys, vapidAuth, vapidOk, type ReceiverKeys, type VapidKeys } from './crypto.js';
 
 /** Who a VAPID push says it's from; Apple's push service wants one. */
-const SUBJECT = 'https://github.com/zbagdzevicius/kipdeck';
+const SUBJECT = 'https://github.com/lukepas/kipdeck';
 /** The push services browsers use: Google's (Chrome, Edge, Android), Mozilla's, Apple's and Microsoft's. */
 const PUSH_HOSTS = ['fcm.googleapis.com', 'android.googleapis.com', 'push.services.mozilla.com', 'push.apple.com', 'notify.windows.com'];
 /** The most devices the office keeps, and the most one person has: a new one past that replaces their oldest. */

@@ -21,7 +21,7 @@ import { BRANDS } from '../site/landing/brand.ts';
 
 const ROOT = path.join(import.meta.dirname, '..');
 const read = (f: string) => readFileSync(path.join(ROOT, f), 'utf8');
-const LATEST = 'https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz';
+const LATEST = 'https://github.com/lukepas/kipdeck/releases/latest/download/kipdeck.tgz';
 
 test('one address for the newest release, the same in the app, the landing page and the packer', () => {
   assert.equal(RELEASE_TARBALL, LATEST);
@@ -33,13 +33,13 @@ test('one address for the newest release, the same in the app, the landing page 
   assert.equal(npxSpec('https://git.example.eu/team/kipdeck/'), 'git+https://git.example.eu/team/kipdeck.git');
   if (!ON_NPM) assert.equal(NPX_SPEC, RELEASE_TARBALL);
   assert.equal(INSTALL_COMMAND, `npx ${NPX_SPEC}`);
-  assert.equal(FROM_SOURCE_COMMAND, 'npx github:zbagdzevicius/kipdeck');
+  assert.equal(FROM_SOURCE_COMMAND, 'npx github:lukepas/kipdeck');
 });
 
 test('the README, the CLI help and both install scripts lead with the release and keep github: as the fallback', () => {
   const top = read('README.md').split('\n').slice(0, 20).join('\n');
   assert.ok(top.includes(`npx ${LATEST}`), 'the README opens with the release command');
-  assert.ok(top.includes('npx github:zbagdzevicius/kipdeck'), 'and names the from-source fallback near it');
+  assert.ok(top.includes('npx github:lukepas/kipdeck'), 'and names the from-source fallback near it');
   // The CLI help ends with both (server/runcmd.ts, after the "started as" line).
   const help = startedAs({ root: '/opt/kipdeck', find: () => null, win: false, home: '/home/ada' });
   assert.ok(help.includes(`  ${INSTALL_COMMAND}\n`), help);
@@ -49,7 +49,7 @@ test('the README, the CLI help and both install scripts lead with the release an
     const s = read(f);
     assert.ok(s.includes('/latest/download/kipdeck.tgz'), `${f} installs the newest release`);
     assert.ok(s.includes('/download/v'), `${f} installs a given release with KIPDECK_VERSION`);
-    assert.ok(s.includes('npx github:zbagdzevicius/kipdeck'), `${f} prints the from-source fallback`);
+    assert.ok(s.includes('npx github:lukepas/kipdeck'), `${f} prints the from-source fallback`);
     assert.doesNotMatch(s, /npm view|kipdeck@/, `${f} never asks the registry, which doesn't have it`);
   }
 });

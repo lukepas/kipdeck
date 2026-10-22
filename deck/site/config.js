@@ -11,14 +11,13 @@ window.DECK_CONFIG = {
   // Kip, the mascot who runs across the slides. Set to false for a more conservative investor
   // (the URL flag ?nokip does the same for one viewing).
   kip: true,
-  // Team names, spelled once. Used on the ask slide contact line.
-  team: ['Žygimantas Bagdzevičius', 'Lukas Kveraga', 'Ernestas Rimkevičius'],
+  // Team names, spelled once (Lukas Kveraga is the sole founder, CEO and CTO). Used on the ask slide contact line.
+  team: ['Lukas Kveraga'],
   // Contact block on the ask slide. Empty values are left out (nothing "to be filled" is shown).
   contactEmail: 'hello@kipdeck.com',
   // The product site (kipdeck.com), linked on the ask slide.
   demoUrl: 'https://kipdeck.com',
-  repoUrl: 'https://github.com/zbagdzevicius/kipdeck',
+  repoUrl: 'https://github.com/lukepas/kipdeck',
   // Disclosure line on the team slide. It states only what is public today.
-  // Founders: replace it with the agreed full-time dates, equity split and IP assignment once signed.
-  commitment: 'Today Žygimantas is also co-founder and CEO/CTO of Motored (Antler-backed, raising its own pre-seed), and Lukas and Ernestas are engineers there. Who goes full-time on {{name}} and from when, the equity split and IP assignment to the {{name}} company are agreed in writing before this round closes and shared in diligence.',
+  commitment: 'Lukas Kveraga is the sole founder of {{name}} and works on it full time.',
 };

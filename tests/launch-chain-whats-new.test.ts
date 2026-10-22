@@ -98,9 +98,9 @@ test('commits sort into ours, re-committed upstream PRs, imports and bots, whate
   assert.deepEqual(split.upstream.map((c) => [c.subject, c.pr, c.by]), [['An upstream PR (#9)', 9, 'upstreamdev']]);
   assert.deepEqual(split.imports.map((c) => c.subject), ['Import agent-office at 665aeec']);
   assert.deepEqual(split.others.map((c) => c.subject), ['Bump x (#1)']);
-  const c = { sha: 'abcdef0123', date: '2026-10-01', subject: 's', author: 'Žygimantas' };
-  assert.equal(classify([c], { authors: ['Žygimantas'] }).ours.length, 1);
-  assert.equal(classify([c], { authors: ['Žygimantas'], carried: [{ sha: 'abc', pr: 1, author: 'a' }] }).ours.length, 1, 'a SHA shorter than 7 never matches');
+  const c = { sha: 'abcdef0123', date: '2026-10-01', subject: 's', author: 'Fork Dėv' };
+  assert.equal(classify([c], { authors: ['Fork Dėv'] }).ours.length, 1);
+  assert.equal(classify([c], { authors: ['Fork Dėv'], carried: [{ sha: 'abc', pr: 1, author: 'a' }] }).ours.length, 1, 'a SHA shorter than 7 never matches');
 });
 
 test('lines added counts only our commits, in the counted paths', (t) => {

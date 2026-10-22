@@ -21,7 +21,7 @@ Runtime target: 2:30 (limit: 3:00)
 | 1:25-1:45 | You, then the two explorers side by side | "Solana because a five-dollar bounty has to cost nothing to pay and be fundable from a link. Base because reputation should be a public record any tool can read, not a profile." |
 | 1:45-2:05 | You, then the counts card from data/counts.json | "Where we are, from chain data, today: (read the counts card). All on testnets, all checkable." |
 | 2:05-2:20 | You on camera | "Kipdeck is self-hosted and open source, free for one engineer. Teams pay per seat for the team tier, and later a one to two percent fee on released bounties, after an audit." |
-| 2:20-2:30 | Card: Kipdeck and Proof of Merge, its payout layer; github.com/zbagdzevicius/kipdeck; built on agent-office by webdevcody (MIT) | "We want feedback from teams running agents, and repos willing to fund five issues. Built on agent-office by webdevcody, MIT. Thank you." |
+| 2:20-2:30 | Card: Kipdeck and Proof of Merge, its payout layer; github.com/lukepas/kipdeck; built on agent-office by webdevcody (MIT) | "We want feedback from teams running agents, and repos willing to fund five issues. Built on agent-office by webdevcody, MIT. Thank you." |
 
 ## Technical demo
 

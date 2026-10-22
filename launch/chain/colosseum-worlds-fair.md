@@ -19,10 +19,10 @@ Entry: Kipdeck, the inbox for your AI coding agents, with Proof of Merge, the pa
 - Hackathon FAQ (form fields, videos, prior work): https://colosseum.com/hackathon
 - Arena (registration and the form; arena.colosseum.org now redirects here): https://colosseum.com/arena
 - Upstream: https://github.com/AgentSystemLabs/agent-office (our history starts from snapshot imports of https://github.com/AgentSystemLabs/agent-office/commit/665aeec571bc03f76cbd16de8d628dd169a48874 and https://github.com/AgentSystemLabs/agent-office/commit/1bc3028472d38b161e85117bf621bb6bc12700e5, see [disclosure.md](disclosure.md))
-- Our repository: https://github.com/zbagdzevicius/kipdeck
-- What we added since our import of upstream 1bc3028 (226452e4), the 11 re-committed upstream pull requests included and named in [disclosure.md](disclosure.md): https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
+- Our repository: https://github.com/lukepas/kipdeck
+- What we added since our import of upstream 1bc3028 (226452e4), the 11 re-committed upstream pull requests included and named in [disclosure.md](disclosure.md): https://github.com/lukepas/kipdeck/compare/226452e4...main
 - Live demo (always on, a recorded round in the browser with nothing to install): https://kipdeck-demo.vercel.app
-- Public showcase: https://zbagdzevicius.github.io/kipdeck/ (not published yet on 2026-10-10: it returns 404 until the Pages workflow runs, see [SUBMIT.md](SUBMIT.md))
+- Public showcase: https://lukepas.github.io/kipdeck/ (not published yet on 2026-10-10: it returns 404 until the Pages workflow runs, see [SUBMIT.md](SUBMIT.md))
 
 What is deployed on testnets (every link below was checked on 2026-10-03, the x402 payment and the fifth bounty on 2026-10-04; the explorers block scripted requests, so the transactions were checked over RPC, see [links.json](links.json)):
 
@@ -43,7 +43,7 @@ What is deployed on testnets (every link below was checked on 2026-10-03, the x4
 - [x] Employer policy: the rules make the entrant warrant that entering breaches no employer policy. Kipdeck is unrelated to any founder's job, so it does not.
 - [ ] Every member registered on colosseum.com before 2026-10-12 23:59 PT, profile complete, consent given.
 - [ ] Prior work disclosed in the form: the FAQ allows pre-existing code but requires disclosing all relevant past development; misrepresenting it can mean disqualification. The rules (section 9) also ask entrants to tell Colosseum the status and ownership of open-source and third-party code. Both are covered by [disclosure.md](disclosure.md).
-- [x] Repository public (https://github.com/zbagdzevicius/kipdeck), with the MIT `LICENSE` keeping the upstream copyright notice, and `NOTICE` crediting upstream.
+- [x] Repository public (https://github.com/lukepas/kipdeck), with the MIT `LICENSE` keeping the upstream copyright notice, and `NOTICE` crediting upstream.
 - [ ] Testnet only. The rules and FAQ say nothing about mainnet [unverified: whether judges weigh it]; we say so plainly in [judge-qa.md](judge-qa.md).
 - [ ] Prizes are paid in Phantom CASH to the team leader after prize documents and due diligence (rules, section 14). Expect KYC [unverified: what it involves].
 
@@ -52,7 +52,7 @@ What is deployed on testnets (every link below was checked on 2026-10-03, the x4
 Paste into the prior work question, or "anything else judges should know". It is the same text as [disclosure.md](disclosure.md), where the commit list and the third-party license table are.
 
 ```field name="Prior work disclosure" max-chars=1500
-Kipdeck is built on agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs and community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D office, desks where coding agent CLIs run in live terminals, voice, the GitHub boards and the deploy scripts. Our history starts from two snapshot imports of upstream (commits 01d85bbb = upstream 665aeec, and 226452e4 = upstream 1bc3028, both 2026-09-30); all of that is theirs, and so are 11 upstream pull requests we re-committed under our name (listed with their authors in launch/chain/disclosure.md). Ours, all written during the contest (our first commit is 2026-09-30): the inbox and mission control (attention ranking, review inbox, goals, timeline), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and Proof of Merge, the payout layer: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, a GitHub Action attester, x402 paid tasks, EAS attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are every commit in 226452e4..f61d0eb8 except those 11, the import 01d85bbb and 2 Dependabot bumps. Testnets only. Diff: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
+Kipdeck is built on agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs and community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D office, desks where coding agent CLIs run in live terminals, voice, the GitHub boards and the deploy scripts. Our history starts from two snapshot imports of upstream (commits 01d85bbb = upstream 665aeec, and 226452e4 = upstream 1bc3028, both 2026-09-30); all of that is theirs, and so are 11 upstream pull requests we re-committed under our name (listed with their authors in launch/chain/disclosure.md). Ours, all written during the contest (our first commit is 2026-09-30): the inbox and mission control (attention ranking, review inbox, goals, timeline), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and Proof of Merge, the payout layer: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, a GitHub Action attester, x402 paid tasks, EAS attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are every commit in 226452e4..f61d0eb8 except those 11, the import 01d85bbb and 2 Dependabot bumps. Testnets only. Diff: https://github.com/lukepas/kipdeck/compare/226452e4...main
 ```
 
 ## Project description
@@ -106,7 +106,7 @@ Counted from chain data on the submission day, not estimated. Merged agent PRs a
 ```
 
 ```field name="Team" max-words=80
-Three founders in Vilnius, building Kipdeck since 30 September. Zygimantas Bagdzevicius, CEO/CTO: ex-Amazon engineer, founded and exited a Lithuanian business that scaled to 400k monthly active users. Lukas Kveraga, founding engineer: ex-Vinted, scaling a high-traffic marketplace. Ernestas Rimkevicius, software engineer: backend, importers and pipelines.
+Lukas Kveraga is Kipdeck's sole founder, CEO and CTO, in Vilnius, building it since 30 September. Ex-Vinted, scaling a high-traffic marketplace.
 ```
 
 ```field name="Location" max-chars=60
@@ -134,9 +134,9 @@ Both videos are made from [launch/video/](../video/README.md): the pitch from [p
 
 - [ ] Every member registered before 2026-10-12 23:59 PT.
 - [ ] Multi-track answer from Discord pasted into [judge-qa.md](judge-qa.md).
-- [ ] Repository public (it is: https://github.com/zbagdzevicius/kipdeck); the commit after `226452e4..` in the disclosure re-stamped with the submitted commit (stamped `f61d0eb8` on 2026-10-13; see [SUBMIT.md](SUBMIT.md)).
+- [ ] Repository public (it is: https://github.com/lukepas/kipdeck); the commit after `226452e4..` in the disclosure re-stamped with the submitted commit (stamped `f61d0eb8` on 2026-10-13; see [SUBMIT.md](SUBMIT.md)).
 - [ ] Counts refreshed from chain (`launch/chain/tools/counts.ts --refresh`), demand validation re-read.
-- [ ] Showcase published (GitHub Pages export from onchain/indexer) and https://zbagdzevicius.github.io/kipdeck/ opened in a private window.
+- [ ] Showcase published (GitHub Pages export from onchain/indexer) and https://lukepas.github.io/kipdeck/ opened in a private window.
 - [ ] Pitch and demo uploaded; links in the form.
 - [ ] Disclosure pasted; `whats-new.ts` output in [disclosure.md](disclosure.md).
 - [ ] `npm run launch:check` clean.

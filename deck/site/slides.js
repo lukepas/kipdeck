@@ -596,9 +596,9 @@
     return tl;
   };
 
-  /* ---------- 13 TEAM: three cards reveal, then the commit graph ---------- */
+  /* ---------- 13 TEAM: the founder card and the commit card reveal, then the commit graph ---------- */
   B.s13 = function (s, gsap) {
-    // Our commits on main per day (author date, Vilnius), 30 Sep-10 Oct: 574 in all, main at 7b0f7538.
+    // Lukas's commits on main per day (author date, Vilnius), 30 Sep-10 Oct: 574 in all, main at d67bdf9f.
     // Left out: 2 Dependabot bumps, the 2 upstream snapshot imports and the 11 re-committed upstream PRs.
     var data = [['30', 10], ['1', 5], ['2', 62], ['3', 32], ['4', 118], ['5', 92], ['6', 131], ['7', 94], ['8', 18], ['9', 8], ['10', 4]];
     var box = A(s, 'commits'); box.innerHTML = '';
@@ -611,8 +611,6 @@
     var tl = gsap.timeline({ paused: true });
     rise(tl, [A(s, 'k'), A(s, 'h')], 0);
     tl.fromTo(AA(s, 'card'), { clipPath: 'inset(0 0 100% 0)', y: 12 }, { clipPath: 'inset(0 0 0% 0)', y: 0, duration: 0.3, ease: E, stagger: 0.1 }, 0.2);
-    var st = s.querySelector('[data-count]');
-    counter(tl, st, 0, 400, 0.4, 0.8, 0, 'k');
     rise(tl, [A(s, 'why')], 0.8);
     tl.from(bars, { scaleY: 0, transformOrigin: '50% 100%', duration: 0.35, ease: E, stagger: 0.05 }, 1.0);
     return tl;

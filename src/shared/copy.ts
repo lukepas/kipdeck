@@ -27,7 +27,7 @@ export function tabTitle(waiting: number, project?: string, view?: string): stri
 /** The command it runs as (agent-office still works, for upstream's scripts). */
 export const CLI = 'kipdeck';
 /** The public source repository. */
-export const REPO_URL = 'https://github.com/zbagdzevicius/kipdeck';
+export const REPO_URL = 'https://github.com/lukepas/kipdeck';
 /**
  * Where the full docs are read, linked from the home page's Help: the README, which links every page
  * in docs/. (kipdeck.com is the marketing page, not the docs.)

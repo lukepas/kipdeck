@@ -33,9 +33,9 @@ Kipdeck is built on agent-office (MIT, by webdevcody / AgentSystemLabs, https://
 - DevSecOps stages (the "Most Stages Covered" yardstick): https://about.gitlab.com/topics/devops/#the-dev-ops-lifecycle-and-how-dev-ops-works
 - Google Cloud free credit: https://cloud.google.com/free
 - GitLab credits dashboard: https://gitlab.com/-/profile/gitlab_credits_dashboard
-- Our project: https://github.com/zbagdzevicius/kipdeck , https://kipdeck.com , replay demo https://kipdeck-demo.vercel.app , showcase https://zbagdzevicius.github.io/kipdeck/
+- Our project: https://github.com/lukepas/kipdeck , https://kipdeck.com , replay demo https://kipdeck-demo.vercel.app , showcase https://lukepas.github.io/kipdeck/
 - Upstream (always credited): https://github.com/AgentSystemLabs/agent-office (MIT, by webdevcody / AgentSystemLabs)
-- Our changes against upstream: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
+- Our changes against upstream: https://github.com/lukepas/kipdeck/compare/226452e4...main
 
 ## Fit
 
@@ -81,7 +81,7 @@ Every box here must be ticked before submitting. The first one is open in every 
 Path B asks for it in "What did you add or change during the submission period?" (under Project description). The about text repeats it under "What we added during the submission period" and "Credits".
 
 ```field name="Disclosure paragraph" max-chars=800
-Kipdeck existed before 2026-10-05 as an MIT fork of agent-office by webdevcody / AgentSystemLabs (https://github.com/AgentSystemLabs/agent-office). All GitLab work is new since 2026-10-05: the import, .gitlab-ci.yml, the Duo flows and triggers, the service account, the Cloud Run deploy with rollback and the GitLab Proof of Merge check. Our changes to upstream: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
+Kipdeck existed before 2026-10-05 as an MIT fork of agent-office by webdevcody / AgentSystemLabs (https://github.com/AgentSystemLabs/agent-office). All GitLab work is new since 2026-10-05: the import, .gitlab-ci.yml, the Duo flows and triggers, the service account, the Cloud Run deploy with rollback and the GitLab Proof of Merge check. Our changes to upstream: https://github.com/lukepas/kipdeck/compare/226452e4...main
 ```
 
 ## Project description: form answers
@@ -143,7 +143,7 @@ After, on GitLab: an issue becomes a reviewed, tested, scanned MR without a pers
 
 ## What we added during the submission period
 
-All GitLab work is new since 2026-10-05: the import to GitLab, `.gitlab-ci.yml`, the Duo flow definitions and triggers, the service account setup, the Google Cloud deploy (`deploy/gcp/`), the post-deploy check and rollback, and the GitLab version of the Proof of Merge check. Kipdeck itself existed before, as a fork of agent-office by webdevcody / AgentSystemLabs (MIT): https://github.com/AgentSystemLabs/agent-office . Our changes to upstream are listed at https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main .
+All GitLab work is new since 2026-10-05: the import to GitLab, `.gitlab-ci.yml`, the Duo flow definitions and triggers, the service account setup, the Google Cloud deploy (`deploy/gcp/`), the post-deploy check and rollback, and the GitLab version of the Proof of Merge check. Kipdeck itself existed before, as a fork of agent-office by webdevcody / AgentSystemLabs (MIT): https://github.com/AgentSystemLabs/agent-office . Our changes to upstream are listed at https://github.com/lukepas/kipdeck/compare/226452e4...main .
 
 ## Challenges
 
@@ -167,7 +167,7 @@ https://gitlab.com/[FOUNDERS: hackathon group]/[FOUNDERS: subgroup]/kipdeck
 ```
 
 ```field name="Original MIT-licensed open-source project URL (Path B)"
-https://github.com/zbagdzevicius/kipdeck (our MIT project, itself a fork of https://github.com/AgentSystemLabs/agent-office by webdevcody / AgentSystemLabs, MIT)
+https://github.com/lukepas/kipdeck (our MIT project, itself a fork of https://github.com/AgentSystemLabs/agent-office by webdevcody / AgentSystemLabs, MIT)
 ```
 
 ```field name="Deployed project URL (Path B)"
@@ -199,7 +199,7 @@ https://www.youtube.com/watch?v=[FOUNDERS: video id]  (Public or Unlisted, never
 Image gallery (3:2, up to 5 MB each [verify]): (1) an issue with the Triage flow's note, (2) the MR with the Review brief note and the `ready-for-human` label, (3) the pipeline graph from the merge with all stages green, (4) Cloud Run revisions with the candidate tag promoted, (5) the Proof of Merge note on the MR with the Base Sepolia attestation link.
 
 ```field name="Team members"
-Zygimantas Bagdzevicius (founder-led; CEO/CTO of Kipdeck) [FOUNDERS: team - invite any co-founder by Devpost username, or submit solo]
+Lukas Kveraga (sole founder, CEO and CTO of Kipdeck), submitting solo
 ```
 
 Confirmations to tick in the form: eligibility (age of majority, not in an excluded region), agreement to the Official Rules and Devpost terms, and that the work is yours or used under licence [verify the exact wording].

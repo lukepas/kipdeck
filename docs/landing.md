@@ -105,7 +105,7 @@ The name, tagline, wordmark, npm package, source repository and share-card text 
 KIPDECK_BRAND=<id> npm run build:site
 ```
 
-The test builds the page and checks that it never says a product name other than Kipdeck. The source repository is `github.com/zbagdzevicius/kipdeck`.
+The test builds the page and checks that it never says a product name other than Kipdeck. The source repository is `github.com/lukepas/kipdeck`.
 
 ## Build, look at it, publish
 
@@ -128,7 +128,7 @@ npm run build:site
 
 Upload `dist/site/` to any static host (GitHub Pages, Cloudflare Pages, Netlify, or a bucket behind a CDN), or let Vercel build it from Git: the root `vercel.json` holds the install and build commands, the output folder, the headers and the `/get` redirect, so connecting the repository to a Vercel project is enough (see `site/landing/README.md`). Each address must be `https`, or the build stops.
 
-`/get` on the landing page is a temporary redirect to the newest release, `https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz`, so `npx https://<your domain>/get` is the short form of the README's first command. Vercel reads it from `vercel.json`; Netlify and Cloudflare Pages read the same rule from `site/landing/public/_redirects`.
+`/get` on the landing page is a temporary redirect to the newest release, `https://github.com/lukepas/kipdeck/releases/latest/download/kipdeck.tgz`, so `npx https://<your domain>/get` is the short form of the README's first command. Vercel reads it from `vercel.json`; Netlify and Cloudflare Pages read the same rule from `site/landing/public/_redirects`.
 
 | Variable | What it does | Unset |
 | --- | --- | --- |
@@ -136,7 +136,7 @@ Upload `dist/site/` to any static host (GitHub Pages, Cloudflare Pages, Netlify,
 | `KIPDECK_WAITLIST_URL` | The Team waitlist form appears under the design-partner link and POSTs JSON here; the page's CSP allows that origin and no other | No form: the ask is **Apply as a design partner**, an email to the brand's `contact` address |
 | `KIPDECK_DEMO_URL` | **Try the demo** opens the hosted demo: on Vercel the root `vercel.json` sets it to the [replay demo](demo.md#the-replay-demo), https://kipdeck-demo.vercel.app/ (or a live one: [the demo](demo.md#the-hosted-demo), [Fly](fly.md)) | **Copy the demo command** copies the hero's demo command and lights it |
 | `KIPDECK_REPO_URL` | Replaces the brand's repository everywhere: links, the start commands (`npx <repo>/releases/latest/download/kipdeck.tgz` in place of the brand's `/get` address, or `npx git+https://...` off GitHub), the design-partner link, the structured data. It also counts as public | The brand's repository (`brand.ts`) |
-| `KIPDECK_REPO_PUBLIC` | `0` for a brand whose repository is private: the hero's command, section 06's terminal, the footer's Source and Docs links and the structured data's repository are left out (the `npx` command stays with `KIPDECK_NPM_PUBLISHED=1`), the film is the hero's first button and **Become a design partner** its second | The repository is public (github.com/zbagdzevicius/kipdeck is): all of those are on the page |
+| `KIPDECK_REPO_PUBLIC` | `0` for a brand whose repository is private: the hero's command, section 06's terminal, the footer's Source and Docs links and the structured data's repository are left out (the `npx` command stays with `KIPDECK_NPM_PUBLISHED=1`), the film is the hero's first button and **Become a design partner** its second | The repository is public (github.com/lukepas/kipdeck is): all of those are on the page |
 | `KIPDECK_NPM_PUBLISHED` | `1` once `npx` works from the registry: `npx kipdeck` replaces the release command and the *Not on npm yet* line goes | The release command and the line stay |
 | `KIPDECK_BRAND` | Picks an entry in `site/landing/brand.ts` | `kipdeck` |
 

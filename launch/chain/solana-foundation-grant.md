@@ -14,7 +14,7 @@ Ask: a milestone-based grant (or a convertible grant, if the Foundation prefers 
 - Grants and funding: https://solana.org/grants-funding
 - Application form: https://share.hsforms.com/1GE1hYdApQGaDiCgaiWMXHA5lohw
 - Program on devnet: https://explorer.solana.com/address/JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6?cluster=devnet
-- Code: https://github.com/zbagdzevicius/kipdeck (`onchain/solana/`)
+- Code: https://github.com/lukepas/kipdeck (`onchain/solana/`)
 - Upstream credit: https://github.com/AgentSystemLabs/agent-office
 
 ## Form answers
@@ -26,7 +26,7 @@ The form has nine fields, a reCAPTCHA and a Submit button. It has no project des
 | Company name | Kipdeck |
 | Website URL | https://kipdeck.com |
 | Country | Lithuania |
-| First name, last name | Zygimantas Bagdzevicius (typed with the diacritics on the form) |
+| First name, last name | Lukas Kveraga |
 | Email address | hello@kipdeck.com |
 | Funding category | Developer Tooling (options: AI, Consumer, DeFi, Developer Education & Ecosystem, Developer Tooling; DeFi is only for perps products) |
 
@@ -60,7 +60,7 @@ By clicking Submit the applicant confirms they may act for the project and apply
 ## Pre-existing code disclosure
 
 ```field name="Prior work" max-chars=900
-The escrow program, its SDK and CLI are ours, started on 2026-10-02 (commit ab7396f5) during the Colosseum Crypto World's Fair, and deployed on Solana devnet. The first product that uses them is Kipdeck, built on agent-office, an MIT-licensed open source office for coding agents created by webdevcody / AgentSystemLabs (github.com/AgentSystemLabs/agent-office, first commit 2026-09-25); the office is their work, and this grant does not fund it. The grant funds the program, the SDK, an audit, the GitHub Action (a first version that attests merges and claims bounties is built and ran once on devnet) and docs, none of which depend on agent-office. Our commits are listed in launch/chain/disclosure.md. Diff: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
+The escrow program, its SDK and CLI are ours, started on 2026-10-02 (commit ab7396f5) during the Colosseum Crypto World's Fair, and deployed on Solana devnet. The first product that uses them is Kipdeck, built on agent-office, an MIT-licensed open source office for coding agents created by webdevcody / AgentSystemLabs (github.com/AgentSystemLabs/agent-office, first commit 2026-09-25); the office is their work, and this grant does not fund it. The grant funds the program, the SDK, an audit, the GitHub Action (a first version that attests merges and claims bounties is built and ran once on devnet) and docs, none of which depend on agent-office. Our commits are listed in launch/chain/disclosure.md. Diff: https://github.com/lukepas/kipdeck/compare/226452e4...main
 ```
 
 ## Project description

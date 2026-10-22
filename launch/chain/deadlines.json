@@ -34,8 +34,8 @@
   },
   "fork": {
     "name": "Kipdeck",
-    "repo": "https://github.com/zbagdzevicius/kipdeck",
-    "authors": ["Žygimantas Bagdzevičius"]
+    "repo": "https://github.com/lukepas/kipdeck",
+    "authors": ["Lukas Kveraga"]
   },
   "events": [
     { "id": "bip-day-1", "date": "2026-10-02", "kind": "task", "title": "Build in public, day 1: the fork, credit to upstream, rule one", "kit": "build-in-public.md", "verified": true },
