@@ -20,7 +20,7 @@ Kipdeck is built on agent-office (MIT, by webdevcody / AgentSystemLabs, https://
 - Resources (credits): https://nebiusglobalaihackathon.devpost.com/resources
 - Nemotron on Token Factory: https://nebius.com/services/token-factory/nemotron
 - Token Factory API (OpenAI-compatible): `https://api.tokenfactory.us-central1.nebius.com/v1/`, model id `nvidia/nemotron-3-super-120b-a12b` (from the Nemotron page's example)
-- Kipdeck repo: https://github.com/zbagdzevicius/kipdeck (public, GitHub detects MIT)
+- Kipdeck repo: https://github.com/lukepas/kipdeck (public, GitHub detects MIT)
 - Upstream: https://github.com/AgentSystemLabs/agent-office (MIT, webdevcody / AgentSystemLabs)
 - Replay demo: https://kipdeck-demo.vercel.app (scripted agents, no model. It does not show Nemotron)
 - Site: https://kipdeck.com. Contact: hello@kipdeck.com
@@ -49,7 +49,7 @@ Every box here must be ticked before submitting. The first one is open in every 
 - [ ] Sole ownership: Rules 5 require the submission to be "solely owned by you... with no other person or entity having any right or interest in it". Confirm a fork of an MIT project counts (see the organiser question below).
 - [ ] Ownership and the fork: the same clause sits awkwardly with code that is MIT-licensed upstream work. Before submitting, email the hackathon manager (the "Email the hackathon manager" link on the overview page) and ask whether an MIT fork with disclosed upstream code is eligible when only our additions are claimed. Save the reply. The rules require a written clarification request for anything ambiguous.
 - [ ] Company registration: none exists. Enter as an individual (or as a team of individuals). An Organization entry needs a legal entity at the time of entry. Prize money goes to the individual, who handles Lithuanian tax on it (rules 7: winners pay all fees and taxes).
-- [ ] Team: co-founders undecided (D9). Enter as an individual for now; Devpost lets you add teammates until the deadline. [FOUNDERS: team]
+- [x] Team: solo. Lukas Kveraga, the sole founder, enters as an individual.
 - [ ] Personal fields: Devpost profile name, email, age confirmation and, if you win, prize payment and tax forms. [FOUNDERS: fill in on Devpost yourself]
 - [ ] Product claims: Nemotron support does not exist today (To build item 1). Do not save the submission as final until it is merged on `main`.
 - [ ] Other contests: Kipdeck is also entered in Colosseum. These rules do not forbid that. Rules 5 do forbid projects built with "financial or preferential support from the Sponsor or Administrator" (Nebius or Devpost). The $25 hackathon credits are offered to all entrants, but list any other Nebius credits received.
@@ -115,7 +115,7 @@ A team can now run a queue of coding agents on an open model, from a phone if th
 Routing each task to the cheapest Nemotron model that passes its tests, and a Nebius AI Cloud deploy script so a team can keep the whole thing on infrastructure it controls.
 
 ## Credit and what is new
-Built on agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs and community contributors. We are not affiliated with them. Upstream started 2026-09-25 and built the desks where agent CLIs run in live terminals, the GitHub boards and the deploy scripts. Ours, from 2026-09-30: the inbox and mission control, the review brief, the security layer, Proof of Merge and the Nebius Token Factory provider. Our changes: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
+Built on agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs and community contributors. We are not affiliated with them. Upstream started 2026-09-25 and built the desks where agent CLIs run in live terminals, the GitHub boards and the deploy scripts. Ours, from 2026-09-30: the inbox and mission control, the review brief, the security layer, Proof of Merge and the Nebius Token Factory provider. Our changes: https://github.com/lukepas/kipdeck/compare/226452e4...main
 ```
 
 ### 6. Built with (tags)
@@ -130,16 +130,16 @@ typescript, node.js, opencode, nvidia-nemotron, nemotron-3-super, nebius-token-f
 The replay demo has scripted agents and no model, so it does not count as a Nemotron demo. Use the test build route, which the rules allow:
 
 ```
-https://github.com/zbagdzevicius/kipdeck#run-on-nvidia-nemotron-via-nebius-token-factory
+https://github.com/lukepas/kipdeck#run-on-nvidia-nemotron-via-nebius-token-factory
 https://kipdeck-demo.vercel.app
 https://kipdeck.com
 ```
-The first link is the README section added by To build item 1: `NEBIUS_API_KEY=... npx github:zbagdzevicius/kipdeck --agent opencode`. If item 4 (a recorded Nemotron round) ships, use that as the first link instead.
+The first link is the README section added by To build item 1: `NEBIUS_API_KEY=... npx github:lukepas/kipdeck --agent opencode`. If item 4 (a recorded Nemotron round) ships, use that as the first link instead.
 
 ### 9. Public code repository URL (required: GitHub, GitLab or Bitbucket, license visible at the top)
 
 ```
-https://github.com/zbagdzevicius/kipdeck
+https://github.com/lukepas/kipdeck
 ```
 GitHub detects MIT today (`licenseInfo: mit`). The README must also "highlight how you've used NVIDIA Nemotron... where Token Factory accelerated your workflow and any other Nebius Tools or Services used". That is To build item 1's README section.
 
@@ -164,7 +164,7 @@ Numbers from our runs: [AFTER RUNS: tasks run, share that passed their tests fir
 Kipdeck did not exist before 2026-08-26, so strictly this field is not needed. Fill it anyway if the form shows it, because the base is someone else's work:
 
 ```field name="Pre-existing work explanation"
-Kipdeck did not exist before the submission period. It is built on agent-office (MIT) by webdevcody / AgentSystemLabs, whose first commit was 2026-09-25, also inside the period. Our first commit is 2026-09-30. Upstream: the desks where agent CLIs run, terminals, GitHub boards, deploy scripts. Ours: the inbox and mission control, the review brief, the security layer, Proof of Merge and the Nebius Token Factory provider for OpenCode agents. Every commit and file we changed: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
+Kipdeck did not exist before the submission period. It is built on agent-office (MIT) by webdevcody / AgentSystemLabs, whose first commit was 2026-09-25, also inside the period. Our first commit is 2026-09-30. Upstream: the desks where agent CLIs run, terminals, GitHub boards, deploy scripts. Ours: the inbox and mission control, the review brief, the security layer, Proof of Merge and the Nebius Token Factory provider for OpenCode agents. Every commit and file we changed: https://github.com/lukepas/kipdeck/compare/226452e4...main
 ```
 
 ### 12. Builders & Brews city (optional)
@@ -177,8 +177,8 @@ None (did not attend)
 
 - Submitter type: Individual, unless a company enters. Organizations must "exist and have been organized or incorporated at the time of entry".
 - Country of residence: Lithuania.
-- Team members: [FOUNDERS: team. Kipdeck is founder-led by Zygimantas Bagdzevicius (CEO/CTO). Invite any co-founder by Devpost username only after decision D9]
-- Representative (if a team): Zygimantas Bagdzevicius.
+- Team members: none. Lukas Kveraga, Kipdeck's sole founder, CEO and CTO, enters alone.
+- Representative (if a team): Lukas Kveraga.
 - Personal fields Devpost asks for (name, email, date of birth or age confirmation, address for prize payment): [FOUNDERS: fill in yourself on Devpost. Not written here]
 
 ### 14. Image gallery (optional, Devpost: up to about 5 MB each)
@@ -209,7 +209,7 @@ Runtime target: 2:58 (limit: under 3:00)
 | Time | Shot | Voiceover |
 | --- | --- | --- |
 | 0:00-0:12 | Kipdeck inbox with four agents across Working, Needs you and To review. Each row says Nemotron 3 Super | "This is Kipdeck, the inbox for your AI coding agents. Every agent here runs on NVIDIA Nemotron, served by Nebius Token Factory." |
-| 0:12-0:30 | Terminal: `export NEBIUS_API_KEY=...` (blurred), then `npx github:zbagdzevicius/kipdeck --agent opencode`. Browser opens signed in | "One environment variable. Start Kipdeck in your repository and it opens in the browser." |
+| 0:12-0:30 | Terminal: `export NEBIUS_API_KEY=...` (blurred), then `npx github:lukepas/kipdeck --agent opencode`. Browser opens signed in | "One environment variable. Start Kipdeck in your repository and it opens in the browser." |
 | 0:30-0:55 | Deploy agent: pick OpenCode, model `nebius/nvidia/nemotron-3-super-120b-a12b`, paste a GitHub issue, deploy two more from the queue | "Deploy an agent with a task. Queue a few more. Each one works on its own branch." |
 | 0:55-1:20 | An agent's terminal: reads code, edits, runs tests, a test fails, it fixes it and the tests go green | "It writes the change, runs the tests and fixes what fails, all on Nemotron." |
 | 1:20-1:40 | Agent moves to Needs you. Answer its question in the one box | "When it needs you, it moves to the top. You answer in one box and it carries on." |
@@ -241,7 +241,7 @@ Minimum to enter: items 1, 2, 7 and the README part of 1, about 3 to 3.5 working
 
 - [ ] Organizer's reply on the MIT fork question saved.
 - [ ] Devpost account, "Join hackathon" done. Token Factory credits redeemed (`NEBIUS-DEVPOST-GLOBAL26`) plus Builders Program. Spending cap set.
-- [ ] To build item 1 merged on `main`: Nemotron via Token Factory works from a clean `npx github:zbagdzevicius/kipdeck`.
+- [ ] To build item 1 merged on `main`: Nemotron via Token Factory works from a clean `npx github:lukepas/kipdeck`.
 - [ ] README section on Nemotron and Token Factory live. License shows at the top of the repo page.
 - [ ] Ten or more real Nemotron runs done. "[AFTER RUNS]" lines and the feedback filled in from them.
 - [ ] No unbuilt claim left: every "[IF SANDBOX BUILT]" sentence and the `docker` tag removed unless item 5 merged.

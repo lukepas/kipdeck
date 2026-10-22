@@ -357,6 +357,10 @@ body.show-hint .hint { opacity: .9; }
 #s13 .person .stat { font: 700 64px/1 var(--display); letter-spacing: -0.03em; }
 #s13 .person blockquote { font: 400 18px/1.42 var(--sans); color: var(--muted); }
 #s13 .person blockquote + blockquote { margin-top: -4px; }
+#s13 .people.solo { grid-template-columns: 1fr 1fr; margin-top: 44px; }
+#s13 .people.solo .person { min-height: 400px; justify-content: center; }
+#s13 .people.solo .person.proof { justify-content: space-between; gap: 60px; padding-bottom: 56px; }
+#s13 .person.proof .commits { margin: 0 auto; }
 #s13 .commits { display: flex; align-items: flex-end; gap: 10px; height: 120px; }
 #s13 .commits .b { width: 54px; border-radius: 6px 6px 2px 2px; background: var(--green); opacity: .85; position: relative; }
 #s13 .commits .b span { position: absolute; top: -26px; left: -6px; right: -6px; text-align: center; font: 500 15px/1 var(--mono); color: var(--muted); }
@@ -491,6 +495,7 @@ body.print #s1 .src-quiet { opacity: 0; }
 /* flow (phone) additions */
 body.flow .progress { display: none; }
 body.flow #s13 .people { grid-template-columns: 1fr; gap: 14px; }
+body.flow #s13 .people.solo { margin-top: 30px; grid-template-columns: minmax(0, 1fr); } body.flow #s13 .people.solo .person.proof { padding-left: 18px; padding-right: 18px; } body.flow #s13 .people.solo .commits { gap: 4px; } body.flow #s13 .people.solo .commits .b { width: 24px; } body.flow #s13 .people.solo .person { min-height: 0; } body.flow #s13 .people.solo .person.proof { gap: 40px; padding-bottom: 46px; }
 body.flow #s13 .person .ph { width: 72px; height: 72px; }
 body.flow #s13 .person .stat .t-label { display: block; margin-top: 6px; }
 body.flow #s13 .commits { gap: 6px; }

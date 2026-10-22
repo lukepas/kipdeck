@@ -25,7 +25,7 @@ Plan to register on 2026-10-31 and submit by 2026-12-05 (one day of slack). Thes
 - Community: https://t.me/+BsYAyQmpC8E4NWE1 (the page also names a "#open-house" channel)
 - Resources the page lists: https://docs.arbitrum.io/ (the page's own overview link returned 404 on 2026-10-14), https://docs.arbitrum.io/stylus/reference/testnet-information
 - Precedent with published rules (same host, same format, ended 2026-10-04): https://www.hackquest.io/hackathons/Arbitrum-Open-House-Singapore-Online-Buildathon
-- Our links: repo https://github.com/zbagdzevicius/kipdeck, site https://kipdeck.com, replay demo https://kipdeck-demo.vercel.app, showcase https://zbagdzevicius.github.io/kipdeck/, upstream credit https://github.com/AgentSystemLabs/agent-office
+- Our links: repo https://github.com/lukepas/kipdeck, site https://kipdeck.com, replay demo https://kipdeck-demo.vercel.app, showcase https://lukepas.github.io/kipdeck/, upstream credit https://github.com/AgentSystemLabs/agent-office
 
 ## Fit
 
@@ -69,12 +69,12 @@ HackQuest has two forms: the registration application (fields read from the even
 
 | Field | Required | Limit | Answer |
 | --- | --- | --- | --- |
-| First and Last Name | yes | - | Zygimantas Bagdzevicius |
+| First and Last Name | yes | - | Lukas Kveraga |
 | Location | yes | - | Vilnius, Lithuania |
 | Email | yes | - | `hello@kipdeck.com` |
-| GitHub | yes | - | zbagdzevicius |
+| GitHub | yes | - | lukepas |
 | Twitter | no | - | [FOUNDERS: X handle, or leave empty] |
-| LinkedIn | no | - | [FOUNDERS: LinkedIn URL, or leave empty] |
+| LinkedIn | no | - | https://www.linkedin.com/in/lukas-kveraga |
 | Do you already have an idea for what to build during the Buildathon? | yes | 300 chars | see below |
 | Do you already have a project you're working on? Please share the website URL. | yes | 300 chars | see below |
 | Please share your Arbitrum One wallet address with us. | yes | 300 chars | [FOUNDERS: an Arbitrum One address you control for prizes. Not the attester or deployer test keys in ~/.config/agent-office-chain] |
@@ -89,7 +89,7 @@ Proof of Merge on Arbitrum. Teams run many AI coding agents and their track reco
 Project website (170 chars):
 
 ```field name="Do you already have a project you're working on? Please share the website URL." max-chars=300
-https://kipdeck.com - Kipdeck, the inbox for your AI coding agents. Open source (MIT), built on agent-office by webdevcody. Code: https://github.com/zbagdzevicius/kipdeck
+https://kipdeck.com - Kipdeck, the inbox for your AI coding agents. Open source (MIT), built on agent-office by webdevcody. Code: https://github.com/lukepas/kipdeck
 ```
 
 ### Project submission (opens 2026-11-16, closes 2026-12-06 16:01 UTC)
@@ -114,7 +114,7 @@ Tech tags: Solidity, Rust, Stylus, TypeScript, EAS, ERC-8004.
 
 Ecosystem: Arbitrum.
 
-Submission type: Solo project [FOUNDERS: switch to team project if D9 adds co-founders before submitting].
+Submission type: Solo project.
 
 Description [unverified limit; 247 words]:
 
@@ -144,7 +144,7 @@ During the buildathon (new):
 - Indexer reads both chains into one dataset; the leaderboard shows which chain holds each proof. Replay tests cover both.
 - {{N}} real person-merged agent PRs attested on Arbitrum Sepolia: {{ARBISCAN_LINKS}}.
 - Stretch: MergeStats in Stylus (Rust), deployed at {{ARB_SEPOLIA_MERGE_STATS}}, with cargo tests.
-Commits: https://github.com/zbagdzevicius/kipdeck/compare/{{START_SHA}}...{{END_SHA}}
+Commits: https://github.com/lukepas/kipdeck/compare/{{START_SHA}}...{{END_SHA}}
 ```
 
 Fundraising status:
@@ -156,13 +156,13 @@ Fundraising status:
 GitHub (open source):
 
 ```
-https://github.com/zbagdzevicius/kipdeck
+https://github.com/lukepas/kipdeck
 ```
 
 MVP/Project Website (custom field, required, 300 chars):
 
 ```field name="MVP/Project Website" max-chars=300
-https://zbagdzevicius.github.io/kipdeck/ (public leaderboard rebuilt from chain data) - replay demo: https://kipdeck-demo.vercel.app - product: https://kipdeck.com
+https://lukepas.github.io/kipdeck/ (public leaderboard rebuilt from chain data) - replay demo: https://kipdeck-demo.vercel.app - product: https://kipdeck.com
 ```
 
 Contract Address (custom field):
@@ -176,7 +176,7 @@ Contract Address (custom field):
 Team intro:
 
 ```field name="Team intro"
-Founder-led. Zygimantas Bagdzevicius (CEO/CTO), Vilnius, Lithuania: product, contracts and the office. [FOUNDERS: team - add co-founders and roles if decision D9 settles before submission.] Kipdeck builds on agent-office by webdevcody / AgentSystemLabs (MIT); their office is their work.
+Solo founder. Lukas Kveraga (Founder, CEO and CTO), Vilnius, Lithuania: product, contracts and the office. Kipdeck builds on agent-office by webdevcody / AgentSystemLabs (MIT); their office is their work.
 ```
 
 Pitch video: 2 minutes, founder on camera, script below. Demo video: 3 minutes, screen capture, script below. Upload both unlisted (YouTube) [unverified: whether HackQuest takes a link or an upload; the placeholder text says "Please Upload"].

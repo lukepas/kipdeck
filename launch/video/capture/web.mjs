@@ -22,7 +22,7 @@ const only = process.argv[2] ? new Set(process.argv[2].split(',')) : undefined;
 const PROGRAM = 'JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6';
 // The program's first release (2026-10-03), a demo bounty with no GitHub merge behind it (launch/chain/README.md).
 const RELEASE = '2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc';
-// The bounty account for issue #2 on zbagdzevicius/ugc-army-demo (15 test tokens, open), from `ao-bounty show`.
+// The bounty account for issue #2 on the demo repository (15 test tokens, open), from `ao-bounty show`.
 // A release on the upgraded program through the approver-wallet path (2026-10-03): the attester and the
 // approver both signed, 5 test tokens, a demo bounty with no GitHub merge behind it (deployments/devnet.json).
 const RELEASE2 = '2CNXXdgQU9Teyem2Zfd39TtUXiB1mLhyjy6PfbLA2ZzE7kADbReYc8ppRC6FkLVpPQ98Gwpdy6j22bp4LSELWD8r';
@@ -42,8 +42,11 @@ const PAGES = {
   'eas-schema': [`https://base-sepolia.easscan.org/schema/view/${SCHEMA}`, 8000, null],
   'bs-x402': [`https://base-sepolia.blockscout.com/tx/${X402TX}`, 9000, null],
   'bs-reputation': [`https://base-sepolia.blockscout.com/address/${REPUTATION}`, 9000, null],
-  'gh-pr4': ['https://github.com/zbagdzevicius/ugc-army-demo/pull/4', 5000, null],
-  'gh-issue2': ['https://github.com/zbagdzevicius/ugc-army-demo/issues/2', 5000, null],
+  // The GitHub shots need DEMO_REPO=<owner>/ugc-army-demo; without it they are skipped.
+  ...(process.env.DEMO_REPO ? {
+    'gh-pr4': [`https://github.com/${process.env.DEMO_REPO}/pull/4`, 5000, null],
+    'gh-issue2': [`https://github.com/${process.env.DEMO_REPO}/issues/2`, 5000, null],
+  } : {}),
 };
 
 async function scrollTo(page, selector, above) {

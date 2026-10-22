@@ -8,7 +8,7 @@ Last checked: 2026-10-07, against Colosseum's hackathon FAQ (https://colosseum.c
 
 - Two to three minutes. Judges watch it first, and it often decides whether a project goes further.
 - Who the team is, what problem it solves, who it is for, any user feedback or validation (informal counts), and the bigger vision.
-- Judges are also asking: can these founders explain the product clearly, and can they grow its user base?
+- Judges are also asking: can the founder explain the product clearly, and can he grow its user base?
 - Things they mark down: going over time, flashy visuals with little behind them, buzzwords, descriptions that are vague or too technical, leaving out the team, and not making the core idea and its impact clear.
 
 So: your face for most of it, short cutaways to the real product, no hype words, and say plainly what is testnet and what has no users yet.
@@ -34,14 +34,14 @@ About 360 spoken words at roughly 150 words a minute. Times are cumulative. Squa
 | 1:12-1:32 | Why crypto | You; cut to Solana Explorer (devnet) and easscan (Base Sepolia) side by side | ~50 |
 | 1:32-1:52 | Traction | You; a plain card with the counts | ~50 |
 | 1:52-2:07 | Go-to-market | You | ~40 |
-| 2:07-2:17 | Team | You; a card with the three founders' names | ~40 |
+| 2:07-2:17 | Team | You; a card with the founder's name and role | ~40 |
 | 2:17-2:27 | Ask | You; end card with the repo link and "Built on agent-office by webdevcody (MIT)" | ~25 |
 
 ### 0:00 Hook
 
 [Use a true moment of your own. If you have one, it beats anything written here. Shape: when, how many agents, what went wrong.]
 
-> Hi, I'm Zygimantas.
+> Hi, I'm Lukas.
 > [True version: "Last week I had N coding agents running at once, and one of them sat waiting on me for an hour before I noticed."]
 > [Fallback: "If you run more than two coding agents at once, you know this:"]
 > they write code faster than you can read it,
@@ -114,13 +114,12 @@ Read the version that is true on the day. Refresh `counts.json` first.
 
 ### 2:07 Team
 
-> We're three founders in Vilnius.
-> I'm Zygimantas, CEO and CTO; Lukas Kveraga is our founding engineer; Ernestas Rimkevicius is a software engineer.
+> I'm Lukas Kveraga, Kipdeck's sole founder, CEO and CTO, in Vilnius.
 > [One true line about the team, as the deck says it. No current employer name.]
 > We built Kipdeck on top of agent-office, an MIT project by webdevcody.
 > The inbox and everything on chain are ours, built since 30 September.
 
-[All three must be registered on colosseum.com before the deadline.]
+[Lukas must be registered on colosseum.com before the deadline.]
 
 ### 2:17 Ask
 
@@ -133,7 +132,7 @@ Read the version that is true on the day. Refresh `counts.json` first.
 Paste this block alone into the teleprompter. Fill the bracketed lines first, then delete the brackets. Each blank line is a breath.
 
 ```text
-Hi, I'm Zygimantas.
+Hi, I'm Lukas.
 [your true hook line]
 they write code faster than you can read it,
 and you lose track of which one is waiting on you.
@@ -186,10 +185,9 @@ Kipdeck is self-hosted and free for one engineer.
 Teams pay per seat for the team tier,
 and later a small fee on released bounties, after an audit.
 
-We're three founders in Vilnius.
-I'm Zygimantas, CEO and CTO;
-Lukas Kveraga is our founding engineer;
-Ernestas Rimkevicius is a software engineer.
+I'm Lukas Kveraga,
+Kipdeck's sole founder, CEO and CTO,
+in Vilnius.
 [your team line]
 We built Kipdeck on top of agent-office,
 an MIT project by webdevcody.

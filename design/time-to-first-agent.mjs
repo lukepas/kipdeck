@@ -44,7 +44,7 @@ writeStandIn(bin);
 writeFileSync(path.join(home, '.claude.json'), JSON.stringify({ oauthAccount: { emailAddress: 'demo@example.invalid' } }));
 
 // The published release: the README's first command (src/shared/demo.ts RELEASE_TARBALL).
-let tarball = npxSpec('https://github.com/zbagdzevicius/kipdeck');
+let tarball = npxSpec('https://github.com/lukepas/kipdeck');
 if (!fromRelease) {
   console.log('packing...');
   tarball = packRelease({ root: HERE, out: pack });

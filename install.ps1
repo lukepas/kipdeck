@@ -1,13 +1,13 @@
 # Install Kipdeck (the inbox for your AI coding agents) from its newest release on Windows and start it:
 #
-#   irm https://raw.githubusercontent.com/zbagdzevicius/kipdeck/main/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/lukepas/kipdeck/main/install.ps1 | iex
 #
 # It installs the newest release's package, built ahead by the Release workflow (nothing is compiled
 # on your machine), with `npm install --global`, which puts a `kipdeck` command on your PATH. Run it
 # again to update. It never installs anything else: the agent CLIs (Claude Code, Codex, Cursor) are
 # yours to install. Kipdeck is not on npm yet; the newest release is
 #
-#   https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz
+#   https://github.com/lukepas/kipdeck/releases/latest/download/kipdeck.tgz
 #
 # and `npx <that address>` runs it without installing anything.
 #
@@ -37,7 +37,7 @@ if (-not ((Get-Command claude -ErrorAction SilentlyContinue) -or (Get-Command co
   Write-Host 'warning: no Claude Code, Codex or Cursor CLI on your PATH. Agents need one of them, e.g. npm install -g @anthropic-ai/claude-code' -ForegroundColor Yellow
 }
 
-$releases = 'https://github.com/zbagdzevicius/kipdeck/releases'
+$releases = 'https://github.com/lukepas/kipdeck/releases'
 $spec = "$releases/latest/download/kipdeck.tgz"
 if ($env:KIPDECK_VERSION) { $spec = "$releases/download/v$($env:KIPDECK_VERSION.TrimStart('v'))/kipdeck.tgz" }
 if ($env:KIPDECK_TARBALL) {
@@ -56,11 +56,11 @@ if ($LASTEXITCODE -ne 0) {
   Write-Host 'To run it straight from the repository instead (Node.js 20+ and git; the'
   Write-Host 'first run builds it, a few minutes), in your repository:'
   Write-Host ''
-  Write-Host '  cd ~\code\your-project; npx github:zbagdzevicius/kipdeck'
+  Write-Host '  cd ~\code\your-project; npx github:lukepas/kipdeck'
   Write-Host ''
   Write-Host 'Or from a clone, with a kipdeck command on your PATH:'
   Write-Host ''
-  Write-Host '  git clone https://github.com/zbagdzevicius/kipdeck'
+  Write-Host '  git clone https://github.com/lukepas/kipdeck'
   Write-Host '  cd kipdeck; npm install; npm link'
   Write-Host '  cd ~\code\your-project; kipdeck'
   Write-Host ''

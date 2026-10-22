@@ -2,18 +2,18 @@
 # Install Kipdeck (the inbox for your AI coding agents) from its newest release and start it, for
 # anyone who would rather have a `kipdeck` command than type the npx command each time:
 #
-#   curl -fsSL https://raw.githubusercontent.com/zbagdzevicius/kipdeck/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/lukepas/kipdeck/main/install.sh | bash
 #
 # Anything after `bash -s --` goes to Kipdeck, e.g. a port:
 #
-#   curl -fsSL https://raw.githubusercontent.com/zbagdzevicius/kipdeck/main/install.sh | bash -s -- --port 4700
+#   curl -fsSL https://raw.githubusercontent.com/lukepas/kipdeck/main/install.sh | bash -s -- --port 4700
 #
 # It installs the newest release's package, built ahead by the Release workflow (nothing is compiled
 # on your machine), into ~/.local/share/kipdeck and links a `kipdeck` command into ~/.local/bin. Run
 # it again to update. It never installs anything else: the agent CLIs (Claude Code, Codex, Cursor)
 # are yours to install. Kipdeck is not on npm yet; the newest release is
 #
-#   https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz
+#   https://github.com/lukepas/kipdeck/releases/latest/download/kipdeck.tgz
 #
 # Environment:
 #   KIPDECK_VERSION        install this release (e.g. 0.1.70) instead of the newest
@@ -27,7 +27,7 @@ KIPDECK_VERSION="${KIPDECK_VERSION:-}"
 KIPDECK_TARBALL="${KIPDECK_TARBALL:-}"
 KIPDECK_INSTALL_ONLY="${KIPDECK_INSTALL_ONLY:-}"
 
-RELEASES="https://github.com/zbagdzevicius/kipdeck/releases"
+RELEASES="https://github.com/lukepas/kipdeck/releases"
 PREFIX="${KIPDECK_PREFIX:-${XDG_DATA_HOME:-$HOME/.local/share}/kipdeck}"
 BIN_DIR="${KIPDECK_BIN_DIR-$HOME/.local/bin}"
 
@@ -62,11 +62,11 @@ from_source() {
 To run it straight from the repository instead (Node.js 20+ and git; the
 first run builds it, a few minutes), in your repository:
 
-  cd ~/code/your-project && npx github:zbagdzevicius/kipdeck
+  cd ~/code/your-project && npx github:lukepas/kipdeck
 
 Or from a clone, with a kipdeck command on your PATH:
 
-  git clone https://github.com/zbagdzevicius/kipdeck
+  git clone https://github.com/lukepas/kipdeck
   cd kipdeck && npm install && npm link
   cd ~/code/your-project && kipdeck
 

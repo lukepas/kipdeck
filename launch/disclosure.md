@@ -24,7 +24,7 @@ The upstream project did not exist before 2026-09-25. That cuts both ways:
 Use this where the form has room (Colosseum "anything else judges should know", Devpost "About the project", grant applications).
 
 ```field name="Disclosure (long)" max-chars=1500
-This project is a fork of Agent Office (github.com/AgentSystemLabs/agent-office), an MIT-licensed open source project created by webdevcody (AgentSystemLabs) with community contributors. Upstream built the 3D multiplayer office, the desks where Claude Code, Codex, OpenCode, Grok, Muse and DeepSeek Harness workers run, the shared live terminals, voice chat, the GitHub issue and PR boards, the stdio MCP server for managing workers, and the deploy scripts for AWS, Azure, Railway, Fly.io and Dokploy. Its first commit is dated 2026-09-25. Our history starts from two snapshot imports of upstream, 01d85bbb (upstream 665aeec) and 226452e4 (upstream 1bc3028), both 2026-09-30. Everything in them is their work, and so are 11 upstream pull requests we re-committed under our name (listed with their authors in launch/chain/disclosure.md). The MIT license and copyright notice are kept in LICENSE. We are not affiliated with AgentSystemLabs. What we built during this competition is listed below, commit by commit, with a link to the diff against the upstream baseline: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main (the 11 upstream PRs are inside it).
+This project is a fork of Agent Office (github.com/AgentSystemLabs/agent-office), an MIT-licensed open source project created by webdevcody (AgentSystemLabs) with community contributors. Upstream built the 3D multiplayer office, the desks where Claude Code, Codex, OpenCode, Grok, Muse and DeepSeek Harness workers run, the shared live terminals, voice chat, the GitHub issue and PR boards, the stdio MCP server for managing workers, and the deploy scripts for AWS, Azure, Railway, Fly.io and Dokploy. Its first commit is dated 2026-09-25. Our history starts from two snapshot imports of upstream, 01d85bbb (upstream 665aeec) and 226452e4 (upstream 1bc3028), both 2026-09-30. Everything in them is their work, and so are 11 upstream pull requests we re-committed under our name (listed with their authors in launch/chain/disclosure.md). The MIT license and copyright notice are kept in LICENSE. We are not affiliated with AgentSystemLabs. What we built during this competition is listed below, commit by commit, with a link to the diff against the upstream baseline: https://github.com/lukepas/kipdeck/compare/226452e4...main (the 11 upstream PRs are inside it).
 ```
 
 ## Disclosure text, short form
@@ -32,7 +32,7 @@ This project is a fork of Agent Office (github.com/AgentSystemLabs/agent-office)
 Use this where every character counts (a 255-character summary, a Devpost elevator pitch).
 
 ```field name="Disclosure (short)" max-chars=255
-Fork of MIT-licensed Agent Office by webdevcody/AgentSystemLabs (upstream, first commit 2026-09-25). Our work: the inbox and Proof of Merge (Solana escrow, Base attestations, x402). Diff: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
+Fork of MIT-licensed Agent Office by webdevcody/AgentSystemLabs (upstream, first commit 2026-09-25). Our work: the inbox and Proof of Merge (Solana escrow, Base attestations, x402). Diff: https://github.com/lukepas/kipdeck/compare/226452e4...main
 ```
 
 ## Exactly what is new
@@ -43,7 +43,7 @@ Generate this list from git right before each submission, so it is the branch's 
 npx tsx launch/tools/whats-new.ts > /tmp/whats-new.md
 ```
 
-It runs the same code as `launch/chain/tools/whats-new.ts`: the upstream credit and the two snapshot imports, our commits since `226452e4`, the 11 re-committed upstream pull requests with their upstream authors, the Dependabot bumps apart, and every changed file, grouped into code, tests, docs, deploy and kits. Paste it under the kit's disclosure section and link the diff, https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main.
+It runs the same code as `launch/chain/tools/whats-new.ts`: the upstream credit and the two snapshot imports, our commits since `226452e4`, the 11 re-committed upstream pull requests with their upstream authors, the Dependabot bumps apart, and every changed file, grouped into code, tests, docs, deploy and kits. Paste it under the kit's disclosure section and link the diff, https://github.com/lukepas/kipdeck/compare/226452e4...main.
 
 As of 2026-10-01 the fork had these workstreams, each on its own branch from the 665aeec import (history: the branches were later merged or dropped, and the repository is now Kipdeck). The status column is what the branch held on 2026-10-01, not the plan. Only claim what is merged and working on the day you submit, and replace this table with the `whats-new.ts` output then.
 

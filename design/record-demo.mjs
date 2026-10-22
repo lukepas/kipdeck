@@ -29,8 +29,8 @@ const H = 900;
 const WALL = process.env.REC_DECK === '1';
 /** Whether `npx kipdeck` works yet (src/shared/demo.ts ON_NPM): until it does, the cards show npx running it from GitHub. */
 const ON_NPM = /export const ON_NPM = true;/.test(readFileSync(path.join(ROOT, 'src', 'shared', 'demo.ts'), 'utf8'));
-const DEMO_CMD = ON_NPM ? 'npx kipdeck --demo' : 'npx github:zbagdzevicius/kipdeck --demo';
-const REPO = 'github.com/zbagdzevicius/kipdeck';
+const DEMO_CMD = ON_NPM ? 'npx kipdeck --demo' : 'npx github:lukepas/kipdeck --demo';
+const REPO = 'github.com/lukepas/kipdeck';
 
 const home = mkdtempSync(path.join(tmpdir(), 'demo-record-home-'));
 const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), '--demo', '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD], {

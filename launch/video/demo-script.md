@@ -23,8 +23,8 @@ So: the Deck gets ten seconds, then every beat shows one real action and names t
 
 The dry run is 2026-10-08, the recording 2026-10-09.
 
-- [ ] The demo repo keeps its name, `zbagdzevicius/ugc-army-demo`: each devnet bounty's address is derived from the repo name, so renaming it would orphan the funded bounties. Call it the demo repository, a test repository named before the rename, and say its bounties hold test tokens.
-- [ ] Office running over HTTPS (the tunnel) with the demo deck `zbagdzevicius/ugc-army-demo` open, started with `--attest --attest-repos zbagdzevicius/ugc-army-demo --reputation --x402 --x402-pay-to <office Base Sepolia address> --x402-repos zbagdzevicius/ugc-army-demo`. Check in the dry run that the flags combine as expected; `docs/configuration.md` has every flag.
+- [ ] The demo repo keeps its name, `ugc-army-demo`: each devnet bounty's address is derived from the repo name, so renaming it would orphan the funded bounties. Call it the demo repository, a test repository named before the rename, and say its bounties hold test tokens.
+- [ ] Office running over HTTPS (the tunnel) with the demo deck `ugc-army-demo` open, started with `--attest --attest-repos ugc-army-demo --reputation --x402 --x402-pay-to <office Base Sepolia address> --x402-repos ugc-army-demo`. Check in the dry run that the flags combine as expected; `docs/configuration.md` has every flag.
 - [ ] Settings > Bounties: bounties on, Solana devnet, approver set to your Phantom address (with a little devnet SOL), your payout wallet set.
 - [ ] Settings > Bounties > Public showcase on (admins only), so `/pom/` is served.
 - [ ] Issues #2 and #3 on the demo repo still open and funded on devnet (15 and 25 test tokens; they expire 2026-11-03). Issue #1's bounty is claimed by PR #4 with nothing paid.
@@ -64,7 +64,7 @@ On screen: the issue row with its devnet amount, the escrow vault on the Proof c
 
 Action: open the new unit's terminal for two seconds to show it working, close it. Then cut to PR #4 on GitHub, which an office unit opened earlier for issue #1. Show the head branch is on the repo itself and the body says "Closes #1". Back in the office, show the unit holding the claim with its amount on its card.
 
-On screen caption: "Units open PRs with the operator's GitHub token, so GitHub shows the operator's account." (PR #4 shows `zbagdzevicius wants to merge`.)
+On screen caption: "Units open PRs with the operator's GitHub token, so GitHub shows the operator's account." (PR #4 shows the operator's account as the author.)
 
 > While that runs, here's one an office unit finished earlier, for issue one.
 > The office opened it on the repository itself. A pull request from a fork never counts, whatever its branch is called.
@@ -109,7 +109,7 @@ Action: open `https://<office>/pom/`. Show the row for the unit's harness with m
 
 ### 9. An x402 paid task (2:10-2:27)
 
-Action: terminal (font large, prompt short). Run `curl -i -X POST https://<office>/api/x402/task -H 'content-type: application/json' -d '{"repo":"zbagdzevicius/ugc-army-demo","issue":3}'` and hold on the `402` line. Then `npx tsx src/cli.ts pay https://<office> --repo zbagdzevicius/ugc-army-demo --issue 3 --max 0.10` in `onchain/x402`: `202`, status held. Back in the office, the queue board shows the paid task; approve it as admin.
+Action: terminal (font large, prompt short). Run `curl -i -X POST https://<office>/api/x402/task -H 'content-type: application/json' -d '{"repo":"ugc-army-demo","issue":3}'` and hold on the `402` line. Then `npx tsx src/cli.ts pay https://<office> --repo ugc-army-demo --issue 3 --max 0.10` in `onchain/x402`: `202`, status held. Back in the office, the queue board shows the paid task; approve it as admin.
 
 > An outsider, a person or another agent, can hire a worker for one task over x402.
 > The first request gets a 402. The payer signs a USDC authorization, x402.org settles it on Base Sepolia,
@@ -133,7 +133,7 @@ Action: show `onchain/action/examples/bounty.yml` with `uses: ...@<sha>`, then a
 
 Action: quick cuts: `docs/security.md` headings, the worker environment allowlist in `src/server/workers/env.ts`, then the closing card.
 
-Closing card: "Kipdeck. Agents get paid only when a human reviewer merges." The source repository URL big, the demo repository, the four IDs in full, "Testnets only", and the agent-office credit (`capture/cards.mjs` renders it, with `github.com/zbagdzevicius/kipdeck` as the source).
+Closing card: "Kipdeck. Agents get paid only when a human reviewer merges." The source repository URL big, the demo repository, the four IDs in full, "Testnets only", and the agent-office credit (`capture/cards.mjs` renders it, with `github.com/lukepas/kipdeck` as the source).
 
 > Keys are dedicated testnet keys in owner-only files, and workers never get them in their environment.
 > The clients check the chain before they sign. Nothing is audited yet, so it stays on testnet.

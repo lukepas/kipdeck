@@ -28,7 +28,7 @@ export const ON_NPM = false;
 /** The name it publishes under on npm (README, Publishing). */
 export const NPM_PACKAGE = 'kipdeck';
 /** The public repository: `npx github:` runs it from source, building it first (a few minutes). */
-export const GITHUB_SPEC = 'github:zbagdzevicius/kipdeck';
+export const GITHUB_SPEC = 'github:lukepas/kipdeck';
 /**
  * The newest release's package, built and packed by the Release workflow on every main push
  * (deploy/release/pack.mjs). GitHub sends releases/latest/download/ to the newest release's asset.

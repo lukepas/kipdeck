@@ -23,15 +23,15 @@ The same model and page power Kipdeck's Rundown window and the holo city on its 
 Two ways in. The Claude Code plugin also adds the session brief (below):
 
 ```
-/plugin marketplace add zbagdzevicius/kipdeck
+/plugin marketplace add lukepas/kipdeck
 /plugin install rundown@kipdeck
 ```
 
 Or copy the skill into `~/.claude/skills/rundown/` (no session brief):
 
 ```
-npx github:zbagdzevicius/kipdeck rundown install            # or: kipdeck rundown install
-npx github:zbagdzevicius/kipdeck rundown install --dry-run  # only list what would change
+npx github:lukepas/kipdeck rundown install            # or: kipdeck rundown install
+npx github:lukepas/kipdeck rundown install --dry-run  # only list what would change
 ```
 
 The installer lists what changes, backs the old folder up to `~/.claude/backups/rundown-<time>/`,

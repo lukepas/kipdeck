@@ -99,9 +99,9 @@ test('one name: the page says Kipdeck and never another product name', () => {
   assert.doesNotMatch(main.html, /\{\{\w+\}\}/, 'no brand token left unfilled');
   // Links use the real repository; the start command runs its newest release, built ahead, by the
   // page's own short address (/get in vercel.json).
-  assert.equal(repoOf(main.html), 'https://github.com/zbagdzevicius/kipdeck');
+  assert.equal(repoOf(main.html), 'https://github.com/lukepas/kipdeck');
   assert.match(main.html, /data-copy="npx https:\/\/kipdeck\.com\/get --demo"/);
-  assert.match(main.html, /"codeRepository":"https:\/\/github\.com\/zbagdzevicius\/kipdeck"/);
+  assert.match(main.html, /"codeRepository":"https:\/\/github\.com\/lukepas\/kipdeck"/);
 });
 
 test('every film and poster the page shows is in site/landing/public/media, and the build copies it', () => {
@@ -177,7 +177,7 @@ test('the build fills in the addresses, opens the CSP to the waitlist only, and 
   assert.match(filled, /data-link="repo-run" href="https:\/\/github\.com\/example\/agent-inbox#from-source"/);
   assert.match(filled, /data-copy="npx https:\/\/github\.com\/example\/agent-inbox\/releases\/latest\/download\/kipdeck\.tgz --demo"/);
   assert.match(filled, /<span data-unpublished>npx https:\/\/github\.com\/example\/agent-inbox\/releases\/latest\/download\/kipdeck\.tgz --labs<\/span>/);
-  assert.doesNotMatch(filled, /zbagdzevicius|kipdeck\.com\/get/);
+  assert.doesNotMatch(filled, /lukepas|kipdeck\.com\/get/);
   assert.ok(!filled.includes(repoOf(html)), 'no link left to the brand repository');
   assert.throws(() => buildPage(html, { KIPDECK_WAITLIST_URL: 'http://wait.example.eu/' }), /must be https/);
   assert.throws(() => buildPage(html, { KIPDECK_DEMO_URL: 'not a url' }), /not a URL/);
@@ -199,8 +199,8 @@ test('while the repository is private the page points nowhere a visitor cannot f
   assert.doesNotMatch(npm, /data-link="repo"|codeRepository/);
   assert.match(buildPage(main.html, { KIPDECK_DEMO_URL: 'https://demo.example.eu/' }), /data-link="demo" href="https:\/\/demo\.example\.eu\/" rel="noopener">Try the demo</);
   // The default build (the repository is public) links it everywhere.
-  assert.match(main.html, /data-link="repo" href="https:\/\/github\.com\/zbagdzevicius\/kipdeck"/);
-  assert.match(main.html, /"codeRepository":"https:\/\/github\.com\/zbagdzevicius\/kipdeck"/);
+  assert.match(main.html, /data-link="repo" href="https:\/\/github\.com\/lukepas\/kipdeck"/);
+  assert.match(main.html, /"codeRepository":"https:\/\/github\.com\/lukepas\/kipdeck"/);
   assert.match(main.html, /data-copy="npx https:\/\/kipdeck\.com\/get --demo"/);
   // KIPDECK_REPO_URL counts as public even beside KIPDECK_REPO_PUBLIC=0.
   const moved = buildPage(main.html, { KIPDECK_REPO_PUBLIC: '0', KIPDECK_REPO_URL: 'https://github.com/example/agent-inbox' });

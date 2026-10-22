@@ -30,7 +30,7 @@ has /rundown in every folder. It lists what changes first, backs up what was
 there to ~/.claude/backups/rundown-<time>/ and prints a diff command. It never
 replaces a newer installed copy with this one unless you add --force. The
 Claude Code plugin is the other way in, and it adds the session brief:
-/plugin marketplace add zbagdzevicius/kipdeck, then /plugin install rundown@kipdeck.
+/plugin marketplace add lukepas/kipdeck, then /plugin install rundown@kipdeck.
 
 Options:
       --open        Open the page when it's written

@@ -147,9 +147,9 @@ test('one tagline and one description: README, package.json, the installers, the
 test('the command to run it is the one the README gives, and never one that 404s', () => {
   // Before npm, npx runs the newest release's prebuilt package; the README leads with that same command.
   assert.ok(read('README.md').split('\n').slice(0, 20).join('\n').includes(INSTALL_COMMAND), 'the README opens with the npx command');
-  assert.equal(INSTALL_COMMAND, ON_NPM ? `npx ${BRANDS.kipdeck.pkg}` : 'npx https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz');
+  assert.equal(INSTALL_COMMAND, ON_NPM ? `npx ${BRANDS.kipdeck.pkg}` : 'npx https://github.com/lukepas/kipdeck/releases/latest/download/kipdeck.tgz');
   // The repository itself stays the fallback, in the README, the CLI help and both install scripts.
-  for (const f of ['README.md', 'src/server/runcmd.ts', 'install.sh', 'install.ps1']) assert.ok(read(f).includes('github:zbagdzevicius/kipdeck') || read(f).includes('FROM_SOURCE_COMMAND'), f);
+  for (const f of ['README.md', 'src/server/runcmd.ts', 'install.sh', 'install.ps1']) assert.ok(read(f).includes('github:lukepas/kipdeck') || read(f).includes('FROM_SOURCE_COMMAND'), f);
   if (!ON_NPM) for (const f of ['README.md', 'src/client/login.html', 'src/server/opencmd.ts', 'src/server/cli.ts']) assert.doesNotMatch(read(f), /npx kipdeck\b(?![-@])/, f);
   // The sign-in page's fallback (the office normally says how it can be typed there).
   assert.equal(openCommand(), `${INSTALL_COMMAND} open`);

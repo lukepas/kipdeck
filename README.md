@@ -8,18 +8,18 @@
 The inbox for your AI coding agents. Full control and clarity over every AI coding agent you run, in one place. See who is waiting on you and for how long, then answer, review and merge without leaving it.
 
 ```bash
-npx https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz
+npx https://github.com/lukepas/kipdeck/releases/latest/download/kipdeck.tgz
 ```
 
 Four sections: **Needs you** (a question or a permission), **To review** (finished work to read and merge), **Working** (nothing to decide) and **Idle** (no task, asleep, merged or snoozed).
 
 ![The inbox from the demo with numbered notes: the top bar's wait and spend figures, Pause all, then Needs you, To review and Working](docs/img/inbox-annotated.png)
 
-> Not on npm yet: the name waits on a trademark search ([business/naming.md](business/naming.md)). Until it is published, npx runs the newest release, which the Release workflow builds and packs on every change to main, so nothing compiles on your machine. After that the terminal prints the exact command for everything else (a new sign-in link, attach). If the release can't be fetched, `npx github:zbagdzevicius/kipdeck` runs it straight from this repository and builds it first (a few minutes), or [run it from source](#from-source).
+> Not on npm yet: the name waits on a trademark search ([business/naming.md](business/naming.md)). Until it is published, npx runs the newest release, which the Release workflow builds and packs on every change to main, so nothing compiles on your machine. After that the terminal prints the exact command for everything else (a new sign-in link, attach). If the release can't be fetched, `npx github:lukepas/kipdeck` runs it straight from this repository and builds it first (a few minutes), or [run it from source](#from-source).
 
 ![Kipdeck in 30 seconds: Codex's question opens by itself and is answered in one box, Claude Code's diff is reviewed and merged into Shipped today (the demo's scripted agents, no model)](docs/img/demo.gif)
 
-No agents yet? `npx https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz --demo` plays five scripted ones on a throwaway repository, no CLI, sign-in or model needed ([the demo](docs/demo.md)). Or watch a recorded round in the browser, with nothing to install: https://kipdeck-demo.vercel.app, or the same round on the 3D Deck at https://kipdeck-demo.vercel.app/deck
+No agents yet? `npx https://github.com/lukepas/kipdeck/releases/latest/download/kipdeck.tgz --demo` plays five scripted ones on a throwaway repository, no CLI, sign-in or model needed ([the demo](docs/demo.md)). Or watch a recorded round in the browser, with nothing to install: https://kipdeck-demo.vercel.app, or the same round on the 3D Deck at https://kipdeck-demo.vercel.app/deck
 
 Run it inside the repository you work in. It opens in your browser, signed in, with that repository as your first project. Claude Code, Codex and Cursor run side by side (OpenCode, Pi, Grok, Muse and DeepSeek Harness in beta), each on a branch of its own, and you answer, review and merge from one page, on your laptop or your phone. It runs on your machine or your team's dev box, and nothing leaves it.
 
@@ -45,7 +45,7 @@ You need **Node.js 20+**, **git** and one agent CLI: **Claude Code** (`npm insta
 In the repository you work in:
 
 ```bash
-npx https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz
+npx https://github.com/lukepas/kipdeck/releases/latest/download/kipdeck.tgz
 ```
 
 The landing page sends `/get` to the same file, so `npx https://kipdeck.com/get` is the short form. npx keeps the copy it fetched the first time and runs that again; to move to a newer release, use [`install.sh`](install.sh) (run it again to update) or clear npx's cache (`rm -rf ~/.npm/_npx`).
@@ -63,7 +63,7 @@ Nothing asks you anything in the terminal, and there are no settings to fill in.
 A clone runs the same way, and starts in seconds every time. `npm install` builds it:
 
 ```bash
-git clone https://github.com/zbagdzevicius/kipdeck ~/kipdeck
+git clone https://github.com/lukepas/kipdeck ~/kipdeck
 cd ~/kipdeck && npm install
 cd ~/code/your-project && node ~/kipdeck/bin/agent-office.js      # or: npm link once in ~/kipdeck, then kipdeck
 node ~/kipdeck/bin/agent-office.js --demo                         # the demo, anywhere
@@ -71,7 +71,7 @@ node ~/kipdeck/bin/agent-office.js --demo                         # the demo, an
 
 The demo's coach strip ends at *Run it on your repo* (*That's the loop. Now run it on your repo.* once you've answered and merged) with the command you started the demo with, without `--demo`, to copy.
 
-From here on, `kipdeck` stands for the way you run it: `npx https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz`, `node <clone>/bin/agent-office.js`, or `kipdeck` once it is on your PATH (`npm link` in the clone). `kipdeck --help` says which one you used, and every command Kipdeck prints is already in that form.
+From here on, `kipdeck` stands for the way you run it: `npx https://github.com/lukepas/kipdeck/releases/latest/download/kipdeck.tgz`, `node <clone>/bin/agent-office.js`, or `kipdeck` once it is on your PATH (`npm link` in the clone). `kipdeck --help` says which one you used, and every command Kipdeck prints is already in that form.
 
 Common options:
 
@@ -85,13 +85,13 @@ kipdeck --telemetry                 # share anonymous usage numbers (off by defa
 kipdeck --labs proof                # turn on Proof of Merge (testnets), the Colosseum entry's payout layer
 ```
 
-`kipdeck rundown [path]` writes a project's map (its parts by status, inferred from the code, no Claude needed) into `.rundown/`, and `kipdeck rundown install` adds the `/rundown` skill to Claude Code for Claude's own read (it never replaces a newer installed copy unless you add `--force`). The repository is also a Claude Code plugin: `/plugin marketplace add zbagdzevicius/kipdeck`, then `/plugin install rundown@kipdeck`, adds the same skill plus a SessionStart hook that starts each session in a mapped repository with a brief of at most 1.5 KB (milestone, next step, open decisions, stuck parts) when its map is under a week old; see [docs/rundown.md](docs/rundown.md). An agent asks you to make a call with `kipdeck decide "Which host?" --options Vercel,Fly --default Vercel`: it goes on with the default, and the decision waits in Needs you with Keep default and Choose... ([Your call](docs/rundown.md#your-call-decisions-and-the-next-step)).
+`kipdeck rundown [path]` writes a project's map (its parts by status, inferred from the code, no Claude needed) into `.rundown/`, and `kipdeck rundown install` adds the `/rundown` skill to Claude Code for Claude's own read (it never replaces a newer installed copy unless you add `--force`). The repository is also a Claude Code plugin: `/plugin marketplace add lukepas/kipdeck`, then `/plugin install rundown@kipdeck`, adds the same skill plus a SessionStart hook that starts each session in a mapped repository with a brief of at most 1.5 KB (milestone, next step, open decisions, stuck parts) when its map is under a week old; see [docs/rundown.md](docs/rundown.md). An agent asks you to make a call with `kipdeck decide "Which host?" --options Vercel,Fly --default Vercel`: it goes on with the default, and the decision waits in Needs you with Keep default and Choose... ([Your call](docs/rundown.md#your-call-decisions-and-the-next-step)).
 
 To have a `kipdeck` command instead, [`install.sh`](install.sh) (macOS and Linux) and [`install.ps1`](install.ps1) (Windows) install the same release package; run either again to update, and set `KIPDECK_VERSION=0.1.70` for a given release:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zbagdzevicius/kipdeck/main/install.sh | bash
-npm install -g https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz      # the same, by hand
+curl -fsSL https://raw.githubusercontent.com/lukepas/kipdeck/main/install.sh | bash
+npm install -g https://github.com/lukepas/kipdeck/releases/latest/download/kipdeck.tgz      # the same, by hand
 ```
 
 If the release can't be installed, they print the from-source steps above, and `npm link` in a clone gives you the same command. Every option is in [docs/configuration.md](docs/configuration.md); choosing models and providers per agent is in [docs/agents.md](docs/agents.md).
@@ -222,7 +222,7 @@ The rules for coding agents working on this repository are in [`AGENTS.md`](AGEN
 
 ### Publishing to npm
 
-The npm package ships the built `dist/` and the /rundown skill (`files` in `package.json`: the app, the server, the showcase, and `plugins/rundown/skills/rundown/` with its committed script), so an install from npm builds nothing on the user's machine. The GitHub release asset, `kipdeck.tgz`, is the same package: the Release workflow (`.github/workflows/release.yml`) packs it with `deploy/release/pack.mjs` on every push to main, without `prepare` and with an `npm-shrinkwrap.json` from the lockfile, runs it with npx and installs it with `install.sh` on Linux and macOS (and `install.ps1` on Windows, reported but not a gate), then publishes it as release `v<major.minor>.<commits on main>`. `prepare` runs `npm run build` on `npm pack`, `npm publish` and a GitHub install (`npx github:zbagdzevicius/kipdeck`), and `publishConfig.access` is `public`, which a scoped name needs. Both bin names (`kipdeck`, `agent-office`) run the same script, so `npx <any name>` finds it. To publish under a scope you own, for example `@kipdeck/kipdeck`:
+The npm package ships the built `dist/` and the /rundown skill (`files` in `package.json`: the app, the server, the showcase, and `plugins/rundown/skills/rundown/` with its committed script), so an install from npm builds nothing on the user's machine. The GitHub release asset, `kipdeck.tgz`, is the same package: the Release workflow (`.github/workflows/release.yml`) packs it with `deploy/release/pack.mjs` on every push to main, without `prepare` and with an `npm-shrinkwrap.json` from the lockfile, runs it with npx and installs it with `install.sh` on Linux and macOS (and `install.ps1` on Windows, reported but not a gate), then publishes it as release `v<major.minor>.<commits on main>`. `prepare` runs `npm run build` on `npm pack`, `npm publish` and a GitHub install (`npx github:lukepas/kipdeck`), and `publishConfig.access` is `public`, which a scoped name needs. Both bin names (`kipdeck`, `agent-office`) run the same script, so `npx <any name>` finds it. To publish under a scope you own, for example `@kipdeck/kipdeck`:
 
 ```bash
 npm login
@@ -239,7 +239,7 @@ Then, in the same release: set `NPM_PACKAGE` to that name and `ON_NPM` to `true`
 - [Spend and control](docs/spend.md): each agent's permission mode badge, spend on rows and in the pulse, budget caps that pause an agent into Needs you, and Pause all, Resume all and Stop all
 - [Push to your devices](docs/push.md): installing Kipdeck as an app, Web Push to your phone and laptop, who gets a push and when, Allow once and Deny from the lock screen, and when Slack or Discord hears after it
 - [Signal](docs/signal.md): the project's status at one look over the inbox list (On track, At risk, Off track or No goal), the rules behind it, and Copy as text for Slack
-- [The demo](docs/demo.md): `npx https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz --demo` with five scripted agents, the hosted read-only demo, the replay demo at https://kipdeck-demo.vercel.app and its Deck at /deck, and the scripts that make the video, the GIF and the deck's screenshots
+- [The demo](docs/demo.md): `npx https://github.com/lukepas/kipdeck/releases/latest/download/kipdeck.tgz --demo` with five scripted agents, the hosted read-only demo, the replay demo at https://kipdeck-demo.vercel.app and its Deck at /deck, and the scripts that make the video, the GIF and the deck's screenshots
 - [Metrics for the deck](docs/metrics.md): what each number means, where it comes from, and what not to show
 - [The landing page](docs/landing.md): `site/landing/` (`npm run build:site`, then `npm run preview:site`), what each section's motion shows, the one file that holds the product's name, its speed budgets (`npm run perf:site`), accessibility and search tags, the design-partner ask, and how to deploy it to Cloudflare Pages ([site/landing/README.md](site/landing/README.md))
 - [Features](docs/features.md): the inbox first, then the whole office in detail

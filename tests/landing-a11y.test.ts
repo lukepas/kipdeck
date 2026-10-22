@@ -265,7 +265,7 @@ test('the film has English captions, and its poster is fetched only when it is o
   // The film names Kipdeck on screen, so the captions do too, and none of the old names or the old slogan.
   assert.match(vtt, /^Kipdeck\.$/m);
   assert.match(vtt, /The inbox for your AI coding agents\./);
-  assert.match(vtt, /github\.com\/zbagdzevicius\/kipdeck/);
+  assert.match(vtt, /github\.com\/lukepas\/kipdeck/);
   assert.doesNotMatch(vtt, /UGC Army|Mergeline|army of|test USDC/i);
   const { page } = await open(t);
   const posters: string[] = [];

@@ -12,7 +12,7 @@ Each line is a gate. A post that goes out before its gate is a claim that isn't 
 | --- | --- | --- |
 | The name clears the trademark search | npm publish, the domain and every post carry it | [business/naming.md](../../business/naming.md) |
 | `npm publish` done, `npx kipdeck` works from a clean machine | Every post says `npx kipdeck` | `design/time-to-first-agent.mjs` |
-| The repository is public, with LICENSE and NOTICE (done) | The posts say open source and credit agent-office | https://github.com/zbagdzevicius/kipdeck |
+| The repository is public, with LICENSE and NOTICE (done) | The posts say open source and credit agent-office | https://github.com/lukepas/kipdeck |
 | The hosted demo is up | Try the demo on the landing page and in the posts | [docs/demo.md](../../docs/demo.md#the-hosted-demo), [docs/fly.md](../../docs/fly.md) |
 | The landing page is up with a working waitlist | The team tier ask | [docs/landing.md](../../docs/landing.md) |
 | The 60-second video with real agents is recorded | The posts' video; the scripted cut says it's scripted | [docs/demo.md](../../docs/demo.md) |

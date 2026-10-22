@@ -70,6 +70,6 @@ test(`the bridge's world speaks calmly: no exclamation marks, no war words, no e
 
 test('Help\'s "Read the docs" opens the docs (the README in the public repository), not the marketing page', async () => {
   const { DOCS_URL, REPO_URL } = await import('../src/shared/copy.ts');
-  assert.equal(REPO_URL, 'https://github.com/zbagdzevicius/kipdeck');
+  assert.equal(REPO_URL, 'https://github.com/lukepas/kipdeck');
   assert.equal(DOCS_URL, `${REPO_URL}#readme`);
 });

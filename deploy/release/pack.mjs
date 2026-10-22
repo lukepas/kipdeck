@@ -1,6 +1,6 @@
 // Packs the release tarball, kipdeck.tgz: the package as it ships from an already built tree, with
 // nothing left to build or compile on the machine that installs it. The Release workflow publishes it
-// on every main push at https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz,
+// on every main push at https://github.com/lukepas/kipdeck/releases/latest/download/kipdeck.tgz,
 // which the README's first command, install.sh and install.ps1 install; design/time-to-first-agent.mjs
 // times the same tarball.
 //

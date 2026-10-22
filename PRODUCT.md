@@ -55,7 +55,7 @@ Three critics (an investor, a first user and an engineer) reviewed the build bef
 
 ### Left for later (and why)
 
-- **npm publish and the hosted demo deploy** wait on the trademark search (`launch/kipdeck/README.md`). The repository (github.com/zbagdzevicius/kipdeck) is public and kipdeck.com serves the landing page.
+- **npm publish and the hosted demo deploy** wait on the trademark search (`launch/kipdeck/README.md`). The repository (github.com/lukepas/kipdeck) is public and kipdeck.com serves the landing page.
 - **Traction row with real numbers.** There are no users yet; the page asks for five design partners instead of inventing a number.
 - **Branch prefix.** Branches still start `office/` so existing branches, prune and pull request detection keep working; renaming it is a migration.
 - **Merge all ready with passing tests** (the team headline feature) and a project filter chip are not built; the project picker covers several projects today.
@@ -112,7 +112,7 @@ The recording is `design/shots/fundable/final/kipdeck-demo.mp4` (66.5 s, silent,
 | 0:46 | Codex's fix merged | "And the fix Codex asked about is in too." |
 | 0:51 | The calm inbox | "Nothing waits on you." |
 | 0:54 | Numbers | "And here's the number we sell on: human wait time, per agent and model, week over week." |
-| 1:01 | End card with github.com/zbagdzevicius/kipdeck | "Free and open source for one engineer. Teams pay for the shared inbox, routing, SSO and audit. We're raising a pre-seed to take this to the first fifty teams." |
+| 1:01 | End card with github.com/lukepas/kipdeck | "Free and open source for one engineer. Teams pay for the shared inbox, routing, SSO and audit. We're raising a pre-seed to take this to the first fifty teams." |
 
 Questions to expect, and the short answers:
 

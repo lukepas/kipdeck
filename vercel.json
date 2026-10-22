@@ -7,7 +7,7 @@
   "redirects": [
     {
       "source": "/get",
-      "destination": "https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz",
+      "destination": "https://github.com/lukepas/kipdeck/releases/latest/download/kipdeck.tgz",
       "permanent": false
     }
   ],
