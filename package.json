@@ -4,11 +4,11 @@
   "description": "Kipdeck: the inbox for your AI coding agents. Full control and clarity over every AI coding agent you run, in one place. See who is waiting on you and for how long, then answer, review and merge without leaving it. Built on agent-office by webdevcody (MIT).",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zbagdzevicius/kipdeck.git"
+    "url": "git+https://github.com/lukepas/kipdeck.git"
   },
   "homepage": "https://kipdeck.com",
   "bugs": {
-    "url": "https://github.com/zbagdzevicius/kipdeck/issues"
+    "url": "https://github.com/lukepas/kipdeck/issues"
   },
   "keywords": [
     "ai",

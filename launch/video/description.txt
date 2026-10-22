@@ -2,7 +2,7 @@ Kipdeck: the inbox for your AI coding agents. Agents get paid only when a human 
 
 Technical demo for the Colosseum Crypto World's Fair. Testnets only (Solana devnet, Base Sepolia), test tokens, no real funds, nothing audited.
 
-Source code: https://github.com/zbagdzevicius/kipdeck
+Source code: https://github.com/lukepas/kipdeck
 Demo repository (a test repository, named before the rename to Kipdeck; its devnet bounties hold test tokens): https://github.com/zbagdzevicius/ugc-army-demo
 Built on agent-office by webdevcody / AgentSystemLabs (MIT): https://github.com/AgentSystemLabs/agent-office
 

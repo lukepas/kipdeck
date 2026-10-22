@@ -80,7 +80,7 @@ Everything lives in `site/config.js`:
 
 - `name`: every `{{name}}` in the slides and the `npx` command follow it. The `<head>` (title, description, Open Graph and Twitter tags) is plain text so link previews read it without running a script: change it there too. `npm run check:deck` fails on a `{{` in the `<head>`.
 - `npmPublished`: flip to `true` once `npx kipdeck` is on npm; the install claims and the demo CTA change with it.
-- `team`: the names, spelled once (diacritics included).
+- `team`: the names, spelled once (diacritics included). Today that is Lukas Kveraga alone.
 - `contactEmail` (hello@kipdeck.com), `demoUrl` (the product site, https://kipdeck.com, until there is a hosted demo), `repoUrl`: shown on the ask slide as links (mailto: for the email); empty values are left out. `npm run check:deck` fails if the ask slide has no email, site or repository link, or if the team slide loses the agent-office credit.
 - `commitment`: the disclosure line on the team slide.
 
@@ -94,14 +94,15 @@ Everything lives in `site/config.js`:
 - `site/media/` - product stills, the one-minute demo (kipdeck-demo-v3.mp4, 66.5 s; the phone part keeps the Demo data tag beside the phone, clear of its toasts) and the 27 s GIF
 - The logo (Kip's face with his tuft as the signal light) on the cover, the ask and every slide's footer, plus `site/favicon.svg` and `site/apple-touch-icon.png`: all written from `src/shared/logo.ts` by `npm run logo` at the repository root, so do not edit those copies by hand. The cover lights Kip's light in the needs-you colour; the ask leaves it calm.
 
-## Before sending
+## Open items
 
-- The team slide discloses that all three founders work at Motored today. Replace `commitment` in `site/config.js` with the signed full-time dates, equity split and IP assignment before the deck goes out.
-- Confirm titles (Ernestas is "Software Engineer" per the Motored data room) and add Lukas's LinkedIn.
-- `contactEmail` is hello@kipdeck.com and `demoUrl` is https://kipdeck.com; point `demoUrl` at the hosted demo once there is one. `repoUrl` is the public repository, github.com/zbagdzevicius/kipdeck.
+Lukas Kveraga is the sole founder, CEO and CTO; the team slide shows him alone, next to his commit chart. Before the deck goes out:
+
+- Lukas to confirm his time commitment to Kipdeck (full-time or not, and from when) and the IP assignment to the Kipdeck company, then write them into `commitment` in `site/config.js`. Until then the line only says he is the sole founder.
+- `contactEmail` is hello@kipdeck.com and `demoUrl` is https://kipdeck.com; point `demoUrl` at the hosted demo once there is one. `repoUrl` is the public repository, github.com/lukepas/kipdeck.
 - Confirm post-money SAFE with counsel and incorporate the company.
 - Replace the scripted demo with a recording of live agent sessions, and the illustration on slide 2 with a measured wait from your own use.
 
 ## Licences
 
-Space Grotesk, Inter and JetBrains Mono: SIL OFL 1.1 (`site/fonts/LICENSE-*.txt`). GSAP 3: GreenSock standard no-charge licence, commercial use allowed. Team photos come from the founders' own data room.
+Space Grotesk, Inter and JetBrains Mono: SIL OFL 1.1 (`site/fonts/LICENSE-*.txt`). GSAP 3: GreenSock standard no-charge licence, commercial use allowed.

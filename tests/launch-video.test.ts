@@ -12,7 +12,7 @@ import { MARK } from '../src/shared/logo.js';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file: string) => readFileSync(path.join(ROOT, 'launch/video', file), 'utf8');
-const REPO = 'github.com/zbagdzevicius/kipdeck';
+const REPO = 'github.com/lukepas/kipdeck';
 
 interface Edit {
   tags: Record<string, [string, string]>;
@@ -91,7 +91,8 @@ test('the README, the scripts and the capture notes tell the same story about PR
   assert.match(read('README.md'), /merged on 2026-10-07 by the operator's own account/);
   assert.match(read('recording-guide.md'), /Settings > Deck > Quality High/);
   const pitch = read('pitch-script.md');
-  assert.match(pitch, /three founders/);
+  assert.match(pitch, /sole founder, CEO and CTO/);
+  assert.doesNotMatch(pitch, /three founders/);
   assert.match(pitch, /since 30 September/);
   assert.doesNotMatch(pitch, /hosted seat|last two weeks|Kipdeck is mission control/);
 });

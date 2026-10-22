@@ -25,7 +25,7 @@ Kipdeck is built on agent-office (MIT, by webdevcody / AgentSystemLabs, https://
 - Trustless Work docs: https://docs.trustlesswork.com/ (testnet Swagger https://dev.api.trustlesswork.com/docs, mainnet Swagger https://api.trustlesswork.com/docs)
 - Stellar Wallets Kit: https://stellarwalletskit.dev/
 - Public example of the submission layout (Trustless Work, SCF #41, USD 80,000): https://communityfund.stellar.org/submissions/rectq5U666PxPloNn
-- Our links: repo https://github.com/zbagdzevicius/kipdeck, site https://kipdeck.com, replay demo https://kipdeck-demo.vercel.app, showcase https://zbagdzevicius.github.io/kipdeck/, upstream https://github.com/AgentSystemLabs/agent-office
+- Our links: repo https://github.com/lukepas/kipdeck, site https://kipdeck.com, replay demo https://kipdeck-demo.vercel.app, showcase https://lukepas.github.io/kipdeck/, upstream https://github.com/AgentSystemLabs/agent-office
 
 ## Fit
 
@@ -67,7 +67,7 @@ One-line justification: USD 30,000 is inside the handbook's "Small: one simple i
 
 Every box here must be ticked before submitting. The first one is open in every kit.
 
-- [ ] Team: Official Rules 1.1 and 1.2 open SCF programs to Teams and Organizations and ask for at least 2 eligible individuals for webinars and bootcamp. Decision D9 (co-founders) is open. [FOUNDERS: team]
+- [ ] Team: Official Rules 1.1 and 1.2 open SCF programs to Teams and Organizations and ask for at least 2 eligible individuals for webinars and bootcamp. Lukas Kveraga is the sole founder, so a second eligible individual is needed for those. [FOUNDERS: second eligible person, or ask SCF whether a solo founder can attend alone]
 - [ ] Company registration: not required to apply (Teams of individuals are eligible), and entity costs cannot be budgeted. Decide whether to apply as an individual team or a registered company; KYB applies to a company.
 - [ ] Personal fields: KYC at stellar.org/bd-kyc after an award (identity, tax). Fill only from real documents; nothing invented here.
 - [ ] Traction: 0 stars, no users. Without maintainers lined up, the interest form may be routed to Instawards.
@@ -92,7 +92,7 @@ Kipdeck
 ```
 
 ```field name="Applicant / representative"
-Zygimantas Bagdzevicius, CEO/CTO (founder-led) [FOUNDERS: team]
+Lukas Kveraga, Founder, CEO and CTO
 ```
 
 ```field name="Email"
@@ -108,7 +108,7 @@ https://kipdeck.com
 ```
 
 ```field name="GitHub"
-https://github.com/zbagdzevicius/kipdeck
+https://github.com/lukepas/kipdeck
 ```
 
 ```field name="Build Award track"
@@ -178,7 +178,7 @@ Known difference from the Solana program: per-funder refunds. Version 1 on Stell
 ```
 
 ```field name="Open source plan"
-Everything is MIT in the public repo github.com/zbagdzevicius/kipdeck from the first commit: the StellarEscrow adapter, the Action's Stellar mode, the indexer changes, test fixtures and docs. We write no new smart contract; the escrow contracts are Trustless Work's.
+Everything is MIT in the public repo github.com/lukepas/kipdeck from the first commit: the StellarEscrow adapter, the Action's Stellar mode, the indexer changes, test fixtures and docs. We write no new smart contract; the escrow contracts are Trustless Work's.
 ```
 
 ### Build form: requested budget
@@ -195,7 +195,7 @@ About 467 engineering hours at USD 60 an hour (USD 28,000) over 4 months, solo b
 
 ```field name="Traction evidence"
 Honest state on 2026-10-14:
-- Public MIT repo github.com/zbagdzevicius/kipdeck, created 2026-10-06, 0 stars, 0 forks so far.
+- Public MIT repo github.com/lukepas/kipdeck, created 2026-10-06, 0 stars, 0 forks so far.
 - Working Solana devnet escrow program JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6 with a recorded end-to-end bounty run (open, fund, claim, release) in onchain/solana/deployments/devnet.json.
 - A GitHub Action that checks merges and claims bounties, a Base Sepolia attestation schema (UID 0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900), an indexer that rebuilds the board from chain data, and a replay demo at kipdeck-demo.vercel.app.
 - Built on agent-office (webdevcody / AgentSystemLabs), which has 737 stars and 202 forks on GitHub; that is the upstream project's traction, not Kipdeck's.
@@ -239,8 +239,9 @@ Onchain footprint registered at award time: the attester and release-signer mult
 ### Build form: team
 
 ```field name="Team"
-Zygimantas Bagdzevicius, CEO/CTO, Vilnius, Lithuania. Wrote Kipdeck's Proof of Merge layer: the native Rust Solana escrow program and its TypeScript SDK, the GitHub Action, the EAS attestation package on Base Sepolia, the ERC-8004-style reputation contracts, the indexer and the x402 paid tasks on Base Sepolia. GitHub: https://github.com/zbagdzevicius. No prior Soroban or Stellar production work; this award is built on Trustless Work's SDK and API so the contract risk stays with a building block already in production.
-[FOUNDERS: team - second eligible person for webinars and bootcamp (Official Rules 1.2), LinkedIn URLs, relevant experience; do not invent employment history or education]
+Lukas Kveraga, sole founder, CEO and CTO, Vilnius, Lithuania. Kipdeck's Proof of Merge layer: the native Rust Solana escrow program and its TypeScript SDK, the GitHub Action, the EAS attestation package on Base Sepolia, the ERC-8004-style reputation contracts, the indexer and the x402 paid tasks on Base Sepolia. GitHub: https://github.com/lukepas. Kipdeck has no prior Soroban or Stellar production work; this award is built on Trustless Work's SDK and API so the contract risk stays with a building block already in production.
+LinkedIn: https://www.linkedin.com/in/lukas-kveraga
+[FOUNDERS: second eligible person for webinars and bootcamp (Official Rules 1.2), relevant experience; do not invent employment history or education]
 ```
 
 ### Build form: project stats and links
@@ -250,7 +251,7 @@ https://kipdeck.com
 ```
 
 ```field name="GitHub"
-https://github.com/zbagdzevicius/kipdeck
+https://github.com/lukepas/kipdeck
 ```
 
 ```field name="Demo / video"
@@ -258,7 +259,7 @@ https://kipdeck-demo.vercel.app (replay demo). [To build: a 2-minute Stellar tes
 ```
 
 ```field name="Other links"
-Showcase https://zbagdzevicius.github.io/kipdeck/ ; Solana devnet program https://explorer.solana.com/address/JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6?cluster=devnet ; upstream https://github.com/AgentSystemLabs/agent-office
+Showcase https://lukepas.github.io/kipdeck/ ; Solana devnet program https://explorer.solana.com/address/JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6?cluster=devnet ; upstream https://github.com/AgentSystemLabs/agent-office
 ```
 
 ### Build form: additional project information

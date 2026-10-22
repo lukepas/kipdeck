@@ -45,7 +45,7 @@ When a merge that counts happens (an agent's new pull request merged by a second
 
 ## The source repository
 
-Colosseum needs a public code repository, and the cards show it: the title and end cards of both cuts print `github.com/zbagdzevicius/kipdeck`, which is public, and description.txt links it. `FORK_URL` overrides it only if the code moves:
+Colosseum needs a public code repository, and the cards show it: the title and end cards of both cuts print `github.com/lukepas/kipdeck`, which is public, and description.txt links it. `FORK_URL` overrides it only if the code moves:
 
 ```sh
 FORK_URL=github.com/<owner>/<repo> node launch/video/capture/cards.mjs
@@ -86,7 +86,7 @@ Check the result with `ffprobe launch/video/out/demo-3min.mp4`: one video and on
 
 ## Submission checklist
 
-- [ ] The cards show `github.com/zbagdzevicius/kipdeck`, the same link as description.txt and the Colosseum form ([../chain/colosseum-worlds-fair.md](../chain/colosseum-worlds-fair.md)).
+- [ ] The cards show `github.com/lukepas/kipdeck`, the same link as description.txt and the Colosseum form ([../chain/colosseum-worlds-fair.md](../chain/colosseum-worlds-fair.md)).
 - [ ] The cards show Kip's mark (the logo from `design/logo/mark.svg`), not the old 3x3 grid.
 - [ ] Pitch: 2:00-3:00, founder on camera, clear sound, only real footage as cutaways, the agent-office credit said or shown.
 - [ ] Demo: `demo-3min.mp4` with the voiceover, under 3:00, one audio stream. Never submit `demo-3min-silent.mp4` itself.

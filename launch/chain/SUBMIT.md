@@ -50,12 +50,12 @@ If `counts.ts --refresh` changes a number, the linter fails on the demand valida
 Publish the public showcase. GitHub Pages is not switched on for the repository yet (the API answers 404), so turn it on with Actions as the source, then run the workflow by hand. It reads only public chain data and holds no keys:
 
 ```sh
-gh api -X POST repos/zbagdzevicius/kipdeck/pages -f build_type=workflow
-gh workflow run showcase-pages.yml -R zbagdzevicius/kipdeck -f public=zbagdzevicius/ugc-army-demo
-gh run watch -R zbagdzevicius/kipdeck "$(gh run list -R zbagdzevicius/kipdeck --workflow showcase-pages.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
+gh api -X POST repos/lukepas/kipdeck/pages -f build_type=workflow
+gh workflow run showcase-pages.yml -R lukepas/kipdeck -f public=zbagdzevicius/ugc-army-demo
+gh run watch -R lukepas/kipdeck "$(gh run list -R lukepas/kipdeck --workflow showcase-pages.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
 ```
 
-It publishes https://zbagdzevicius.github.io/kipdeck/ (404 on 2026-10-10, before the first run). Open it in a private window before you paste it. The board will be empty, which is the truth: no merge by anyone else is attested yet.
+It publishes https://lukepas.github.io/kipdeck/ (404 on 2026-10-10, before the first run). Open it in a private window before you paste it. The board will be empty, which is the truth: no merge by anyone else is attested yet.
 
 ## 3. Files to upload
 
@@ -78,7 +78,7 @@ Kipdeck: the inbox for your AI coding agents. Agents get paid only when a human 
 
 Pitch for the Colosseum Crypto World's Fair. Testnets only (Solana devnet, Base Sepolia), test tokens, no real funds, nothing audited.
 
-Source code: https://github.com/zbagdzevicius/kipdeck
+Source code: https://github.com/lukepas/kipdeck
 Built on agent-office by webdevcody / AgentSystemLabs (MIT): https://github.com/AgentSystemLabs/agent-office
 ```
 
@@ -138,10 +138,10 @@ Reputation should outlive one office and be readable by any tool. EAS on Base Se
 
 ### Team and backgrounds
 
-The same three founders and roles as the deck's team slide (https://kipdeck-deck.vercel.app).
+The same founder and role as the deck's team slide (https://kipdeck-deck.vercel.app).
 
 ```field name="Team" max-words=80
-Three founders in Vilnius, building Kipdeck since 30 September. Zygimantas Bagdzevicius, CEO/CTO: ex-Amazon engineer, founded and exited a Lithuanian business that scaled to 400k monthly active users. Lukas Kveraga, founding engineer: ex-Vinted, scaling a high-traffic marketplace. Ernestas Rimkevicius, software engineer: backend, importers and pipelines.
+Lukas Kveraga is Kipdeck's sole founder, CEO and CTO, in Vilnius, building it since 30 September. Ex-Vinted, scaling a high-traffic marketplace.
 ```
 
 ### Location
@@ -161,7 +161,7 @@ Upload `design/logo/app-icon-512.png`.
 Public, MIT, with `LICENSE` keeping upstream's notice and `NOTICE` crediting it.
 
 ```field name="GitHub repository" max-chars=100
-https://github.com/zbagdzevicius/kipdeck
+https://github.com/lukepas/kipdeck
 ```
 
 ### Presentation video
@@ -203,7 +203,7 @@ Counted from chain data on the submission day, not estimated. Merged agent PRs a
 The full answer, at most 1,500 characters. The commit after `226452e4..` is the stamp: re-stamp it on submit day.
 
 ```field name="Prior work disclosure" max-chars=1500
-Kipdeck is built on agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs and community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D office, desks where coding agent CLIs run in live terminals, voice, the GitHub boards and the deploy scripts. Our history starts from two snapshot imports of upstream (commits 01d85bbb = upstream 665aeec, and 226452e4 = upstream 1bc3028, both 2026-09-30); all of that is theirs, and so are 11 upstream pull requests we re-committed under our name (listed with their authors in launch/chain/disclosure.md). Ours, all written during the contest (our first commit is 2026-09-30): the inbox and mission control (attention ranking, review inbox, goals, timeline), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and Proof of Merge, the payout layer: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, a GitHub Action attester, x402 paid tasks, EAS attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are every commit in 226452e4..f61d0eb8 except those 11, the import 01d85bbb and 2 Dependabot bumps. Testnets only. Diff: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
+Kipdeck is built on agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs and community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D office, desks where coding agent CLIs run in live terminals, voice, the GitHub boards and the deploy scripts. Our history starts from two snapshot imports of upstream (commits 01d85bbb = upstream 665aeec, and 226452e4 = upstream 1bc3028, both 2026-09-30); all of that is theirs, and so are 11 upstream pull requests we re-committed under our name (listed with their authors in launch/chain/disclosure.md). Ours, all written during the contest (our first commit is 2026-09-30): the inbox and mission control (attention ranking, review inbox, goals, timeline), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and Proof of Merge, the payout layer: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, a GitHub Action attester, x402 paid tasks, EAS attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are every commit in 226452e4..f61d0eb8 except those 11, the import 01d85bbb and 2 Dependabot bumps. Testnets only. Diff: https://github.com/lukepas/kipdeck/compare/226452e4...main
 ```
 
 ### Prior work, short
@@ -222,8 +222,8 @@ For "anything else" or a links field. The showcase only after it opens (section 
 Landing: https://kipdeck.com
 Pitch deck: https://kipdeck-deck.vercel.app
 Live demo, a recorded round in the browser with nothing to install: https://kipdeck-demo.vercel.app
-What we added since our import of upstream: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
-Public showcase (Proof of Merge board, rebuilt from chain data): https://zbagdzevicius.github.io/kipdeck/
+What we added since our import of upstream: https://github.com/lukepas/kipdeck/compare/226452e4...main
+Public showcase (Proof of Merge board, rebuilt from chain data): https://lukepas.github.io/kipdeck/
 Escrow program on Solana devnet: https://explorer.solana.com/address/JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6?cluster=devnet
 Proof-of-merge schema on EAS, Base Sepolia: https://base-sepolia.easscan.org/schema/view/0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900
 Upstream, agent-office (MIT): https://github.com/AgentSystemLabs/agent-office
@@ -235,8 +235,8 @@ Upstream, agent-office (MIT): https://github.com/AgentSystemLabs/agent-office
 - [ ] The stamp is the submitted commit: `git rev-parse --short=8 origin/main` matches the commit after `226452e4..` in the prior work field.
 - [ ] `npm run launch:check` clean and the launch tests pass.
 - [ ] Counts refreshed; the demand validation field matches `data/counts.json`.
-- [ ] Showcase opens at https://zbagdzevicius.github.io/kipdeck/ in a private window.
+- [ ] Showcase opens at https://lukepas.github.io/kipdeck/ in a private window.
 - [ ] Both videos uploaded unlisted, opened in a private window, under 3:00, with sound.
-- [ ] Every link in the form opened once: https://github.com/zbagdzevicius/kipdeck, https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main, https://kipdeck.com, https://kipdeck-deck.vercel.app, https://kipdeck-demo.vercel.app.
+- [ ] Every link in the form opened once: https://github.com/lukepas/kipdeck, https://github.com/lukepas/kipdeck/compare/226452e4...main, https://kipdeck.com, https://kipdeck-deck.vercel.app, https://kipdeck-demo.vercel.app.
 - [ ] The team leader clicks submit before 2026-10-12 23:59 PT; save the confirmation (a screenshot and the email).
 - [ ] After submitting: post day 10 ([posts/2026-10-11.md](posts/2026-10-11.md)) and send upstream the courtesy note in [disclosure.md](disclosure.md).

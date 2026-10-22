@@ -95,7 +95,7 @@ test('windows, medians, token amounts and identity keys', () => {
   assert.equal(median([3, 1, 2]), 2);
   assert.equal(formatUnits(2_500_000n, 6), '2.50');
   assert.equal(formatUnits(1n, 6), '0.000001');
-  assert.equal(agentKey('Claude', 'Žygimantas B.', 'Backend 1'), 'claude/zygimantas-b/backend-1');
+  assert.equal(agentKey('Claude', 'Ąžuolas B.', 'Backend 1'), 'claude/azuolas-b/backend-1');
   assert.equal(agentKey('', '', ''), 'unknown/unknown/unknown');
 });
 

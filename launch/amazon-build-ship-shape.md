@@ -55,7 +55,7 @@ Every box here must be ticked before submitting. The first one is open in every 
 
 - [ ] Sole ownership: confirm a fork of an MIT project counts as solely owned. The rules exclude parents, subsidiaries and affiliates of Amazon, Devpost or a judge's employer; none of those apply to us.
 - [ ] Rules fit on ownership: rules require the entry be "solely owned by the Entrant". Send this to the hackathon manager now:
-  > Hi, we plan to enter the Alexa+ track with Kipdeck, a public MIT-licensed fork of agent-office (webdevcody / AgentSystemLabs). Our MCP server and voice tools are new and ours, written in October 2026, and we disclose the upstream base and list our commits. Is an entry built on an MIT fork with clearly separated additions acceptable? Thanks, Zygimantas Bagdzevicius, hello@kipdeck.com
+  > Hi, we plan to enter the Alexa+ track with Kipdeck, a public MIT-licensed fork of agent-office (webdevcody / AgentSystemLabs). Our MCP server and voice tools are new and ours, written in October 2026, and we disclose the upstream base and list our commits. Is an entry built on an MIT fork with clearly separated additions acceptable? Thanks, Lukas Kveraga, hello@kipdeck.com
 - [ ] Build: nothing of the Alexa+ path is on main today (see above). Needs about 6 days.
 - [ ] Entrant type: enter as an individual unless a company exists. Organizations must "exist and have been organized or incorporated at the time of entry". [FOUNDERS: company registration status] Prize payment goes to the entrant chosen here; it cannot be switched later.
 - [ ] Personal fields on Devpost profile and, if winning, the W-8BEN: legal name, address, date of birth, tax id. [FOUNDERS: fill personally; never by the agent]
@@ -66,7 +66,7 @@ Every box here must be ticked before submitting. The first one is open in every 
 The form asks for this in "What you built or changed during the submission window" (under Project description). The same text, short, for the Open Source mini challenge and the first frame of the video:
 
 ```field name="Disclosure paragraph" max-chars=800
-Kipdeck is a public MIT fork of agent-office by webdevcody / AgentSystemLabs (https://github.com/AgentSystemLabs/agent-office), which started on 2026-09-25 and already had a local stdio MCP server for agents. Our fork started on 2026-09-30, after the hackathon opened. Everything on the Alexa+ path is ours and new in October 2026: the Streamable HTTP transport, auth, the five voice tools, spoken summaries and the simulated Alexa+ page. Commits: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
+Kipdeck is a public MIT fork of agent-office by webdevcody / AgentSystemLabs (https://github.com/AgentSystemLabs/agent-office), which started on 2026-09-25 and already had a local stdio MCP server for agents. Our fork started on 2026-09-30, after the hackathon opened. Everything on the Alexa+ path is ours and new in October 2026: the Streamable HTTP transport, auth, the five voice tools, spoken summaries and the simulated Alexa+ page. Commits: https://github.com/lukepas/kipdeck/compare/226452e4...main
 ```
 
 ## Project description: form answers
@@ -141,7 +141,7 @@ Writing for the ear. A terminal line like `Bash(rm -rf dist)` has to become "wan
 
 ## Accomplishments that we're proud of
 
-An approval answered by voice goes through the same code path, with the same id check and the same audit line ("Zygimantas allowed by voice: ...") as one clicked in the inbox.
+An approval answered by voice goes through the same code path, with the same id check and the same audit line ("Lukas allowed by voice: ...") as one clicked in the inbox.
 
 ## What we learned
 
@@ -153,7 +153,7 @@ Proactive notifications ("Alexa, your release agent needs you"), Alexa+ cards fo
 
 ## Built on open source, and what is new
 
-Kipdeck is a public MIT fork of agent-office by webdevcody / AgentSystemLabs (https://github.com/AgentSystemLabs/agent-office). Upstream already shipped a local, stdio-only MCP server for agents to manage each other (list, hire, send home, tell). Everything in this entry's Alexa+ path is new during the submission window and ours: the Streamable HTTP transport, auth, the five voice tools, the spoken summaries and the simulated Alexa+ page. Full list of our commits against the upstream baseline: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
+Kipdeck is a public MIT fork of agent-office by webdevcody / AgentSystemLabs (https://github.com/AgentSystemLabs/agent-office). Upstream already shipped a local, stdio-only MCP server for agents to manage each other (list, hire, send home, tell). Everything in this entry's Alexa+ path is new during the submission window and ours: the Streamable HTTP transport, auth, the five voice tools, the spoken summaries and the simulated Alexa+ page. Full list of our commits against the upstream baseline: https://github.com/lukepas/kipdeck/compare/226452e4...main
 ```
 
 ### Built with (tags)
@@ -166,7 +166,7 @@ Add `amazon-bedrock` only if the "Your call" item below is taken.
 ### Try it out links
 
 ```
-https://github.com/zbagdzevicius/kipdeck
+https://github.com/lukepas/kipdeck
 https://kipdeck.com
 https://kipdeck-demo.vercel.app
 ```
@@ -180,7 +180,7 @@ https://kipdeck-demo.vercel.app
 ### GitHub repository URL
 
 ```
-https://github.com/zbagdzevicius/kipdeck
+https://github.com/lukepas/kipdeck
 ```
 Public, MIT, `LICENSE` keeps "Copyright (c) 2026 AgentSystemLabs" and adds our line; `NOTICE` credits upstream. Check the repo's About section shows "MIT license" (the rules say the license must be detectable there).
 
@@ -200,7 +200,7 @@ Open Source
 ### What you built or changed during the submission window
 
 ```field name="What you built or changed during the submission window"
-The project existed before in two layers. Upstream agent-office (MIT, by webdevcody / AgentSystemLabs) started on 2026-09-25. Kipdeck, our fork, started on 2026-09-30, after this hackathon opened on 2026-08-31, and everything in it beyond the upstream imports is ours. For this hackathon specifically we built, in October 2026: the Streamable HTTP MCP server (spec 2025-11-25) inside the Kipdeck server with bearer-token auth and Origin checks; five voice tools (whats_waiting, agent_summary, approve_request, deny_request, tell_agent) with output written for speech; the voice safety rule that keeps destructive approvals off voice; {IF BUILT} the simulated Alexa+ web page with multi-turn state; and tests for all of it. Before this, upstream's only MCP server ran on stdio for local agents and had no voice tools. Commit-by-commit list: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main (paste the output of `npx tsx launch/tools/whats-new.ts` below this paragraph).
+The project existed before in two layers. Upstream agent-office (MIT, by webdevcody / AgentSystemLabs) started on 2026-09-25. Kipdeck, our fork, started on 2026-09-30, after this hackathon opened on 2026-08-31, and everything in it beyond the upstream imports is ours. For this hackathon specifically we built, in October 2026: the Streamable HTTP MCP server (spec 2025-11-25) inside the Kipdeck server with bearer-token auth and Origin checks; five voice tools (whats_waiting, agent_summary, approve_request, deny_request, tell_agent) with output written for speech; the voice safety rule that keeps destructive approvals off voice; {IF BUILT} the simulated Alexa+ web page with multi-turn state; and tests for all of it. Before this, upstream's only MCP server ran on stdio for local agents and had no voice tools. Commit-by-commit list: https://github.com/lukepas/kipdeck/compare/226452e4...main (paste the output of `npx tsx launch/tools/whats-new.ts` below this paragraph).
 ```
 
 ### Product feedback
@@ -223,9 +223,9 @@ Would we build with it again: {yes/no and why}
 ### Open Source mini challenge fields
 
 ```
-Contribution URL: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main  (or the PR / branch URL of the Alexa+ work, e.g. https://github.com/zbagdzevicius/kipdeck/pull/{N})
-Project repository URL: https://github.com/zbagdzevicius/kipdeck
-GitHub username: zbagdzevicius
+Contribution URL: https://github.com/lukepas/kipdeck/compare/226452e4...main  (or the PR / branch URL of the Alexa+ work, e.g. https://github.com/lukepas/kipdeck/pull/{N})
+Project repository URL: https://github.com/lukepas/kipdeck
+GitHub username: lukepas
 ```
 
 Description:
@@ -256,7 +256,7 @@ Task: | Steps taken: | Expected: | Actual: | Severity (Blocker/Major/Minor): | W
 ### Team
 
 ```
-Founder-led. Zygimantas Bagdzevicius (CEO/CTO, Vilnius, Lithuania): product and code. [FOUNDERS: team - co-founders undecided, decision D9; add Devpost usernames only once decided]
+Solo founder. Lukas Kveraga (Founder, CEO and CTO, Vilnius, Lithuania): product and code.
 Contact: hello@kipdeck.com
 ```
 

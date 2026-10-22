@@ -27,7 +27,7 @@ Pay-on-merge bounties already exist, and we don't claim the escrow idea. What we
 Every lab is off as Kipdeck ships, Proof of Merge included, so a plain run opens on the inbox alone. Start it with the lab held on:
 
 ```sh
-npx github:zbagdzevicius/kipdeck --labs proof
+npx github:lukepas/kipdeck --labs proof
 ```
 
 From a clone it is `node bin/agent-office.js --labs proof`, and `--demo --labs proof` does the same for the scripted demo. Nothing goes on chain until an admin sets up bounties in Settings with testnet keys; any chain flag (`--attest`, `--reputation`, `--x402`) also holds the lab on. See [docs/labs.md](../../docs/labs.md).

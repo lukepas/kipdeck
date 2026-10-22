@@ -22,7 +22,7 @@ test("the film's mark is the app's mark: the same body and light paths as src/sh
 test('the film says Kipdeck and points at its repository, with no old name, slogan or upstream URL on screen', () => {
   const scenes = ['act1.js', 'act2.js', 'act3.js'].map((f) => read(`../src/scenes/${f}`)).join('\n');
   const beatmap = read('../src/beatmap.json');
-  assert.match(scenes, /const REPO = 'github\.com\/zbagdzevicius\/kipdeck';/);
+  assert.match(scenes, /const REPO = 'github\.com\/lukepas\/kipdeck';/);
   assert.match(scenes, /'The inbox for your AI coding agents\.'/);
   assert.match(beatmap, /The inbox for your AI coding agents\./);
   for (const src of [scenes, beatmap]) {

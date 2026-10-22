@@ -202,7 +202,7 @@ The film now says only Kipdeck and only what is true:
 
 - The end card's mark is Kip, the Kipdeck logo (`src/engine/kip.js`, a copy of `MARK` in `src/shared/logo.ts` that `test/kip.test.mjs` keeps in step), in ink with his light in signal red. The old 3x3 mark's beats carry over: the face presses on each 16th, the light kicks a red ring on its stamp and blinks off before 29.5. The act 1 app header shows the small mark before `KIPDECK  INBOX`.
 - The tagline is the product's: `The inbox for your AI coding agents.` under `Kipdeck.` at 7.0 and as the end card's first promise line.
-- The call to action is `github.com/zbagdzevicius/kipdeck`. The upstream credit stays in the small print.
+- The call to action is `github.com/lukepas/kipdeck`. The upstream credit stays in the small print.
 - The escrow names `25 test tokens`: the release moved the project's devnet test mint (`testMint` in `onchain/solana/deployments/devnet.json`), not devnet USDC. The x402 retry keeps `0.10 test USDC`, which is Circle's test USDC on Base Sepolia.
 - The release tx's chip reads `Real devnet tx, test run` (`Test run` in 9:16): it is a real devnet transaction from a demo bounty with no GitHub merge behind it.
 

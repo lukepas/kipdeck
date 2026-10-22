@@ -1,6 +1,6 @@
 # Launch posts
 
-Status: needs the gates in [README.md](README.md#before-anything-goes-out). Every claim below is true of the code on this branch; numbers stay out until there are real ones. The repository (https://github.com/zbagdzevicius/kipdeck) and the site (https://kipdeck.com) are live and filled in; fill `{{DEMO_URL}}` once the hosted demo is up.
+Status: needs the gates in [README.md](README.md#before-anything-goes-out). Every claim below is true of the code on this branch; numbers stay out until there are real ones. The repository (https://github.com/lukepas/kipdeck) and the site (https://kipdeck.com) are live and filled in; fill `{{DEMO_URL}}` once the hosted demo is up.
 
 ## Show HN
 
@@ -10,7 +10,7 @@ Title (80 characters at most):
 Show HN: Kipdeck - one inbox for Claude Code, Codex and Cursor agents
 ```
 
-URL: `https://github.com/zbagdzevicius/kipdeck`
+URL: `https://github.com/lukepas/kipdeck`
 
 First comment:
 
@@ -77,7 +77,7 @@ Open source (MIT, a fork of webdevcody's agent-office), runs locally, no
 telemetry by default. Demo with scripted agents, no tokens spent:
 `npx kipdeck --demo` or {{DEMO_URL}}.
 
-Source: https://github.com/zbagdzevicius/kipdeck
+Source: https://github.com/lukepas/kipdeck
 ```
 
 ## X

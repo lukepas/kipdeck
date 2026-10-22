@@ -9,7 +9,7 @@
 //
 // Fonts: FONTS_DIR (default: the teaser's video/assets/fonts in this repository) for the variable
 // Archivo, Inter Tight and JetBrains Mono; the app's own woff2 files stand in when it is missing.
-// Writes launch/video/out/gfx/ (untracked). FORK_URL (default github.com/zbagdzevicius/kipdeck) is the
+// Writes launch/video/out/gfx/ (untracked). FORK_URL (default github.com/lukepas/kipdeck) is the
 // source repository on the title and end cards, in both formats.
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -24,7 +24,7 @@ const OUT = path.join(ROOT, 'launch', 'video', 'out', 'gfx');
 const HTML = path.join(OUT, 'html');
 mkdirSync(HTML, { recursive: true });
 const edit = JSON.parse(readFileSync(path.join(HERE, 'edit.json'), 'utf8'));
-const FORK = process.env.FORK_URL || 'github.com/zbagdzevicius/kipdeck';
+const FORK = process.env.FORK_URL || 'github.com/lukepas/kipdeck';
 
 const FONTS_DIR = process.env.FONTS_DIR ?? path.join(ROOT, 'video', 'assets', 'fonts');
 const REPO_FONTS = path.join(ROOT, 'src', 'client', 'styles', 'fonts');

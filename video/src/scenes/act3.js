@@ -1328,7 +1328,7 @@ const recap = {
 
 // ======================================================= 27-30 end card ==
 
-const REPO = 'github.com/zbagdzevicius/kipdeck';
+const REPO = 'github.com/lukepas/kipdeck';
 
 const endcard = {
   id: 'endcard',

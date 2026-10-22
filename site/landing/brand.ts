@@ -45,7 +45,7 @@ export const BRANDS = {
     tagline: TAGLINE,
     wordmark: { lead: 'KIP', muted: 'DECK' },
     pkg: 'kipdeck',
-    repo: 'https://github.com/zbagdzevicius/kipdeck',
+    repo: 'https://github.com/lukepas/kipdeck',
     get: 'https://kipdeck.com/get',
     // Founder TODO: confirm this mailbox receives mail; it is the default until a real address is chosen.
     contact: 'hello@kipdeck.com',

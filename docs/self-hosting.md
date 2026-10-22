@@ -4,17 +4,17 @@ Kipdeck gives you full control and clarity over every AI coding agent you run, i
 
 One script each for [AWS](#deploy-to-aws-ec2), [Azure](#deploy-to-azure), [Railway](#deploy-to-railway), [Fly.io](#deploy-to-flyio) and [Dokploy](#deploy-to-dokploy), the one-line setup for [any Ubuntu or Debian server](#deploy-to-any-ubuntu-or-debian-server), or by hand behind Caddy or nginx. Back to the [README](../README.md).
 
-On your own computer you don't need any of this: `npx https://github.com/zbagdzevicius/kipdeck/releases/latest/download/kipdeck.tgz` in your repository (or from a clone, see the README's [From source](../README.md#from-source)). A team office is reached through an SSH tunnel or Tailscale, and everyone signs in with a password or their own account; the terminal's sign-in links only work on the machine the office runs on.
+On your own computer you don't need any of this: `npx https://github.com/lukepas/kipdeck/releases/latest/download/kipdeck.tgz` in your repository (or from a clone, see the README's [From source](../README.md#from-source)). A team office is reached through an SSH tunnel or Tailscale, and everyone signs in with a password or their own account; the terminal's sign-in links only work on the machine the office runs on.
 
 ## One line on your own server
 
 Run this on any Ubuntu or Debian server, as root or as a user with sudo:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zbagdzevicius/kipdeck/main/deploy/provision.sh | bash
+curl -fsSL https://raw.githubusercontent.com/lukepas/kipdeck/main/deploy/provision.sh | bash
 ```
 
-Or run it from your computer without logging in first: `ssh root@203.0.113.7 'curl -fsSL https://raw.githubusercontent.com/zbagdzevicius/kipdeck/main/deploy/provision.sh | bash'`.
+Or run it from your computer without logging in first: `ssh root@203.0.113.7 'curl -fsSL https://raw.githubusercontent.com/lukepas/kipdeck/main/deploy/provision.sh | bash'`.
 
 It takes a few minutes the first time:
 
@@ -38,7 +38,7 @@ Everything goes through SSH, so there are no certificates to manage, and `localh
 **On your own domain.** Point a DNS record at the server, open ports 80 and 443, and add `--domain`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zbagdzevicius/kipdeck/main/deploy/provision.sh | bash -s -- --domain office.example.com
+curl -fsSL https://raw.githubusercontent.com/lukepas/kipdeck/main/deploy/provision.sh | bash -s -- --domain office.example.com
 ```
 
 It installs [Caddy](https://caddyserver.com), which gets a certificate from Let's Encrypt by itself and serves the office on https://office.example.com. The claim link is then `https://office.example.com/claim?t=…`. Give teammates an invite link each from **🔑 Accounts**.
@@ -46,7 +46,7 @@ It installs [Caddy](https://caddyserver.com), which gets a certificate from Let'
 **On your Tailscale network.** No domain, and no ports to open: add `--tailscale`, and the server joins your tailnet and serves the office on `https://agent-office.<your-tailnet>.ts.net` with [Tailscale Serve](https://tailscale.com/kb/1312/serve), which brings its own certificate:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zbagdzevicius/kipdeck/main/deploy/provision.sh | bash -s -- --tailscale
+curl -fsSL https://raw.githubusercontent.com/lukepas/kipdeck/main/deploy/provision.sh | bash -s -- --tailscale
 ```
 
 It prints a link to add the machine to your tailnet (or pass `--tailscale-auth-key tskey-auth-…`), and the first time, one that turns on MagicDNS and HTTPS Certificates for the tailnet. It waits for each. `--tailscale-hostname` names the machine (`agent-office` by default). Then anyone on your tailnet opens the link, and workers' web servers get links of their own, `https://agent-office.<your-tailnet>.ts.net:<port>`, still behind the office sign-in. For someone outside your tailnet, share the machine with them from Tailscale's Machines page. Re-running the script keeps it on the tailnet. Turn off key expiry for the machine on that page, or it drops off after 180 days. The details, and what else the tailnet can reach on the machine, are in the [AWS reference](aws.md#tailscale), since `deploy/aws.sh up --tailscale` does the same thing.
@@ -111,7 +111,7 @@ If you don't have a domain, `--self-signed` serves HTTPS directly. Browsers will
 One script, using only the AWS CLI. You need the **AWS CLI signed in** (`aws configure` or `aws sso login`), `ssh`, `curl` and a clone of this repo:
 
 ```bash
-git clone https://github.com/zbagdzevicius/kipdeck && cd kipdeck
+git clone https://github.com/lukepas/kipdeck && cd kipdeck
 deploy/aws.sh up --project your-org/your-repo --claude-token "$(claude setup-token)"
 ```
 
@@ -166,7 +166,7 @@ It works with every way of running the office on a server, and needs the `agent-
 The same thing on an Azure VM, using only the Azure CLI. You need the **Azure CLI signed in** (`az login`), `ssh`, `curl` and a clone of this repo:
 
 ```bash
-git clone https://github.com/zbagdzevicius/kipdeck && cd kipdeck
+git clone https://github.com/lukepas/kipdeck && cd kipdeck
 deploy/azure.sh up --project your-org/your-repo --claude-token "$(claude setup-token)"
 ```
 
@@ -179,7 +179,7 @@ Every command from the AWS script works the same, with `deploy/azure.sh` in its 
 No machine to look after: one script, using the Railway CLI. You need the **Railway CLI 5 or newer, logged in** (`railway login`), `ssh`, `curl`, Node.js and a clone of this repo:
 
 ```bash
-git clone https://github.com/zbagdzevicius/kipdeck && cd kipdeck
+git clone https://github.com/lukepas/kipdeck && cd kipdeck
 deploy/railway.sh up --claude-token "$(claude setup-token)"
 ```
 
@@ -208,7 +208,7 @@ The details, and what's on the volume, are in [docs/railway.md](railway.md).
 The same container on a [Fly.io](https://fly.io) machine, using flyctl. You need **flyctl logged in** (`fly auth login`), `ssh`, `curl`, Node.js and a clone of this repo:
 
 ```bash
-git clone https://github.com/zbagdzevicius/kipdeck && cd kipdeck
+git clone https://github.com/lukepas/kipdeck && cd kipdeck
 deploy/fly.sh up --claude-token "$(claude setup-token)"
 ```
 
@@ -241,7 +241,7 @@ The public, read-only demo (`kipdeck --demo --read-only`, scripted agents, no vo
 Already run a [Dokploy](https://dokploy.com) server? One script puts the office on it, through Dokploy's API. You need an **API key** (Dokploy: **Settings → Profile → API/CLI Keys**, with rate limiting off), `ssh`, `curl`, `git`, Node.js and a clone of this repo:
 
 ```bash
-git clone https://github.com/zbagdzevicius/kipdeck && cd kipdeck
+git clone https://github.com/lukepas/kipdeck && cd kipdeck
 export DOKPLOY_API_KEY=<your key>
 deploy/dokploy.sh up --url https://dokploy.example.com --claude-token "$(claude setup-token)"
 ```
@@ -271,7 +271,7 @@ The details, and what's on the volume, are in [docs/dokploy.md](dokploy.md).
 Another cloud, or your own machine? Run one line on the server, as root or as a user with sudo:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zbagdzevicius/kipdeck/main/deploy/provision.sh | bash
+curl -fsSL https://raw.githubusercontent.com/lukepas/kipdeck/main/deploy/provision.sh | bash
 ```
 
 It installs Node 22, git, the GitHub CLI, Claude Code and the office as a systemd service. Run as root, it creates an `agentoffice` user to run the office, so workers never run as root. The office listens on `127.0.0.1:4600` only, and the script ends by printing the SSH tunnel command and a link that shows the office password once. Run the same line again to update.

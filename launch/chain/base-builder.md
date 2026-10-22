@@ -15,7 +15,7 @@ Status: gated. Do not nominate yet. Everything Kipdeck has on Base runs on Base 
 - Program post ("Calling Based Builders", grants.base.eth, dated 2023-10-30, still live on 2026-10-14): https://paragraph.com/@grants.base.eth/calling-based-builders
 - Nomination form ("Base Grant Nominations", no login): https://docs.google.com/forms/d/e/1FAIpQLSfXuEzmiAzRhie_z9raFCF1BXweXgVt18o-DvBuRRgyTygL2A/viewform
 - What runs on Base Sepolia today (EAS schema): https://base-sepolia.easscan.org/schema/view/0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900
-- Repo: https://github.com/zbagdzevicius/kipdeck
+- Repo: https://github.com/lukepas/kipdeck
 - Site: https://kipdeck.com
 - Replay demo: https://kipdeck-demo.vercel.app
 
@@ -51,7 +51,7 @@ Every box here must be ticked before submitting. The first one is open in every 
 - [ ] Mainnet gate: no written mainnet decision, no contract review, no outside paid task on Base mainnet. The kit says "Do not submit testnet work."
 - [ ] Company registration: not needed for the form. Base pays to a wallet and collects a W-8BEN (individual, non-US) or W-8BEN-E (entity) from recipients for KYC and tax. [FOUNDERS: individual or company recipient; if a company, Lithuanian registration details.] Taxes on a 1 ETH grant in Lithuania: [FOUNDERS: check with an accountant].
 - [ ] Personal fields: X and Farcaster handles for the project and the builder are not in the repo. W-8BEN needs legal name, address and tax ID: [FOUNDERS: fill when Base asks; do not put them in the form].
-- [ ] Team: founder-led; co-founders undecided (D9). [FOUNDERS: team] if Base asks later.
+- [x] Team: solo. Lukas Kveraga is the sole founder, CEO and CTO.
 - [ ] A Base wallet to receive ETH: [FOUNDERS: address, ideally with a Basename].
 
 ## Pre-existing code disclosure
@@ -69,7 +69,7 @@ Form title: "Base Grant Nominations". 12 fields, all required. Google Forms shor
 ### 1. Nominator name (short text, required)
 
 ```field name="Nominator Name"
-Zygimantas Bagdzevicius
+Lukas Kveraga
 ```
 
 ### 2. Project name (short text, required)
@@ -101,13 +101,13 @@ Alternative if the board is hosted by then: `{{BOARD_URL}}` (the public board re
 ### 6. Builder twitter (short text, required)
 
 ```field name="Builder Twitter"
-[FOUNDERS: Zygimantas's X handle]
+[FOUNDERS: Lukas's X handle]
 ```
 
 ### 7. Builder farcaster (short text, required)
 
 ```field name="Builder Farcaster"
-[FOUNDERS: Zygimantas's Farcaster handle]
+[FOUNDERS: Lukas's Farcaster handle]
 ```
 
 ### 8. Is the project currently live on Base? (multiple choice, required)
@@ -131,7 +131,7 @@ Kipdeck is an open source inbox for AI coding agents, built on agent-office (MIT
 
 Anyone can also hire an agent for one task with x402: pay {{PRICE}} USDC on Base, an admin approves, the agent opens a pull request. For many developers that is their first wallet and first USDC.
 
-On Base mainnet since {{LIVE_DATE}}: {{PAYERS}} outside payers, {{PAYMENTS}} x402 payments, {{ATTESTATIONS}} merge attestations. Board: {{BOARD_URL}}. MIT code: github.com/zbagdzevicius/kipdeck
+On Base mainnet since {{LIVE_DATE}}: {{PAYERS}} outside payers, {{PAYMENTS}} x402 payments, {{ATTESTATIONS}} merge attestations. Board: {{BOARD_URL}}. MIT code: github.com/lukepas/kipdeck
 ```
 
 ### 10. Please link a 1 minute demo of the project (short text, required)

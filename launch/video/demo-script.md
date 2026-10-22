@@ -133,7 +133,7 @@ Action: show `onchain/action/examples/bounty.yml` with `uses: ...@<sha>`, then a
 
 Action: quick cuts: `docs/security.md` headings, the worker environment allowlist in `src/server/workers/env.ts`, then the closing card.
 
-Closing card: "Kipdeck. Agents get paid only when a human reviewer merges." The source repository URL big, the demo repository, the four IDs in full, "Testnets only", and the agent-office credit (`capture/cards.mjs` renders it, with `github.com/zbagdzevicius/kipdeck` as the source).
+Closing card: "Kipdeck. Agents get paid only when a human reviewer merges." The source repository URL big, the demo repository, the four IDs in full, "Testnets only", and the agent-office credit (`capture/cards.mjs` renders it, with `github.com/lukepas/kipdeck` as the source).
 
 > Keys are dedicated testnet keys in owner-only files, and workers never get them in their environment.
 > The clients check the chain before they sign. Nothing is audited yet, so it stays on testnet.

@@ -33,7 +33,7 @@ The name, tagline, wordmark, npm package, source repository and contact address 
 KIPDECK_BRAND=<id> npm run build:site
 ```
 
-`tests/landing.test.ts` builds the page and fails if it says a product name other than Kipdeck. The repository is `github.com/zbagdzevicius/kipdeck`.
+`tests/landing.test.ts` builds the page and fails if it says a product name other than Kipdeck. The repository is `github.com/lukepas/kipdeck`.
 
 ## Build for a real address
 
@@ -49,7 +49,7 @@ npm run build:site
 | `KIPDECK_WAITLIST_URL` | Shows the Team waitlist form and lets it POST `{ email, source }` there (and nowhere else) | No form; the ask is the design-partner link, an email to the brand's contact address |
 | `KIPDECK_DEMO_URL` | **Try the demo** opens a hosted read-only demo (the root `vercel.json` sets it to the replay demo, https://kipdeck-demo.vercel.app/) | **Try the demo** copies the hero's demo command |
 | `KIPDECK_NPM_PUBLISHED=1` | `npx kipdeck` replaces the release commands (`npx <repo>/releases/latest/download/kipdeck.tgz`) | The release commands and the "Not on npm yet" line stay |
-| `KIPDECK_REPO_PUBLIC=0` | For a brand whose repository is private: the hero's command, the 06 terminal and the Source and Docs links are left out, and the hero leads with the film and the design-partner email | Public (github.com/zbagdzevicius/kipdeck is): all of them are shown |
+| `KIPDECK_REPO_PUBLIC=0` | For a brand whose repository is private: the hero's command, the 06 terminal and the Source and Docs links are left out, and the hero leads with the film and the design-partner email | Public (github.com/lukepas/kipdeck is): all of them are shown |
 | `KIPDECK_BRAND` | Picks an entry in `brand.ts` | `kipdeck` |
 
 Every address must be `https`, or the build stops. The build draws `og.png` with headless Chromium when one is installed (`playwright-core`'s, `CHROMIUM_PATH`, or Google Chrome). Without one it says so and the committed `site/landing/public/og.png` ships instead. When the brand or the headline changes, build where Chromium is available and copy `dist/site/og.png` over it.
@@ -119,4 +119,4 @@ He never stands over text, a link, a button or a field: every spot is checked ag
 - No users and no revenue yet; the page says so and asks for five design partners.
 - Proof of Merge runs on testnets only (Solana devnet, Base Sepolia) with test funds; every chain value says so.
 - `npx kipdeck` is not on npm yet: the page shows the run-from-source command and says so.
-- The repository named in `brand.ts`, github.com/zbagdzevicius/kipdeck, is public, so the default build shows the Source and Docs links and the `npx` release command. The design-partner ask is an email to `contact` in `brand.ts`, so it also works in a `KIPDECK_REPO_PUBLIC=0` build.
+- The repository named in `brand.ts`, github.com/lukepas/kipdeck, is public, so the default build shows the Source and Docs links and the `npx` release command. The design-partner ask is an email to `contact` in `brand.ts`, so it also works in a `KIPDECK_REPO_PUBLIC=0` build.

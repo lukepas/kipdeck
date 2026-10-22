@@ -18,8 +18,12 @@
       "checked": "HTTP 200 on 2026-10-10 (arena.colosseum.org answers 308 to it); the sign-in page for registration and the form"
     },
     {
-      "url": "https://zbagdzevicius.github.io/kipdeck/",
-      "checked": "HTTP 404 on 2026-10-10: not published yet. The address .github/workflows/showcase-pages.yml deploys to; open it again after the run"
+      "url": "https://lukepas.github.io/kipdeck/",
+      "checked": "HTTP 200 on 2026-10-22, after the repository moved to lukepas/kipdeck. The address .github/workflows/showcase-pages.yml deploys to"
+    },
+    {
+      "url": "https://www.linkedin.com/in/lukas-kveraga",
+      "checked": "2026-10-22: the founder's LinkedIn profile, given by the founder; LinkedIn answers 999 to scripts, so open it in a browser before pasting"
     },
     {
       "url": "https://base-sepolia-rpc.publicnode.com",
@@ -126,11 +130,11 @@
       "checked": "explorer answers 429 to scripts; getTransaction on api.devnet.solana.com: finalized, no error, slot 507291328, 12 test tokens from the bounty vault to the operator, 2026-10-04"
     },
     {
-      "url": "https://github.com/zbagdzevicius/kipdeck",
+      "url": "https://github.com/lukepas/kipdeck",
       "checked": "HTTP 200 on 2026-10-09; public repository, the source of this entry"
     },
     {
-      "url": "https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main",
+      "url": "https://github.com/lukepas/kipdeck/compare/226452e4...main",
       "checked": "HTTP 200 on 2026-10-09; the diff from our import of upstream 1bc3028 to main"
     },
     {
